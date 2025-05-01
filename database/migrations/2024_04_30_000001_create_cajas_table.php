@@ -6,26 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-  public function up(): void
+  public function up()
   {
     Schema::create('cajas', function (Blueprint $table) {
       $table->id();
       $table->foreignId('user_id')->constrained()->onDelete('cascade');
       $table->decimal('saldo_inicial', 10, 2);
       $table->decimal('saldo_actual', 10, 2);
-      $table->decimal('total_ingresos', 10, 2)->default(0);
-      $table->decimal('total_egresos', 10, 2)->default(0);
-      $table->datetime('fecha_apertura');
-      $table->datetime('fecha_cierre')->nullable();
-      $table->text('observaciones_apertura')->nullable();
-      $table->text('observaciones_cierre')->nullable();
-      $table->enum('estado', ['abierta', 'cerrada'])->default('abierta');
+      $table->enum('turno', ['matutino', 'vespertino', 'nocturno']);
+      $table->boolean('estado')->default(true);
+      $table->timestamp('fecha_apertura')->useCurrent();
+      $table->timestamp('fecha_cierre')->nullable();
+      $table->text('observaciones')->nullable();
       $table->timestamps();
       $table->softDeletes();
     });
   }
 
-  public function down(): void
+  public function down()
   {
     Schema::dropIfExists('cajas');
   }

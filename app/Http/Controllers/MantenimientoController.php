@@ -94,9 +94,16 @@ class MantenimientoController extends Controller
             'observaciones' => 'nullable|string'
         ]);
 
+        $habitacion = Habitacion::findOrFail($request->habitacion_id);
         $limpieza = new Limpieza($request->all());
         $limpieza->user_id = Auth::id();
         $limpieza->save();
+
+        // Solo cambiar el estado si la limpieza no está completada
+        if (in_array($request->estado, ['pendiente', 'en_proceso'])) {
+            $habitacion->estado = 'Limpieza';
+            $habitacion->save();
+        }
 
         return redirect()->route('mantenimiento.limpieza.index')
             ->with('success', 'Registro de limpieza creado exitosamente.');
@@ -127,9 +134,16 @@ class MantenimientoController extends Controller
             'observaciones' => 'nullable|string'
         ]);
 
+        $habitacion = Habitacion::findOrFail($request->habitacion_id);
         $reparacion = new Reparacion($request->all());
         $reparacion->user_id = Auth::id();
         $reparacion->save();
+
+        // Solo cambiar el estado si la reparación no está completada
+        if (in_array($request->estado, ['pendiente', 'en_proceso'])) {
+            $habitacion->estado = 'Mantenimiento';
+            $habitacion->save();
+        }
 
         return redirect()->route('mantenimiento.reparacion.index')
             ->with('success', 'Registro de reparación creado exitosamente.');
@@ -144,6 +158,13 @@ class MantenimientoController extends Controller
 
         $limpieza->update($request->all());
 
+        // Si la limpieza se completa, actualizar estado de la habitación
+        if ($request->estado === 'completada') {
+            $habitacion = $limpieza->habitacion;
+            $habitacion->estado = 'Disponible';
+            $habitacion->save();
+        }
+
         return redirect()->route('mantenimiento.limpieza.index')
             ->with('success', 'Registro de limpieza actualizado exitosamente.');
     }
@@ -157,6 +178,13 @@ class MantenimientoController extends Controller
         ]);
 
         $reparacion->update($request->all());
+
+        // Si la reparación se completa, actualizar estado de la habitación
+        if ($request->estado === 'completada') {
+            $habitacion = $reparacion->habitacion;
+            $habitacion->estado = 'Disponible';
+            $habitacion->save();
+        }
 
         return redirect()->route('mantenimiento.reparacion.index')
             ->with('success', 'Registro de reparación actualizado exitosamente.');

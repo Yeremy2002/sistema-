@@ -19,66 +19,85 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Crear permisos
         $permissions = [
-            // Permisos de habitaciones
-            'ver habitaciones',
-            'crear habitaciones',
-            'editar habitaciones',
-            'eliminar habitaciones',
-            'cambiar estado habitaciones',
+            // Dashboard
+            'dashboard.ver',
 
-            // Permisos de reservas
-            'ver reservas',
-            'crear reservas',
-            'editar reservas',
-            'eliminar reservas',
-            'hacer checkin',
-            'hacer checkout',
+            // Gestión de Habitaciones
+            'habitaciones.ver',
+            'habitaciones.crear',
+            'habitaciones.editar',
+            'habitaciones.eliminar',
+            'categorias.ver',
+            'categorias.crear',
+            'categorias.editar',
+            'categorias.eliminar',
+            'niveles.ver',
+            'niveles.crear',
+            'niveles.editar',
+            'niveles.eliminar',
 
-            // Permisos de clientes
-            'ver clientes',
-            'crear clientes',
-            'editar clientes',
-            'eliminar clientes',
+            // Reservas
+            'reservas.ver',
+            'reservas.crear',
+            'reservas.editar',
+            'reservas.eliminar',
+            'reservas.cancelar',
 
-            // Permisos de caja
-            'ver cajas',
-            'abrir caja',
-            'cerrar caja',
-            'ver movimientos caja',
-            'registrar ingreso',
-            'registrar egreso',
-            'ver arqueo caja',
-            'realizar arqueo',
-            'asignar caja',
+            // Clientes
+            'clientes.ver',
+            'clientes.crear',
+            'clientes.editar',
+            'clientes.eliminar',
 
-            // Permisos para gastos
-            'ver gastos',
-            'crear gastos',
-            'editar gastos',
-            'eliminar gastos',
-            'aprobar gastos',
+            // Reportes
+            'reportes.ver',
+            'reportes.crear',
+            'reportes.editar',
+            'reportes.eliminar',
 
-            // Permisos de usuarios
-            'ver usuarios',
-            'crear usuarios',
-            'editar usuarios',
-            'desactivar usuarios',
+            // Mantenimiento General
+            'mantenimiento.ver',
+            'mantenimiento.crear',
+            'mantenimiento.editar',
+            'mantenimiento.eliminar',
+            // Limpieza
+            'limpieza.ver',
+            'limpieza.registrar',
+            'limpieza.editar',
+            'limpieza.eliminar',
+            // Reparaciones
+            'reparaciones.ver',
+            'reparaciones.registrar',
+            'reparaciones.editar',
+            'reparaciones.eliminar',
 
-            // Permisos de reportes
-            'ver reportes',
-            'generar reportes',
+            // Configuración General
+            'configuracion.ver',
+            'configuracion.editar',
+            // Usuarios
+            'usuarios.ver',
+            'usuarios.crear',
+            'usuarios.editar',
+            'usuarios.eliminar',
+            // Roles y Permisos
+            'roles.ver',
+            'roles.crear',
+            'roles.editar',
+            'roles.eliminar',
 
-            // Permisos de configuración
-            'ver configuracion',
-            'editar configuracion',
-
-            // Permisos de mantenimiento
-            'registrar limpieza',
-            'registrar reparacion'
+            // Gestión de Caja
+            'cajas.ver',
+            'cajas.apertura',
+            'cajas.cierre',
+            'cajas.arqueo',
+            'cajas.asignar',
+            // Movimientos de Caja
+            'cajas.movimientos.ver',
+            'cajas.movimientos.crear',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Super Administrador
