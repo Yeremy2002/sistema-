@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Limpieza;
+use App\Models\Reparacion;
+use App\Models\Habitacion;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class MantenimientoController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('permission:registrar limpieza')->only(['indexLimpieza', 'createLimpieza', 'storeLimpieza', 'updateLimpieza']);
+        $this->middleware('permission:registrar reparacion')->only(['indexReparacion', 'createReparacion', 'storeReparacion', 'updateReparacion']);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+
+    public function indexLimpieza()
+    {
+        $limpiezas = Limpieza::with(['habitacion', 'user'])->latest()->get();
+        return view('mantenimiento.limpieza.index', compact('limpiezas'));
+    }
+
+    public function createLimpieza()
+    {
+        $habitaciones = Habitacion::where('estado', true)->get();
+        return view('mantenimiento.limpieza.create', compact('habitaciones'));
+    }
+
+    public function storeLimpieza(Request $request)
+    {
+        $request->validate([
+            'habitacion_id' => 'required|exists:habitacions,id',
+            'fecha' => 'required|date',
+            'hora' => 'required',
+            'estado' => 'required|in:pendiente,en_proceso,completada',
+            'observaciones' => 'nullable|string'
+        ]);
+
+        $limpieza = new Limpieza($request->all());
+        $limpieza->user_id = Auth::id();
+        $limpieza->save();
+
+        return redirect()->route('mantenimiento.limpieza.index')
+            ->with('success', 'Registro de limpieza creado exitosamente.');
+    }
+
+    public function indexReparacion()
+    {
+        $reparaciones = Reparacion::with(['habitacion', 'user'])->latest()->get();
+        return view('mantenimiento.reparacion.index', compact('reparaciones'));
+    }
+
+    public function createReparacion()
+    {
+        $habitaciones = Habitacion::where('estado', true)->get();
+        return view('mantenimiento.reparacion.create', compact('habitaciones'));
+    }
+
+    public function storeReparacion(Request $request)
+    {
+        $request->validate([
+            'habitacion_id' => 'required|exists:habitacions,id',
+            'fecha' => 'required|date',
+            'hora' => 'required',
+            'estado' => 'required|in:pendiente,en_proceso,completada',
+            'tipo_reparacion' => 'required|string',
+            'costo' => 'required|numeric|min:0',
+            'descripcion' => 'required|string',
+            'observaciones' => 'nullable|string'
+        ]);
+
+        $reparacion = new Reparacion($request->all());
+        $reparacion->user_id = Auth::id();
+        $reparacion->save();
+
+        return redirect()->route('mantenimiento.reparacion.index')
+            ->with('success', 'Registro de reparación creado exitosamente.');
+    }
+
+    public function updateLimpieza(Request $request, Limpieza $limpieza)
+    {
+        $request->validate([
+            'estado' => 'required|in:pendiente,en_proceso,completada',
+            'observaciones' => 'nullable|string'
+        ]);
+
+        $limpieza->update($request->all());
+
+        return redirect()->route('mantenimiento.limpieza.index')
+            ->with('success', 'Registro de limpieza actualizado exitosamente.');
+    }
+
+    public function updateReparacion(Request $request, Reparacion $reparacion)
+    {
+        $request->validate([
+            'estado' => 'required|in:pendiente,en_proceso,completada',
+            'costo' => 'required|numeric|min:0',
+            'observaciones' => 'nullable|string'
+        ]);
+
+        $reparacion->update($request->all());
+
+        return redirect()->route('mantenimiento.reparacion.index')
+            ->with('success', 'Registro de reparación actualizado exitosamente.');
+    }
+}
