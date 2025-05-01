@@ -21,3 +21,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Archivos y carpetas personalizados
+/original
+gestion_hoteles.code-workspace
