@@ -32,7 +32,11 @@ class ClienteController extends Controller
       'telefono' => 'required|string|max:20',
     ]);
 
-    $cliente = Cliente::create($request->all());
+    // Convertir nombre a mayúsculas
+    $data = $request->all();
+    $data['nombre'] = strtoupper($data['nombre']);
+
+    $cliente = Cliente::create($data);
 
     if ($request->ajax()) {
       return response()->json($cliente);
@@ -61,7 +65,11 @@ class ClienteController extends Controller
       'telefono' => 'required|string|max:20',
     ]);
 
-    $cliente->update($request->all());
+    // Convertir nombre a mayúsculas
+    $data = $request->all();
+    $data['nombre'] = strtoupper($data['nombre']);
+
+    $cliente->update($data);
 
     return redirect()->route('clientes.index')
       ->with('success', 'Cliente actualizado exitosamente.');
@@ -85,5 +93,33 @@ class ClienteController extends Controller
       ->get();
 
     return response()->json($clientes);
+  }
+
+  /**
+   * Buscar cliente por DPI
+   */
+  public function buscarPorDpi($dpi)
+  {
+    $cliente = Cliente::where('dpi', $dpi)->first();
+
+    if ($cliente) {
+      return response()->json($cliente);
+    } else {
+      return response()->json(null, 404);
+    }
+  }
+
+  /**
+   * Buscar cliente por NIT
+   */
+  public function buscarPorNit($nit)
+  {
+    $cliente = Cliente::where('nit', $nit)->first();
+
+    if ($cliente) {
+      return response()->json($cliente);
+    } else {
+      return response()->json(null, 404);
+    }
   }
 }

@@ -114,6 +114,18 @@
                     </div>
                 @endif
 
+                <div class="form-group">
+                    <label for="session_lifetime">Duración de la sesión (minutos)</label>
+                    <input type="number" class="form-control @error('session_lifetime') is-invalid @enderror"
+                        id="session_lifetime" name="session_lifetime"
+                        value="{{ old('session_lifetime', $hotel->session_lifetime ?? 60) }}" min="1" required>
+                    @error('session_lifetime')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="form-text text-muted">Tiempo de inactividad antes de cerrar sesión
+                        automáticamente.</small>
+                </div>
+
                 <div class="row mt-4">
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">

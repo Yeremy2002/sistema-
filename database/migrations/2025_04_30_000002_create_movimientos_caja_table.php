@@ -12,7 +12,7 @@ return new class extends Migration
       $table->id();
       $table->foreignId('caja_id')->constrained()->onDelete('cascade');
       $table->foreignId('user_id')->constrained()->onDelete('cascade');
-      $table->morphs('movimientable'); // Para reservas, gastos u otros tipos de movimientos
+      $table->nullableMorphs('movimientable'); // Para reservas, gastos u otros tipos de movimientos
       $table->enum('tipo', ['ingreso', 'egreso']);
       $table->decimal('monto', 10, 2);
       $table->string('concepto');

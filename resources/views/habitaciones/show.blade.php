@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Detalles de Habitación')
+@section('title', 'Detalle de Habitación')
 
 @section('content_header')
-    <h1>Detalles de Habitación</h1>
+    <h1>Detalle de Habitación</h1>
 @stop
 
 @section('content')
@@ -17,6 +17,46 @@
             </div>
         </div>
         <div class="card-body">
+            <!-- Galería de imágenes -->
+            @if ($habitacione->imagenes->count() > 0)
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4>Galería de Imágenes</h4>
+                        <div id="carouselHabitacion" class="carousel slide" data-ride="carousel">
+                            <ol class="carousel-indicators">
+                                @foreach ($habitacione->imagenes as $index => $imagen)
+                                    <li data-target="#carouselHabitacion" data-slide-to="{{ $index }}"
+                                        {{ $index === 0 ? 'class="active"' : '' }}></li>
+                                @endforeach
+                            </ol>
+                            <div class="carousel-inner">
+                                @foreach ($habitacione->imagenes as $index => $imagen)
+                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                        <img src="{{ Storage::url($imagen->ruta) }}" class="d-block w-100"
+                                            alt="Imagen de habitación"
+                                            style="height: 600px; object-fit: cover; object-position: center;">
+                                        @if ($imagen->descripcion)
+                                            <div
+                                                class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                                                <p class="mb-0">{{ $imagen->descripcion }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            <a class="carousel-control-prev" href="#carouselHabitacion" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Anterior</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselHabitacion" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Siguiente</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -53,7 +93,8 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>Precio:</label>
-                        <p class="form-control-static">S/ {{ number_format($habitacione->precio, 2) }}</p>
+                        <p class="form-control-static">{{ $hotel->simbolo_moneda }}
+                            {{ number_format($habitacione->precio, 2) }}</p>
                     </div>
                     <div class="form-group">
                         <label>Descripción:</label>
@@ -65,51 +106,23 @@
                     </div>
                 </div>
             </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="btn-group">
-                        <a href="{{ route('habitaciones.edit', ['habitacione' => $habitacione->id]) }}"
-                            class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <form action="{{ route('habitaciones.destroy', ['habitacione' => $habitacione->id]) }}"
-                            method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('¿Está seguro de eliminar esta habitación?')">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
 @stop
 
 @section('css')
     <link rel="stylesheet" href="/css/admin_custom.css">
     <style>
-        .form-control-static {
-            padding-top: 7px;
-            margin-bottom: 15px;
-            font-size: 16px;
+        .carousel-item {
+            background-color: #000;
         }
 
-        .badge {
-            font-size: 14px;
-            padding: 8px 12px;
+        .carousel-caption {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            max-width: 80%;
         }
     </style>
 @stop
@@ -117,10 +130,10 @@
 @section('js')
     <script>
         $(document).ready(function() {
-            // Auto-hide alert after 5 seconds
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
+            // Inicializar el carrusel
+            $('.carousel').carousel({
+                interval: 5000
+            });
         });
     </script>
 @stop

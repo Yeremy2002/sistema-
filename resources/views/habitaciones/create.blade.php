@@ -9,7 +9,7 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('habitaciones.store') }}" method="POST">
+            <form action="{{ route('habitaciones.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="row">
@@ -66,6 +66,19 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
+                            <label for="precio">Precio</label>
+                            <input type="number" step="0.01" class="form-control @error('precio') is-invalid @enderror"
+                                id="precio" name="precio" value="{{ old('precio') }}" required>
+                            @error('precio')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
                             <label for="estado">Estado</label>
                             <select class="form-control @error('estado') is-invalid @enderror" id="estado" name="estado"
                                 required>
@@ -101,10 +114,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="precio">Precio</label>
-                    <input type="number" step="0.01" class="form-control @error('precio') is-invalid @enderror"
-                        id="precio" name="precio" value="{{ old('precio') }}" required>
-                    @error('precio')
+                    <label for="imagenes">Imágenes de la Habitación</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input @error('imagenes.*') is-invalid @enderror"
+                            id="imagenes" name="imagenes[]" multiple accept="image/*">
+                        <label class="custom-file-label" for="imagenes">Seleccionar imágenes</label>
+                    </div>
+                    <small class="form-text text-muted">Puede seleccionar múltiples imágenes. La primera imagen será la
+                        principal.</small>
+                    @error('imagenes.*')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
@@ -124,9 +142,12 @@
 
 @section('js')
     <script>
-        $(document).ready(function() {
-            // Inicializar select2 si lo deseas
-            // $('#categoria_id, #nivel_id').select2();
+        // Actualizar el nombre del archivo seleccionado
+        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+            var fileName = e.target.files.length > 1 ?
+                e.target.files.length + ' archivos seleccionados' :
+                e.target.files[0].name;
+            e.target.nextElementSibling.innerHTML = fileName;
         });
     </script>
 @stop

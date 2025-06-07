@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Habitacion;
 use App\Models\Categoria;
 use App\Models\Nivel;
+use App\Models\HabitacionImagen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class HabitacionController extends Controller
 {
@@ -50,9 +52,24 @@ class HabitacionController extends Controller
             'categoria_id' => 'required|exists:categorias,id',
             'nivel_id' => 'required|exists:nivels,id',
             'estado' => 'required|in:Disponible,Ocupada,Mantenimiento',
+            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'imagen_principal' => 'nullable|integer|min:0'
         ]);
 
-        $habitacion = Habitacion::create($request->all());
+        $habitacion = Habitacion::create($request->except(['imagenes', 'imagen_principal']));
+
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $index => $imagen) {
+                $ruta = $imagen->store('habitaciones', 'public');
+                $esPrincipal = $request->imagen_principal == $index;
+
+                HabitacionImagen::create([
+                    'habitacion_id' => $habitacion->id,
+                    'ruta' => $ruta,
+                    'es_principal' => $esPrincipal
+                ]);
+            }
+        }
 
         return redirect()->route('habitaciones.index')
             ->with('success', 'Habitación creada exitosamente.');
@@ -89,9 +106,49 @@ class HabitacionController extends Controller
             'categoria_id' => 'required|exists:categorias,id',
             'nivel_id' => 'required|exists:nivels,id',
             'estado' => 'required|in:Disponible,Ocupada,Mantenimiento',
+            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'imagen_principal' => 'nullable|integer|min:0',
+            'eliminar_imagenes' => 'nullable|array',
+            'eliminar_imagenes.*' => 'exists:habitacion_imagenes,id'
         ]);
 
-        $habitacione->update($request->all());
+        $habitacione->update($request->except(['imagenes', 'imagen_principal', 'eliminar_imagenes']));
+
+        // Eliminar imágenes seleccionadas
+        if ($request->has('eliminar_imagenes')) {
+            foreach ($request->eliminar_imagenes as $imagenId) {
+                $imagen = HabitacionImagen::find($imagenId);
+                if ($imagen) {
+                    Storage::disk('public')->delete($imagen->ruta);
+                    $imagen->delete();
+                }
+            }
+        }
+
+        // Agregar nuevas imágenes
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $index => $imagen) {
+                $ruta = $imagen->store('habitaciones', 'public');
+                $esPrincipal = $request->imagen_principal == $index;
+
+                HabitacionImagen::create([
+                    'habitacion_id' => $habitacione->id,
+                    'ruta' => $ruta,
+                    'es_principal' => $esPrincipal
+                ]);
+            }
+        }
+
+        // Actualizar imagen principal si se especificó
+        if ($request->has('imagen_principal')) {
+            HabitacionImagen::where('habitacion_id', $habitacione->id)
+                ->update(['es_principal' => false]);
+
+            $imagenPrincipal = HabitacionImagen::find($request->imagen_principal);
+            if ($imagenPrincipal) {
+                $imagenPrincipal->update(['es_principal' => true]);
+            }
+        }
 
         return redirect()->route('habitaciones.index')
             ->with('success', 'Habitación actualizada exitosamente.');
@@ -102,8 +159,36 @@ class HabitacionController extends Controller
      */
     public function destroy(Habitacion $habitacione)
     {
+        // Eliminar todas las imágenes asociadas
+        foreach ($habitacione->imagenes as $imagen) {
+            Storage::disk('public')->delete($imagen->ruta);
+        }
+
         $habitacione->delete();
         return redirect()->route('habitaciones.index')
             ->with('success', 'Habitación eliminada exitosamente.');
+    }
+
+    public function cambiarEstado(Request $request, Habitacion $habitacion)
+    {
+        $request->validate([
+            'estado' => 'required|in:Disponible,Ocupada,Limpieza,Mantenimiento'
+        ]);
+
+        try {
+            $habitacion->update([
+                'estado' => $request->estado
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

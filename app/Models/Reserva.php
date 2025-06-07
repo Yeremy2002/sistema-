@@ -13,15 +13,16 @@ class Reserva extends Model
     protected $fillable = [
         'habitacion_id',
         'nombre_cliente',
-        'documento_identidad',
-        'telefono',
+        'documento_cliente',
+        'telefono_cliente',
         'fecha_entrada',
         'fecha_salida',
         'adelanto',
         'estado',
         'observaciones',
         'total',
-        'user_id'
+        'user_id',
+        'cliente_id'
     ];
 
     protected $casts = [
@@ -39,6 +40,11 @@ class Reserva extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
     }
 
     public function movimientos()

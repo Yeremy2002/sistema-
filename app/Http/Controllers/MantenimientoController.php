@@ -2,88 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Habitacion;
 use App\Models\Limpieza;
 use App\Models\Reparacion;
-use App\Models\Habitacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MantenimientoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:registrar limpieza')->only(['indexLimpieza', 'createLimpieza', 'storeLimpieza', 'updateLimpieza']);
-        $this->middleware('permission:registrar reparacion')->only(['indexReparacion', 'createReparacion', 'storeReparacion', 'updateReparacion']);
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function indexLimpieza()
-    {
-        $limpiezas = Limpieza::with(['habitacion', 'user'])->latest()->get();
-        return view('mantenimiento.limpieza.index', compact('limpiezas'));
-    }
-
-    public function createLimpieza()
-    {
-        $habitaciones = Habitacion::where('estado', true)->get();
-        return view('mantenimiento.limpieza.create', compact('habitaciones'));
-    }
-
     public function storeLimpieza(Request $request)
     {
         $request->validate([
@@ -95,30 +22,24 @@ class MantenimientoController extends Controller
         ]);
 
         $habitacion = Habitacion::findOrFail($request->habitacion_id);
+        if ($habitacion->estado === 'Ocupada') {
+            return back()->with('error', 'No se puede realizar la limpieza. La habitación está ocupada.');
+        }
+
         $limpieza = new Limpieza($request->all());
         $limpieza->user_id = Auth::id();
         $limpieza->save();
 
-        // Solo cambiar el estado si la limpieza no está completada
-        if (in_array($request->estado, ['pendiente', 'en_proceso'])) {
+        // Actualizar el estado de la habitación según el estado de la limpieza
+        if ($request->estado === 'completada') {
+            $habitacion->estado = 'Disponible';
+        } else {
             $habitacion->estado = 'Limpieza';
-            $habitacion->save();
         }
+        $habitacion->save();
 
         return redirect()->route('mantenimiento.limpieza.index')
-            ->with('success', 'Registro de limpieza creado exitosamente.');
-    }
-
-    public function indexReparacion()
-    {
-        $reparaciones = Reparacion::with(['habitacion', 'user'])->latest()->get();
-        return view('mantenimiento.reparacion.index', compact('reparaciones'));
-    }
-
-    public function createReparacion()
-    {
-        $habitaciones = Habitacion::where('estado', true)->get();
-        return view('mantenimiento.reparacion.create', compact('habitaciones'));
+            ->with('success', 'Registro de limpieza creado exitosamente y estado de la habitación actualizado.');
     }
 
     public function storeReparacion(Request $request)
@@ -135,6 +56,10 @@ class MantenimientoController extends Controller
         ]);
 
         $habitacion = Habitacion::findOrFail($request->habitacion_id);
+        if ($habitacion->estado === 'Ocupada') {
+            return back()->with('error', 'No se puede realizar la reparación. La habitación está ocupada.');
+        }
+
         $reparacion = new Reparacion($request->all());
         $reparacion->user_id = Auth::id();
         $reparacion->save();
@@ -142,8 +67,10 @@ class MantenimientoController extends Controller
         // Solo cambiar el estado si la reparación no está completada
         if (in_array($request->estado, ['pendiente', 'en_proceso'])) {
             $habitacion->estado = 'Mantenimiento';
-            $habitacion->save();
+        } else {
+            $habitacion->estado = 'Disponible';
         }
+        $habitacion->save();
 
         return redirect()->route('mantenimiento.reparacion.index')
             ->with('success', 'Registro de reparación creado exitosamente.');
@@ -158,15 +85,20 @@ class MantenimientoController extends Controller
 
         $limpieza->update($request->all());
 
-        // Si la limpieza se completa, actualizar estado de la habitación
-        if ($request->estado === 'completada') {
-            $habitacion = $limpieza->habitacion;
+        // Refrescar la relación
+        $limpieza->refresh();
+        $habitacion = $limpieza->habitacion;
+
+        if ($request->estado === 'completada' && $habitacion) {
             $habitacion->estado = 'Disponible';
+            $habitacion->save();
+        } else if (in_array($request->estado, ['pendiente', 'en_proceso']) && $habitacion) {
+            $habitacion->estado = 'Limpieza';
             $habitacion->save();
         }
 
         return redirect()->route('mantenimiento.limpieza.index')
-            ->with('success', 'Registro de limpieza actualizado exitosamente.');
+            ->with('success', 'Registro de limpieza actualizado exitosamente y estado de la habitación actualizado.');
     }
 
     public function updateReparacion(Request $request, Reparacion $reparacion)
@@ -179,14 +111,50 @@ class MantenimientoController extends Controller
 
         $reparacion->update($request->all());
 
-        // Si la reparación se completa, actualizar estado de la habitación
-        if ($request->estado === 'completada') {
-            $habitacion = $reparacion->habitacion;
+        // Refrescar la relación
+        $reparacion->refresh();
+        $habitacion = $reparacion->habitacion;
+
+        if ($request->estado === 'completada' && $habitacion) {
             $habitacion->estado = 'Disponible';
+            $habitacion->save();
+        } else if (in_array($request->estado, ['pendiente', 'en_proceso']) && $habitacion) {
+            $habitacion->estado = 'Mantenimiento';
             $habitacion->save();
         }
 
         return redirect()->route('mantenimiento.reparacion.index')
             ->with('success', 'Registro de reparación actualizado exitosamente.');
+    }
+
+    public function createLimpieza()
+    {
+        // Solo mostrar habitaciones que no estén ocupadas
+        $habitaciones = Habitacion::where('estado', '!=', 'Ocupada')->get();
+        return view('mantenimiento.limpieza.create', compact('habitaciones'));
+    }
+
+    public function createReparacion()
+    {
+        // Solo mostrar habitaciones que no estén ocupadas
+        $habitaciones = Habitacion::where('estado', '!=', 'Ocupada')->get();
+        return view('mantenimiento.reparacion.create', compact('habitaciones'));
+    }
+
+    public function indexLimpieza()
+    {
+        $limpiezas = Limpieza::with(['habitacion', 'user'])->latest()->get();
+        return view('mantenimiento.limpieza.index', compact('limpiezas'));
+    }
+
+    public function indexReparacion()
+    {
+        $reparaciones = Reparacion::with(['habitacion', 'user'])->latest()->get();
+        return view('mantenimiento.reparacion.index', compact('reparaciones'));
+    }
+
+    public function habitacion(): BelongsTo
+    {
+        return $this->belongsTo(Habitacion::class);
     }
 }

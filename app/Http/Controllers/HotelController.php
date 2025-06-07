@@ -28,7 +28,8 @@ class HotelController extends Controller
       'nombre_fiscal' => 'required|string|max:255',
       'direccion' => 'required|string|max:500',
       'simbolo_moneda' => 'required|string|max:5',
-      'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+      'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+      'session_lifetime' => 'required|integer|min:1|max:1440',
     ]);
 
     $hotel = Hotel::getInfo();
@@ -50,6 +51,7 @@ class HotelController extends Controller
     $hotel->nombre_fiscal = $request->nombre_fiscal;
     $hotel->direccion = $request->direccion;
     $hotel->simbolo_moneda = $request->simbolo_moneda;
+    $hotel->session_lifetime = $request->session_lifetime;
     $hotel->save();
 
     return redirect()->route('configuracion.hotel')

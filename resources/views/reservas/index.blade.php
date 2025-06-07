@@ -10,9 +10,11 @@
     <div class="card">
         <div class="card-header">
             <div class="float-right">
-                <a href="{{ route('reservas.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nueva Reserva
-                </a>
+                @can('crear reservas')
+                    <a href="{{ route('reservas.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nueva Reserva
+                    </a>
+                @endcan
             </div>
         </div>
         <div class="card-body">
@@ -41,26 +43,38 @@
                             <tr>
                                 <td>{{ $reserva->habitacion->numero }}</td>
                                 <td>
-                                    {{ $reserva->nombre_cliente }}<br>
-                                    <small class="text-muted">{{ $reserva->telefono }}</small>
+                                    {{ $reserva->cliente ? $reserva->cliente->nombre : $reserva->nombre_cliente }}<br>
+                                    <small
+                                        class="text-muted">{{ $reserva->cliente ? $reserva->cliente->telefono : $reserva->telefono_cliente }}</small>
+                                    @if ($reserva->cliente)
+                                        <br><small class="text-muted">NIT: {{ $reserva->cliente->nit }}</small>
+                                    @endif
                                 </td>
-                                <td>{{ $reserva->fecha_entrada->format('d/m/Y H:i') }}</td>
-                                <td>{{ $reserva->fecha_salida->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    {{ $reserva->fecha_entrada->format('d/m/Y') }}
+                                    <br>
+                                    <small class="text-muted">Check-in: 14:00</small>
+                                </td>
+                                <td>
+                                    {{ $reserva->fecha_salida->format('d/m/Y') }}
+                                    <br>
+                                    <small class="text-muted">Check-out: 12:30</small>
+                                </td>
                                 <td>
                                     @switch($reserva->estado)
-                                        @case('pendiente')
+                                        @case('Pendiente')
                                             <span class="badge badge-warning">Pendiente</span>
                                         @break
 
-                                        @case('activa')
-                                            <span class="badge badge-success">Activa</span>
+                                        @case('Check-in')
+                                            <span class="badge badge-success">Check-in</span>
                                         @break
 
-                                        @case('completada')
-                                            <span class="badge badge-info">Completada</span>
+                                        @case('Check-out')
+                                            <span class="badge badge-info">Check-out</span>
                                         @break
 
-                                        @case('cancelada')
+                                        @case('Cancelada')
                                             <span class="badge badge-danger">Cancelada</span>
                                         @break
                                     @endswitch
@@ -69,21 +83,46 @@
                                 <td>S/. {{ number_format($reserva->pendiente, 2) }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('reservas.show', $reserva) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('reservas.edit', $reserva) }}" class="btn btn-sm btn-warning">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('reservas.destroy', $reserva) }}" method="POST"
-                                            style="display: inline;"
-                                            onsubmit="return confirm('¿Está seguro de eliminar esta reserva?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        @can('ver reservas')
+                                            <a href="{{ route('reservas.show', $reserva) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endcan
+                                        @can('editar reservas')
+                                            <a href="{{ route('reservas.edit', $reserva) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcan
+                                        @can('eliminar reservas')
+                                            <form action="{{ route('reservas.destroy', $reserva) }}" method="POST"
+                                                style="display: inline;"
+                                                onsubmit="event.preventDefault();
+                                                    Swal.fire({
+                                                        title: '¿Está seguro de eliminar esta reserva?',
+                                                        icon: 'warning',
+                                                        showCancelButton: true,
+                                                        confirmButtonText: 'Sí, eliminar',
+                                                        cancelButtonText: 'Cancelar',
+                                                        reverseButtons: true
+                                                    }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            this.submit();
+                                                        }
+                                                    });
+                                                return false;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endcan
+                                        @if ($reserva->estado === 'Check-in')
+                                            <a href="{{ route('reservas.checkout', $reserva) }}"
+                                                class="btn btn-sm btn-danger">
+                                                <i class="fas fa-sign-out-alt"></i> Check-out
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

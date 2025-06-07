@@ -49,11 +49,11 @@ class Caja extends Model
 
     // Crear el movimiento
     $movimiento = new MovimientoCaja([
-      'user_id' => auth()->id(),
+      'user_id' => \Auth::id(),
       'tipo' => $tipo,
       'monto' => $monto,
       'concepto' => $concepto,
-      'observaciones' => $observaciones
+      'descripcion' => $observaciones
     ]);
 
     // Si hay un modelo relacionado (por ejemplo, una reserva)
@@ -71,5 +71,15 @@ class Caja extends Model
     $this->save();
 
     return $movimiento;
+  }
+
+  public function getTotalIngresosAttribute()
+  {
+    return $this->movimientos()->where('tipo', 'ingreso')->sum('monto');
+  }
+
+  public function getTotalEgresosAttribute()
+  {
+    return $this->movimientos()->where('tipo', 'egreso')->sum('monto');
   }
 }

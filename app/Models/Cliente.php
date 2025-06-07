@@ -20,4 +20,10 @@ class Cliente extends Model
     {
         return $this->hasMany(Reserva::class);
     }
+
+    // Mutador para siempre guardar el nombre en mayúsculas
+    public function setNombreAttribute($value)
+    {
+        $this->attributes['nombre'] = strtoupper($value);
+    }
 }

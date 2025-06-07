@@ -66,13 +66,14 @@ class CajaController extends Controller
     }
 
     // Verificar si ya existe una caja abierta para ese turno
-    $cajaExistente = Caja::where('turno', $request->turno)
+    $cajaAbiertaTurno = Caja::where('user_id', $request->user_id)
+      ->where('turno', $request->turno)
       ->where('estado', true)
       ->first();
 
-    if ($cajaExistente) {
+    if ($cajaAbiertaTurno) {
       return redirect()->back()
-        ->with('error', 'Ya existe una caja abierta para este turno.');
+        ->with('error', 'Ya tienes una caja abierta para este turno.');
     }
 
     $caja = new Caja([
@@ -103,7 +104,32 @@ class CajaController extends Controller
         ->with('error', 'Ya tienes una caja abierta.');
     }
 
-    return view('cajas.create');
+    // Determinar el turno sugerido basado en la hora actual
+    $horaActual = Carbon::now()->hour;
+    $turnoSugerido = ($horaActual >= 6 && $horaActual < 18) ? 'matutino' : 'nocturno';
+
+    // Verificar si ya existe una caja abierta para el turno sugerido
+    $cajaExistente = Caja::where('turno', $turnoSugerido)
+      ->where('estado', true)
+      ->first();
+
+    if ($cajaExistente) {
+      $mensaje = 'Ya existe una caja abierta para el turno ' . ($turnoSugerido == 'matutino' ? 'de mañana' : 'de noche') .
+        ' por el usuario ' . $cajaExistente->user->name . '.';
+      $turnoAlternativo = $turnoSugerido == 'matutino' ? 'nocturno' : 'matutino';
+
+      // Verificar si también hay una caja abierta para el turno alternativo
+      $cajaAlternativa = Caja::where('turno', $turnoAlternativo)
+        ->where('estado', true)
+        ->first();
+
+      if ($cajaAlternativa) {
+        return redirect()->route('cajas.index')
+          ->with('error', 'Ya existen cajas abiertas para ambos turnos. No se puede abrir una nueva caja.');
+      }
+    }
+
+    return view('cajas.create', compact('turnoSugerido'));
   }
 
   public function store(Request $request)
@@ -114,14 +140,38 @@ class CajaController extends Controller
       'observaciones_apertura' => 'nullable|string'
     ]);
 
-    // Verificar si ya existe una caja abierta para ese turno
-    $cajaExistente = Caja::where('turno', $request->turno)
+    // Verificar si el usuario ya tiene una caja abierta
+    $cajaUsuario = Caja::where('user_id', Auth::id())
       ->where('estado', true)
       ->first();
 
-    if ($cajaExistente) {
+    if ($cajaUsuario) {
       return redirect()->back()
-        ->with('error', 'Ya existe una caja abierta para este turno.');
+        ->with('error', 'Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.');
+    }
+
+    // Verificar si ya existe una caja abierta para ese turno
+    $cajaAbiertaTurno = Caja::where('user_id', Auth::id())
+      ->where('turno', $request->turno)
+      ->where('estado', true)
+      ->first();
+
+    if ($cajaAbiertaTurno) {
+      return redirect()->back()
+        ->with('error', 'Ya tienes una caja abierta para este turno.');
+    }
+
+    // Determinar el turno sugerido basado en la hora actual
+    $horaActual = Carbon::now()->hour;
+    $turnoSugerido = ($horaActual >= 6 && $horaActual < 18) ? 'matutino' : 'nocturno';
+
+    // Mostrar advertencia si el turno seleccionado no coincide con la hora actual
+    $mensajeAdicional = '';
+    if ($request->turno != $turnoSugerido) {
+      $mensajeAdicional = ' Nota: Has seleccionado el turno ' .
+        ($request->turno == 'matutino' ? 'matutino (mañana)' : 'nocturno (noche)') .
+        ' pero la hora actual sugiere el turno ' .
+        ($turnoSugerido == 'matutino' ? 'matutino (mañana)' : 'nocturno (noche)') . '.';
     }
 
     $caja = new Caja([
@@ -137,14 +187,15 @@ class CajaController extends Controller
     $caja->save();
 
     return redirect()->route('cajas.show', $caja)
-      ->with('success', 'Caja abierta exitosamente.');
+      ->with('success', 'Caja abierta exitosamente.' . $mensajeAdicional);
   }
 
   public function show(Caja $caja)
   {
     $this->authorize('view', $caja);
-    $caja->load(['user', 'movimientos.user', 'movimientos.movimientable']);
-    return view('cajas.show', compact('caja'));
+    $caja->load(['user']);
+    $movimientos = $caja->movimientos()->paginate(10); // Paginar los movimientos
+    return view('cajas.show', compact('caja', 'movimientos'));
   }
 
   public function edit(Caja $caja)

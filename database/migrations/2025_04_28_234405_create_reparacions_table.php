@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('habitacion_id')->constrained('habitacions')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('fecha');
+            $table->date('fecha_fin')->nullable();
             $table->time('hora');
+            $table->time('hora_fin')->nullable();
             $table->enum('estado', ['pendiente', 'en_proceso', 'completada']);
             $table->string('tipo_reparacion');
             $table->decimal('costo', 10, 2)->default(0);

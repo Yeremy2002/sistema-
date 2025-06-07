@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             'ver reservas',
             'crear reservas',
             'editar reservas',
+            'eliminar reservas',
             'cancelar reservas',
 
             // Clientes

@@ -14,7 +14,9 @@ class Reparacion extends Model
         'habitacion_id',
         'user_id',
         'fecha',
+        'fecha_fin',
         'hora',
+        'hora_fin',
         'estado',
         'tipo_reparacion',
         'costo',
@@ -24,7 +26,9 @@ class Reparacion extends Model
 
     protected $casts = [
         'fecha' => 'date',
+        'fecha_fin' => 'date',
         'hora' => 'datetime',
+        'hora_fin' => 'datetime',
         'costo' => 'decimal:2'
     ];
 

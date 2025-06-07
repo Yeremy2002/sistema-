@@ -9,8 +9,9 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('reservas.store', $habitacione) }}" method="POST">
+            <form action="{{ route('reservas.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="habitacion_id" value="{{ $habitacione->id }}">
 
                 <div class="row">
                     <div class="col-md-6">
@@ -27,10 +28,18 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="documento_identidad">Documento de Identidad</label>
-                            <input type="text" name="documento_identidad" id="documento_identidad"
-                                class="form-control @error('documento_identidad') is-invalid @enderror"
-                                value="{{ old('documento_identidad') }}" required>
+                            <label for="documento_identidad">Documento de Identidad (DPI)</label>
+                            <div class="input-group">
+                                <input type="text" name="documento_identidad" id="documento_identidad"
+                                    class="form-control @error('documento_identidad') is-invalid @enderror"
+                                    value="{{ old('documento_identidad') }}" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" id="buscar-por-dpi">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Será usado también como NIT si no se especifica otro</small>
                             @error('documento_identidad')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -39,6 +48,24 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nit">NIT (Opcional)</label>
+                            <div class="input-group">
+                                <input type="text" name="nit" id="nit"
+                                    class="form-control @error('nit') is-invalid @enderror" value="{{ old('nit') }}">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" id="buscar-por-nit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Si se deja vacío, se usará el DPI como NIT</small>
+                            @error('nit')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="telefono">Teléfono</label>
@@ -67,10 +94,18 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_entrada">Fecha de Entrada</label>
+                            <label for="fecha_entrada">Fecha de Entrada <span class="text-muted">(Check-in
+                                    14:00)</span></label>
                             <input type="date" name="fecha_entrada" id="fecha_entrada"
                                 class="form-control @error('fecha_entrada') is-invalid @enderror"
-                                value="{{ old('fecha_entrada', date('Y-m-d')) }}" required>
+                                value="{{ old('fecha_entrada', $fechaActual ?? date('Y-m-d')) }}" required>
+                            <small class="form-text text-info">
+                                <i class="fas fa-info-circle"></i> El check-in siempre se realiza a las 14:00 horas
+                            </small>
+                            <small class="form-text text-danger">
+                                <i class="fas fa-calendar-day"></i> Fecha actual del sistema: {{ date('d/m/Y') }}
+                                ({{ date('l') }})
+                            </small>
                             @error('fecha_entrada')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -79,10 +114,14 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_salida">Fecha de Salida</label>
+                            <label for="fecha_salida">Fecha de Salida <span class="text-muted">(Check-out
+                                    12:30)</span></label>
                             <input type="date" name="fecha_salida" id="fecha_salida"
                                 class="form-control @error('fecha_salida') is-invalid @enderror"
                                 value="{{ old('fecha_salida') }}" required>
+                            <small class="form-text text-info">
+                                <i class="fas fa-info-circle"></i> El check-out debe realizarse a las 12:30 horas
+                            </small>
                             @error('fecha_salida')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -146,15 +185,18 @@
                 return date;
             }
 
-            // Configurar fecha de entrada
-            let now = new Date();
-            // Si es después de la hora de check-in, programar para el día siguiente
-            if (now.getHours() >= 14 || (now.getHours() === 14 && now.getMinutes() > 0)) {
-                now.setDate(now.getDate() + 1);
-            }
+            // Usar la fecha actual del sistema sin modificaciones
+            let fechaPhp = '{{ $fechaActual ?? date('Y-m-d') }}';
+            let now = new Date(fechaPhp);
+
+            // Establecer la hora de check-in sin cambiar la fecha
             now = setCheckInTime(now);
-            fechaEntrada.min = now.toISOString().split('T')[0];
-            fechaEntrada.value = now.toISOString().split('T')[0];
+            fechaEntrada.min = fechaPhp;
+            fechaEntrada.value = fechaPhp;
+
+            // Mostrar fecha seleccionada para debug
+            console.log('Fecha de entrada seleccionada (PHP):', fechaPhp);
+            console.log('Fecha JavaScript:', now.toISOString().split('T')[0]);
 
             // Configurar fecha de salida mínima
             fechaEntrada.addEventListener('change', function() {
@@ -166,9 +208,17 @@
                 minSalida.setDate(minSalida.getDate() + 1);
                 setCheckOutTime(minSalida);
 
-                fechaSalida.min = minSalida.toISOString().split('T')[0];
-                if (fechaSalida.value && new Date(fechaSalida.value) <= entrada) {
-                    fechaSalida.value = minSalida.toISOString().split('T')[0];
+                // Convertir a formato YYYY-MM-DD sin dependencia de toISOString
+                const salida_año = minSalida.getFullYear();
+                const salida_mes = String(minSalida.getMonth() + 1).padStart(2, '0');
+                const salida_dia = String(minSalida.getDate()).padStart(2, '0');
+                const fechaSalidaStr = `${salida_año}-${salida_mes}-${salida_dia}`;
+
+                console.log('Fecha salida calculada:', fechaSalidaStr);
+
+                fechaSalida.min = fechaSalidaStr;
+                if (!fechaSalida.value || new Date(fechaSalida.value) <= entrada) {
+                    fechaSalida.value = fechaSalidaStr;
                 }
             });
 
@@ -177,6 +227,48 @@
                 const salida = new Date(this.value);
                 setCheckOutTime(salida);
             });
+
+            // Buscar cliente por DPI o NIT
+            document.getElementById('buscar-por-dpi').addEventListener('click', function() {
+                buscarCliente('dpi', document.getElementById('documento_identidad').value);
+            });
+
+            document.getElementById('buscar-por-nit').addEventListener('click', function() {
+                buscarCliente('nit', document.getElementById('nit').value);
+            });
+
+            // Función para buscar cliente por DPI o NIT
+            function buscarCliente(tipo, valor) {
+                if (!valor) {
+                    alert('Debe ingresar un ' + tipo.toUpperCase() + ' para buscar.');
+                    return;
+                }
+
+                // Realizar petición AJAX para buscar cliente
+                fetch(`/api/clientes/buscar-por-${tipo}/${valor}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la búsqueda');
+                        }
+                        return response.json();
+                    })
+                    .then(cliente => {
+                        if (cliente) {
+                            // Llenar formulario con datos del cliente
+                            document.getElementById('nombre_cliente').value = cliente.nombre;
+                            document.getElementById('documento_identidad').value = cliente.dpi;
+                            document.getElementById('nit').value = cliente.nit;
+                            document.getElementById('telefono').value = cliente.telefono;
+                            alert('Cliente encontrado. Se han cargado sus datos.');
+                        } else {
+                            alert('No se encontró ningún cliente con ese ' + tipo.toUpperCase() + '.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al buscar el cliente.');
+                    });
+            }
 
             // Trigger inicial para establecer las fechas correctamente
             fechaEntrada.dispatchEvent(new Event('change'));

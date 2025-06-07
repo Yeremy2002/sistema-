@@ -18,7 +18,7 @@ class MovimientoCaja extends Model
     'tipo',
     'monto',
     'concepto',
-    'observaciones',
+    'descripcion',
     'movimientable_type',
     'movimientable_id'
   ];

@@ -7,6 +7,51 @@
 @stop
 
 @section('content')
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: '{{ session('success') }}',
+                timer: 3500,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '{{ session('error') }}',
+                timer: 3500,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+    @if (session('warning'))
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Advertencia',
+                text: '{{ session('warning') }}',
+                timer: 3500,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+    @if (session('info'))
+        <script>
+            Swal.fire({
+                icon: 'info',
+                title: 'Información',
+                text: '{{ session('info') }}',
+                timer: 3500,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Lista de Habitaciones</h3>
@@ -17,12 +62,6 @@
             </div>
         </div>
         <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
-
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -73,7 +112,20 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('¿Está seguro de eliminar esta habitación?')">
+                                            onclick="event.preventDefault();
+                                                Swal.fire({
+                                                    title: '¿Está seguro de eliminar esta habitación?',
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Sí, eliminar',
+                                                    cancelButtonText: 'Cancelar',
+                                                    reverseButtons: true
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        this.closest('form').submit();
+                                                    }
+                                                });
+                                            return false;">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>

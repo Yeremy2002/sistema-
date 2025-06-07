@@ -52,6 +52,20 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha Fin</label>
+                            <input type="date" name="fecha_fin" id="fecha_fin" class="form-control"
+                                value="{{ old('fecha_fin') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="hora_fin">Hora Fin</label>
+                            <input type="time" name="hora_fin" id="hora_fin" class="form-control"
+                                value="{{ old('hora_fin') }}">
+                        </div>
+                    </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="tipo_reparacion">Tipo de Reparación</label>

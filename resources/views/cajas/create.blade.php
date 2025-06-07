@@ -9,6 +9,12 @@
 @section('content')
     <div class="card">
         <div class="card-body">
+            @if (isset($turnoSugerido))
+                <div class="alert alert-info">
+                    <strong>Turno sugerido:</strong>
+                    {{ $turnoSugerido == 'matutino' ? 'Matutino (mañana)' : 'Nocturno (noche)' }} basado en la hora actual.
+                </div>
+            @endif
             <form action="{{ route('cajas.store') }}" method="POST">
                 @csrf
                 <div class="row">
