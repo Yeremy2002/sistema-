@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Landing API</title>
+</head>
+<body>
+    <h1>Debug Landing API</h1>
+    <button onclick="testAvailability()">Test Availability</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = '/api';
+        
+        async function testAvailability() {
+            console.log('Testing availability...');
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Same parameters as the landing page
+                const params = {
+                    checkin: '2025-10-17',
+                    checkout: '2025-10-18',
+                    guests: 2
+                };
+                
+                const baseUrl = `${API_BASE_URL}/reservas/disponibilidad`;
+                const queryParams = new URLSearchParams({
+                    fecha_entrada: params.checkin,
+                    fecha_salida: params.checkout,
+                    huespedes: params.guests
+                });
+                const fullUrl = `${baseUrl}?${queryParams.toString()}`;
+                
+                console.log('Making request to:', fullUrl);
+                
+                const response = await fetch(fullUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                console.log('Response:', response);
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                resultDiv.innerHTML = '<p style="color: green;">Success! Found ' + data.data.total_disponibles + ' rooms</p>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Test immediately on load
+        window.onload = testAvailability;
+    </script>
+</body>
+</html>

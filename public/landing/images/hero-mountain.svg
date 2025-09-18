@@ -1,0 +1,119 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Sky gradient -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EDE9DA;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#DDCAA4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BEA572;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Mountain gradient -->
+    <linearGradient id="mountainGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7A47;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#664D07;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="mountainGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#BEA572;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7A47;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Hotel building gradient -->
+    <linearGradient id="buildingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DDCAA4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BEA572;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="1200" height="600" fill="url(#skyGradient)"/>
+  
+  <!-- Distant mountains -->
+  <path d="M0 300 L150 200 L300 250 L450 180 L600 220 L750 160 L900 200 L1050 140 L1200 180 L1200 600 L0 600 Z" 
+        fill="url(#mountainGradient2)" opacity="0.6"/>
+  
+  <!-- Main mountain range -->
+  <path d="M0 400 L100 280 L200 320 L350 250 L500 300 L650 220 L800 280 L950 200 L1100 260 L1200 240 L1200 600 L0 600 Z" 
+        fill="url(#mountainGradient1)"/>
+  
+  <!-- Foreground hills -->
+  <path d="M0 500 L200 450 L400 480 L600 440 L800 470 L1000 430 L1200 450 L1200 600 L0 600 Z" 
+        fill="#8B7A47" opacity="0.8"/>
+  
+  <!-- Hotel building complex -->
+  <g transform="translate(400, 350)">
+    <!-- Main building -->
+    <rect x="0" y="50" width="120" height="80" fill="url(#buildingGradient)" stroke="#664D07" stroke-width="2"/>
+    
+    <!-- Main roof -->
+    <path d="M-10 50 L60 20 L130 50 Z" fill="#DC8711" stroke="#664D07" stroke-width="2"/>
+    
+    <!-- Side building -->
+    <rect x="120" y="70" width="80" height="60" fill="url(#buildingGradient)" stroke="#664D07" stroke-width="2"/>
+    <path d="M110 70 L160 45 L210 70 Z" fill="#DC8711" stroke="#664D07" stroke-width="2"/>
+    
+    <!-- Windows -->
+    <rect x="20" y="70" width="15" height="20" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    <rect x="45" y="70" width="15" height="20" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    <rect x="70" y="70" width="15" height="20" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    <rect x="95" y="70" width="15" height="20" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    
+    <!-- Side building windows -->
+    <rect x="135" y="85" width="12" height="15" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    <rect x="155" y="85" width="12" height="15" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    <rect x="175" y="85" width="12" height="15" fill="#DDCAA4" stroke="#664D07" stroke-width="1"/>
+    
+    <!-- Main entrance -->
+    <rect x="50" y="100" width="20" height="30" fill="#664D07"/>
+    <path d="M50 115 Q60 110 70 115" stroke="#BEA572" stroke-width="2" fill="none"/>
+    
+    <!-- Chimney -->
+    <rect x="80" y="15" width="8" height="25" fill="#664D07"/>
+    
+    <!-- Balcony -->
+    <rect x="40" y="95" width="40" height="3" fill="#8B7A47"/>
+    <line x1="45" y1="95" x2="45" y2="105" stroke="#8B7A47" stroke-width="2"/>
+    <line x1="55" y1="95" x2="55" y2="105" stroke="#8B7A47" stroke-width="2"/>
+    <line x1="65" y1="95" x2="65" y2="105" stroke="#8B7A47" stroke-width="2"/>
+    <line x1="75" y1="95" x2="75" y2="105" stroke="#8B7A47" stroke-width="2"/>
+  </g>
+  
+  <!-- Trees around the hotel -->
+  <g>
+    <!-- Tree 1 -->
+    <rect x="350" y="480" width="8" height="40" fill="#664D07"/>
+    <circle cx="354" cy="470" r="25" fill="#8B7A47" opacity="0.8"/>
+    
+    <!-- Tree 2 -->
+    <rect x="580" y="470" width="10" height="50" fill="#664D07"/>
+    <circle cx="585" cy="460" r="30" fill="#8B7A47" opacity="0.8"/>
+    
+    <!-- Tree 3 -->
+    <rect x="320" y="490" width="6" height="30" fill="#664D07"/>
+    <circle cx="323" cy="485" r="20" fill="#8B7A47" opacity="0.8"/>
+    
+    <!-- Tree 4 -->
+    <rect x="650" y="485" width="8" height="35" fill="#664D07"/>
+    <circle cx="654" cy="480" r="22" fill="#8B7A47" opacity="0.8"/>
+  </g>
+  
+  <!-- Clouds -->
+  <g opacity="0.3">
+    <ellipse cx="200" cy="100" rx="40" ry="20" fill="white"/>
+    <ellipse cx="220" cy="95" rx="35" ry="18" fill="white"/>
+    <ellipse cx="180" cy="95" rx="30" ry="15" fill="white"/>
+    
+    <ellipse cx="800" cy="80" rx="50" ry="25" fill="white"/>
+    <ellipse cx="825" cy="75" rx="40" ry="20" fill="white"/>
+    <ellipse cx="775" cy="75" rx="35" ry="18" fill="white"/>
+    
+    <ellipse cx="1000" cy="120" rx="45" ry="22" fill="white"/>
+    <ellipse cx="1020" cy="115" rx="38" ry="19" fill="white"/>
+  </g>
+  
+  <!-- Sun rays effect -->
+  <g opacity="0.2">
+    <path d="M1100 50 L1000 200 L1200 200 Z" fill="#DC8711"/>
+    <path d="M1050 30 L950 180 L1150 180 Z" fill="#DC8711"/>
+  </g>
+</svg>

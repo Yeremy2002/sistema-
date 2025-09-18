@@ -1,0 +1,101 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wallGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EDE9DA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DDCAA4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="floorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#BEA572;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7A47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Room background -->
+  <rect width="400" height="300" fill="url(#wallGradient)"/>
+  
+  <!-- Floor -->
+  <rect x="0" y="200" width="400" height="100" fill="url(#floorGradient)"/>
+  
+  <!-- Large window with mountain view -->
+  <rect x="250" y="20" width="140" height="120" fill="#DDCAA4" stroke="#664D07" stroke-width="3"/>
+  <rect x="255" y="25" width="130" height="110" fill="#EDE9DA"/>
+  
+  <!-- Mountain view -->
+  <rect x="255" y="25" width="130" height="110" fill="#BEA572"/>
+  <path d="M255 70 L300 40 L340 55 L370 35 L385 45 L385 135 L255 135 Z" fill="#8B7A47"/>
+  <path d="M255 95 L285 80 L320 90 L350 75 L385 85 L385 135 L255 135 Z" fill="#664D07"/>
+  
+  <!-- Window frame -->
+  <line x1="320" y1="25" x2="320" y2="135" stroke="#664D07" stroke-width="3"/>
+  <line x1="255" y1="80" x2="385" y2="80" stroke="#664D07" stroke-width="3"/>
+  
+  <!-- Balcony door -->
+  <rect x="300" y="140" width="80" height="60" fill="#DDCAA4" stroke="#664D07" stroke-width="2"/>
+  <rect x="305" y="145" width="70" height="50" fill="#EDE9DA"/>
+  <circle cx="370" cy="170" r="3" fill="#664D07"/>
+  
+  <!-- King size bed -->
+  <rect x="30" y="130" width="150" height="90" fill="#DC8711" stroke="#664D07" stroke-width="2"/>
+  <rect x="25" y="125" width="160" height="12" fill="#8B7A47"/>
+  
+  <!-- Luxury pillows -->
+  <rect x="45" y="135" width="30" height="18" fill="#DDCAA4" stroke="#BEA572" stroke-width="1"/>
+  <rect x="80" y="135" width="30" height="18" fill="#DDCAA4" stroke="#BEA572" stroke-width="1"/>
+  <rect x="115" y="135" width="30" height="18" fill="#DDCAA4" stroke="#BEA572" stroke-width="1"/>
+  <rect x="150" y="135" width="30" height="18" fill="#DDCAA4" stroke="#BEA572" stroke-width="1"/>
+  
+  <!-- Bedside tables -->
+  <rect x="190" y="150" width="35" height="45" fill="#8B7A47" stroke="#664D07" stroke-width="1"/>
+  <rect x="195" y="155" width="25" height="3" fill="#664D07"/>
+  <rect x="195" y="170" width="25" height="3" fill="#664D07"/>
+  
+  <rect x="10" y="150" width="35" height="45" fill="#8B7A47" stroke="#664D07" stroke-width="1"/>
+  <rect x="15" y="155" width="25" height="3" fill="#664D07"/>
+  <rect x="15" y="170" width="25" height="3" fill="#664D07"/>
+  
+  <!-- Elegant lamps -->
+  <rect x="200" y="140" width="4" height="20" fill="#664D07"/>
+  <ellipse cx="202" cy="135" rx="12" ry="8" fill="#DDCAA4" stroke="#8B7A47" stroke-width="1"/>
+  
+  <rect x="20" y="140" width="4" height="20" fill="#664D07"/>
+  <ellipse cx="22" cy="135" rx="12" ry="8" fill="#DDCAA4" stroke="#8B7A47" stroke-width="1"/>
+  
+  <!-- Armchair -->
+  <rect x="240" y="170" width="35" height="40" fill="#8B7A47" stroke="#664D07" stroke-width="2"/>
+  <rect x="240" y="160" width="35" height="15" fill="#BEA572"/>
+  <rect x="270" y="160" width="8" height="25" fill="#BEA572"/>
+  
+  <!-- Coffee table -->
+  <ellipse cx="220" cy="240" rx="25" ry="15" fill="#8B7A47" stroke="#664D07" stroke-width="2"/>
+  
+  <!-- Large TV -->
+  <rect x="80" y="40" width="80" height="50" fill="#664D07" stroke="#8B7A47" stroke-width="2"/>
+  <rect x="85" y="45" width="70" height="40" fill="#BEA572"/>
+  
+  <!-- Minibar -->
+  <rect x="10" y="80" width="40" height="30" fill="#8B7A47" stroke="#664D07" stroke-width="1"/>
+  <rect x="15" y="85" width="30" height="3" fill="#664D07"/>
+  <circle cx="45" cy="95" r="2" fill="#664D07"/>
+  
+  <!-- Ceiling chandelier -->
+  <circle cx="150" cy="25" r="20" fill="#DDCAA4" stroke="#8B7A47" stroke-width="2"/>
+  <circle cx="150" cy="25" r="12" fill="#DC8711" opacity="0.6"/>
+  <circle cx="140" cy="30" r="3" fill="#DC8711"/>
+  <circle cx="160" cy="30" r="3" fill="#DC8711"/>
+  <circle cx="150" cy="35" r="3" fill="#DC8711"/>
+  
+  <!-- Luxury carpet -->
+  <ellipse cx="120" cy="250" rx="60" ry="25" fill="#DC8711" opacity="0.8"/>
+  <ellipse cx="120" cy="250" rx="45" ry="18" fill="#BEA572" opacity="0.6"/>
+  
+  <!-- Wall art -->
+  <rect x="60" y="100" width="30" height="40" fill="#BEA572" stroke="#8B7A47" stroke-width="2"/>
+  <rect x="65" y="105" width="20" height="30" fill="#DDCAA4"/>
+  
+  <!-- Balcony railing visible -->
+  <rect x="300" y="200" width="80" height="5" fill="#8B7A47"/>
+  <line x1="310" y1="200" x2="310" y2="210" stroke="#8B7A47" stroke-width="2"/>
+  <line x1="330" y1="200" x2="330" y2="210" stroke="#8B7A47" stroke-width="2"/>
+  <line x1="350" y1="200" x2="350" y2="210" stroke="#8B7A47" stroke-width="2"/>
+  <line x1="370" y1="200" x2="370" y2="210" stroke="#8B7A47" stroke-width="2"/>
+</svg>

@@ -1,0 +1,163 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#EDE9DA;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#DDCAA4;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#BEA572;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7A47;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountain1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7A47;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#664D07;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountain2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#BEA572;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7A47;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountain3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DDCAA4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BEA572;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="400" height="300" fill="url(#skyGradient)"/>
+  
+  <!-- Distant mountain layers -->
+  <!-- Layer 1 (farthest) -->
+  <path d="M0 120 L50 80 L100 100 L150 70 L200 90 L250 60 L300 80 L350 50 L400 70 L400 300 L0 300 Z" 
+        fill="url(#mountain3)" opacity="0.4"/>
+  
+  <!-- Layer 2 -->
+  <path d="M0 140 L60 100 L120 120 L180 90 L240 110 L300 80 L360 100 L400 85 L400 300 L0 300 Z" 
+        fill="url(#mountain2)" opacity="0.6"/>
+  
+  <!-- Layer 3 -->
+  <path d="M0 160 L80 120 L140 140 L200 110 L260 130 L320 100 L380 120 L400 110 L400 300 L0 300 Z" 
+        fill="url(#mountain1)" opacity="0.8"/>
+  
+  <!-- Main mountain range -->
+  <path d="M0 200 L70 150 L130 170 L190 140 L250 160 L310 130 L370 150 L400 140 L400 300 L0 300 Z" 
+        fill="url(#mountain1)"/>
+  
+  <!-- Foreground hills with vegetation -->
+  <path d="M0 240 L100 220 L200 230 L300 210 L400 220 L400 300 L0 300 Z" 
+        fill="#8B7A47"/>
+  
+  <!-- Valley with river -->
+  <path d="M50 280 Q150 270 250 275 Q300 278 350 270" 
+        stroke="#BEA572" stroke-width="6" fill="none" opacity="0.8"/>
+  <path d="M50 280 Q150 270 250 275 Q300 278 350 270" 
+        stroke="#DDCAA4" stroke-width="3" fill="none" opacity="0.6"/>
+  
+  <!-- Trees on hills -->
+  <!-- Tree cluster 1 -->
+  <g transform="translate(80, 210)">
+    <rect x="0" y="15" width="4" height="20" fill="#664D07"/>
+    <ellipse cx="2" cy="10" rx="8" ry="12" fill="#8B7A47" opacity="0.9"/>
+    
+    <rect x="10" y="18" width="3" height="15" fill="#664D07"/>
+    <ellipse cx="11" cy="13" rx="6" ry="10" fill="#8B7A47" opacity="0.9"/>
+    
+    <rect x="-8" y="20" width="3" height="12" fill="#664D07"/>
+    <ellipse cx="-6" cy="16" rx="5" ry="8" fill="#8B7A47" opacity="0.9"/>
+  </g>
+  
+  <!-- Tree cluster 2 -->
+  <g transform="translate(220, 200)">
+    <rect x="0" y="20" width="5" height="25" fill="#664D07"/>
+    <ellipse cx="2" cy="15" rx="10" ry="15" fill="#8B7A47" opacity="0.9"/>
+    
+    <rect x="15" y="25" width="4" height="18" fill="#664D07"/>
+    <ellipse cx="17" cy="20" rx="8" ry="12" fill="#8B7A47" opacity="0.9"/>
+    
+    <rect x="-10" y="28" width="3" height="15" fill="#664D07"/>
+    <ellipse cx="-8" cy="24" rx="6" ry="9" fill="#8B7A47" opacity="0.9"/>
+  </g>
+  
+  <!-- Tree cluster 3 -->
+  <g transform="translate(320, 195)">
+    <rect x="0" y="25" width="4" height="20" fill="#664D07"/>
+    <ellipse cx="2" cy="20" rx="7" ry="12" fill="#8B7A47" opacity="0.9"/>
+    
+    <rect x="12" y="30" width="3" height="15" fill="#664D07"/>
+    <ellipse cx="13" cy="26" rx="5" ry="9" fill="#8B7A47" opacity="0.9"/>
+  </g>
+  
+  <!-- Clouds in the sky -->
+  <g opacity="0.6">
+    <!-- Cloud 1 -->
+    <ellipse cx="80" cy="50" rx="20" ry="10" fill="white"/>
+    <ellipse cx="95" cy="45" rx="18" ry="9" fill="white"/>
+    <ellipse cx="65" cy="45" rx="15" ry="8" fill="white"/>
+    <ellipse cx="80" cy="40" rx="12" ry="6" fill="white"/>
+    
+    <!-- Cloud 2 -->
+    <ellipse cx="200" cy="40" rx="25" ry="12" fill="white"/>
+    <ellipse cx="220" cy="35" rx="22" ry="11" fill="white"/>
+    <ellipse cx="180" cy="35" rx="18" ry="9" fill="white"/>
+    <ellipse cx="200" cy="30" rx="15" ry="7" fill="white"/>
+    
+    <!-- Cloud 3 -->
+    <ellipse cx="320" cy="60" rx="18" ry="9" fill="white"/>
+    <ellipse cx="335" cy="55" rx="15" ry="8" fill="white"/>
+    <ellipse cx="305" cy="55" rx="12" ry="7" fill="white"/>
+  </g>
+  
+  <!-- Birds flying -->
+  <g stroke="#664D07" stroke-width="1" fill="none" opacity="0.7">
+    <path d="M120 80 Q125 75 130 80 Q135 75 140 80"/>
+    <path d="M160 90 Q165 85 170 90 Q175 85 180 90"/>
+    <path d="M250 70 Q255 65 260 70 Q265 65 270 70"/>
+    <path d="M280 85 Q285 80 290 85 Q295 80 300 85"/>
+  </g>
+  
+  <!-- Sun setting behind mountains -->
+  <circle cx="300" cy="90" r="25" fill="#DC8711" opacity="0.7"/>
+  <circle cx="300" cy="90" r="18" fill="#DC8711" opacity="0.9"/>
+  
+  <!-- Sun rays -->
+  <g stroke="#DC8711" stroke-width="2" opacity="0.3">
+    <line x1="300" y1="50" x2="300" y2="65"/>
+    <line x1="300" y1="115" x2="300" y2="130"/>
+    <line x1="260" y1="90" x2="275" y2="90"/>
+    <line x1="325" y1="90" x2="340" y2="90"/>
+    <line x1="275" y1="65" x2="285" y2="75"/>
+    <line x1="315" y1="105" x2="325" y2="115"/>
+    <line x1="325" y1="65" x2="315" y2="75"/>
+    <line x1="285" y1="105" x2="275" y2="115"/>
+  </g>
+  
+  <!-- Atmospheric haze -->
+  <rect x="0" y="100" width="400" height="50" fill="#DDCAA4" opacity="0.2"/>
+  <rect x="0" y="150" width="400" height="30" fill="#BEA572" opacity="0.1"/>
+  
+  <!-- Wildflowers in foreground -->
+  <g>
+    <!-- Flower 1 -->
+    <circle cx="30" cy="260" r="2" fill="#DC8711"/>
+    <rect x="29" y="262" width="2" height="8" fill="#8B7A47"/>
+    
+    <!-- Flower 2 -->
+    <circle cx="50" cy="265" r="1.5" fill="#BEA572"/>
+    <rect x="49" y="266" width="2" height="6" fill="#8B7A47"/>
+    
+    <!-- Flower 3 -->
+    <circle cx="370" cy="255" r="2" fill="#DC8711"/>
+    <rect x="369" y="257" width="2" height="8" fill="#8B7A47"/>
+    
+    <!-- Flower 4 -->
+    <circle cx="385" cy="260" r="1.5" fill="#BEA572"/>
+    <rect x="384" y="261" width="2" height="6" fill="#8B7A47"/>
+  </g>
+  
+  <!-- Grass details -->
+  <g stroke="#8B7A47" stroke-width="1" opacity="0.6">
+    <line x1="20" y1="270" x2="22" y2="280"/>
+    <line x1="25" y1="275" x2="27" y2="285"/>
+    <line x1="35" y1="272" x2="37" y2="282"/>
+    <line x1="360" y1="265" x2="362" y2="275"/>
+    <line x1="375" y1="270" x2="377" y2="280"/>
+    <line x1="390" y1="268" x2="392" y2="278"/>
+  </g>
+</svg>

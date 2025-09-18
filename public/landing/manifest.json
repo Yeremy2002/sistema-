@@ -1,0 +1,197 @@
+{
+  "name": "Casa Vieja Hotel y Restaurante",
+  "short_name": "Casa Vieja",
+  "description": "Tu hogar en el corazón de la montaña. Habitaciones acogedoras, comida de casa y vistas que enamoran.",
+  "start_url": "/?utm_source=pwa",
+  "display": "standalone",
+  "background_color": "#EDE9DA",
+  "theme_color": "#DC8711",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["travel", "hospitality", "restaurant", "lifestyle"],
+  "icons": [
+    {
+      "src": "images/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icons/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icons/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "images/screenshots/desktop-wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Vista de escritorio - Casa Vieja Hotel"
+    },
+    {
+      "src": "images/screenshots/mobile-narrow.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Vista móvil - Reservas y habitaciones"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hacer Reserva",
+      "short_name": "Reservar",
+      "description": "Reserva directa en Casa Vieja Hotel",
+      "url": "/?action=reservar#reservas",
+      "icons": [
+        {
+          "src": "images/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "WhatsApp",
+      "short_name": "Chat",
+      "description": "Contactar por WhatsApp",
+      "url": "https://wa.me/573001234567?text=Hola!%20Me%20interesa%20información%20sobre%20Casa%20Vieja%20Hotel",
+      "icons": [
+        {
+          "src": "images/icons/whatsapp-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Galería",
+      "short_name": "Fotos",
+      "description": "Ver galería de fotos",
+      "url": "/?section=galeria#galeria",
+      "icons": [
+        {
+          "src": "images/icons/gallery-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ubicación",
+      "short_name": "Mapa",
+      "description": "Cómo llegar al hotel",
+      "url": "/?section=ubicacion#ubicacion",
+      "icons": [
+        {
+          "src": "images/icons/location-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "web+casavieja",
+      "url": "/?handler=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "capture_links": "existing-client-navigate",
+  "file_handlers": [
+    {
+      "action": "/?file=%s",
+      "accept": {
+        "text/calendar": [".ics"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/?share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ]
+}

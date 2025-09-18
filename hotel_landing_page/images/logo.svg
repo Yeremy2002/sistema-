@@ -1,0 +1,55 @@
+<svg width="300" height="120" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mountain silhouette background -->
+  <defs>
+    <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC8711;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#664D07;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Mountain peaks -->
+  <path d="M0 45 L25 20 L45 35 L65 15 L85 25 L105 10 L125 20 L145 5 L165 15 L185 25 L205 10 L225 20 L245 15 L265 25 L285 20 L300 30 L300 50 L0 50 Z" 
+        fill="url(#mountainGradient)" opacity="0.8"/>
+  
+  <!-- House structure -->
+  <g transform="translate(200, 15)">
+    <!-- Main house body -->
+    <rect x="0" y="20" width="60" height="25" fill="#BEA572" stroke="#664D07" stroke-width="1"/>
+    
+    <!-- Roof -->
+    <path d="M-5 20 L30 5 L65 20 Z" fill="#DC8711" stroke="#664D07" stroke-width="1"/>
+    
+    <!-- Chimney -->
+    <rect x="45" y="8" width="6" height="12" fill="#664D07"/>
+    
+    <!-- Door -->
+    <rect x="25" y="30" width="10" height="15" fill="#664D07"/>
+    
+    <!-- Windows -->
+    <rect x="10" y="25" width="8" height="8" fill="#DDCAA4" stroke="#664D07" stroke-width="0.5"/>
+    <rect x="42" y="25" width="8" height="8" fill="#DDCAA4" stroke="#664D07" stroke-width="0.5"/>
+    
+    <!-- Window crosses -->
+    <line x1="14" y1="25" x2="14" y2="33" stroke="#664D07" stroke-width="0.5"/>
+    <line x1="10" y1="29" x2="18" y2="29" stroke="#664D07" stroke-width="0.5"/>
+    <line x1="46" y1="25" x2="46" y2="33" stroke="#664D07" stroke-width="0.5"/>
+    <line x1="42" y1="29" x2="50" y2="29" stroke="#664D07" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Main text -->
+  <text x="10" y="75" font-family="serif" font-size="28" font-weight="bold" fill="#664D07">
+    CASA VIEJA
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="10" y="95" font-family="serif" font-size="12" font-weight="normal" fill="#8B7A47" letter-spacing="2px">
+    HOTEL Y RESTAURANTE
+  </text>
+  
+  <!-- Decorative line -->
+  <line x1="10" y1="105" x2="280" y2="105" stroke="#BEA572" stroke-width="2"/>
+  
+  <!-- Small decorative elements -->
+  <circle cx="15" cy="105" r="3" fill="#DC8711"/>
+  <circle cx="275" cy="105" r="3" fill="#DC8711"/>
+</svg>

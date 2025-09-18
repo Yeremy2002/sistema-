@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./cpanel_deployment/prepare_for_cpanel.sh:*)",
+      "Bash(php:*)",
+      "Bash(grep:*)",
+      "Bash(chmod:*)",
+      "Bash(./validate_deployment.sh)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,205 @@
+version: '3.8'
+
+services:
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: hotel-app
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+    volumes:
+      - storage_data:/var/www/html/storage
+      - database_data:/var/www/html/database
+      - ./docker/logs:/var/www/html/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hotel-network
+    ports:
+      - "8080:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hotel.rule=Host(`hotel.localhost`)"
+      - "traefik.http.routers.hotel.entrypoints=web"
+
+  # Queue worker
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: hotel-queue-worker
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+    volumes:
+      - storage_data:/var/www/html/storage
+      - database_data:/var/www/html/database
+    depends_on:
+      - app
+      - mysql
+      - redis
+    networks:
+      - hotel-network
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+
+  # Scheduler (cron)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: hotel-scheduler
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+    volumes:
+      - storage_data:/var/www/html/storage
+      - database_data:/var/www/html/database
+    depends_on:
+      - app
+      - mysql
+      - redis
+    networks:
+      - hotel-network
+    command: >
+      sh -c "
+        while true; do
+          php artisan schedule:run
+          sleep 60
+        done
+      "
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: hotel-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secure_root_password}
+      MYSQL_DATABASE: ${DB_DATABASE:-hotel_management}
+      MYSQL_USER: ${DB_USERNAME:-hotel_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secure_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - hotel-network
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: hotel-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - hotel-network
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+
+  # Nginx Load Balancer (optional for multiple app instances)
+  nginx:
+    image: nginx:alpine
+    container_name: hotel-nginx
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/nginx-lb.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/var/www/html/public:ro
+    depends_on:
+      - app
+    networks:
+      - hotel-network
+    ports:
+      - "80:80"
+      - "443:443"
+
+  # Development services (only for development)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: hotel-mailhog
+    restart: unless-stopped
+    networks:
+      - hotel-network
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    profiles:
+      - development
+
+  # Database administration
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: hotel-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${DB_USERNAME:-hotel_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-secure_password}
+    depends_on:
+      - mysql
+    networks:
+      - hotel-network
+    ports:
+      - "8081:80"
+    profiles:
+      - development
+
+  # Redis GUI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: hotel-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: redis:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - hotel-network
+    ports:
+      - "8082:8081"
+    profiles:
+      - development
+
+networks:
+  hotel-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  storage_data:
+    driver: local
+  database_data:
+    driver: local
