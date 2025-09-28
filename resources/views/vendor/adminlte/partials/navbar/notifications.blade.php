@@ -1,3 +1,25 @@
+{{-- Estilos urgentes para iconos SVG --}}
+<style>
+svg.w-5, svg.h-5, .w-5.h-5 {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    max-width: 1.25rem !important;
+    max-height: 1.25rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+svg {
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+}
+.btn svg, .table svg, a svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    max-width: 1rem !important;
+    max-height: 1rem !important;
+}
+</style>
+
 @if (Auth::user()->unreadNotifications->count() > 0)
     @foreach (Auth::user()->unreadNotifications as $notification)
         @php

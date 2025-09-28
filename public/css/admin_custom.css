@@ -262,6 +262,25 @@
     margin: 0.125rem;
 }
 
+/* FIXED: Tamaño controlado de iconos en tablas */
+.table .btn i {
+    font-size: 0.875rem !important;
+    width: 1rem;
+    text-align: center;
+}
+
+.table .btn-sm i {
+    font-size: 0.75rem !important;
+    width: 0.875rem;
+    text-align: center;
+}
+
+/* Asegurar que los iconos no se agranden desproporcionalmente */
+.fas, .far, .fab {
+    font-size: inherit;
+    vertical-align: baseline;
+}
+
 /* ===============================
    BOTONES PERSONALIZADOS
    =============================== */
@@ -512,4 +531,108 @@
     .table td {
         border: 1px solid #000 !important;
     }
+}
+
+/* ===============================
+   TAILWIND CSS CLASSES COMPATIBILITY
+   Para iconos SVG que usan clases Tailwind
+   =============================== */
+
+/* URGENTE: Forzar tamaño de iconos SVG inmediatamente */
+svg.w-5, svg.h-5, .w-5.h-5 {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    max-width: 1.25rem !important;
+    max-height: 1.25rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Forzar para todos los SVG en general */
+svg {
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+}
+
+/* Tamaños de width y height de Tailwind */
+.w-4, .w-4 svg {
+    width: 1rem !important; /* 16px */
+    max-width: 1rem !important;
+}
+
+.h-4, .h-4 svg {
+    height: 1rem !important; /* 16px */
+    max-height: 1rem !important;
+}
+
+.w-5, .w-5 svg {
+    width: 1.25rem !important; /* 20px */
+    max-width: 1.25rem !important;
+}
+
+.h-5, .h-5 svg {
+    height: 1.25rem !important; /* 20px */
+    max-height: 1.25rem !important;
+}
+
+.w-6, .w-6 svg {
+    width: 1.5rem !important; /* 24px */
+    max-width: 1.5rem !important;
+}
+
+.h-6, .h-6 svg {
+    height: 1.5rem !important; /* 24px */
+    max-height: 1.5rem !important;
+}
+
+/* SVG icons en general */
+svg {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Específicamente para botones con SVG */
+.btn svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    max-width: 1rem !important;
+    max-height: 1rem !important;
+}
+
+.btn-sm svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+    max-width: 0.875rem !important;
+    max-height: 0.875rem !important;
+}
+
+.btn-lg svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    max-width: 1.25rem !important;
+    max-height: 1.25rem !important;
+}
+
+/* Para enlaces y elementos de navegación */
+a svg, .nav-link svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+    max-width: 1.125rem !important;
+    max-height: 1.125rem !important;
+}
+
+/* Para íconos en tablas */
+.table svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    max-width: 1rem !important;
+    max-height: 1rem !important;
+}
+
+/* Para notificaciones y alertas */
+.notification svg, .alert svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    max-width: 1.25rem !important;
+    max-height: 1.25rem !important;
 }

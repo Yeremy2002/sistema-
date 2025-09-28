@@ -37,12 +37,13 @@
     <link rel="stylesheet" href="{{ asset('landing/styles.css') }}">
     <link rel="stylesheet" href="{{ asset('landing/responsive-fixes.css') }}">
     
-    <!-- Favicon and PWA -->
+    <!-- Favicon - Fixed 404 errors -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <link rel="apple-touch-icon" href="/logo.svg">
+    <!-- Removed missing PWA files to prevent 404 errors -->
+    <!-- <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> -->
+    <!-- <link rel="manifest" href="/site.webmanifest"> -->
 </head>
 <body>
     <!-- Skip Navigation -->
@@ -438,12 +439,12 @@
                 
                 <div class="form__group">
                     <label for="guest-email" class="form__label">Correo electrónico</label>
-                    <input type="email" id="guest-email" name="guest-email" class="form__input" required>
+                    <input type="email" id="guest-email" name="guest-email" class="form__input" placeholder="ejemplo@correo.com" required>
                 </div>
                 
                 <div class="form__group">
                     <label for="guest-phone" class="form__label">Teléfono</label>
-                    <input type="tel" id="guest-phone" name="guest-phone" class="form__input" required>
+                    <input type="tel" id="guest-phone" name="guest-phone" class="form__input" placeholder="(+502) 8888-7867" required>
                 </div>
                 
                 <div class="form__group">

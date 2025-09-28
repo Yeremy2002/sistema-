@@ -568,6 +568,16 @@ return [
                 ],
             ],
         ],
+        'AdminCustomCSS' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'css/admin_custom.css',
+                ],
+            ],
+        ],
     ],
 
     /*

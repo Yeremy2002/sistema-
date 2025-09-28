@@ -366,6 +366,58 @@
         .bg-info-light {
             background-color: rgba(23, 162, 184, 0.1);
         }
+
+        /* Estilos para modal de reserva SweetAlert2 */
+        .swal-wide {
+            width: 600px !important;
+            max-width: 90vw !important;
+        }
+
+        .reservation-details .row,
+        .room-status .row {
+            margin-bottom: 10px;
+        }
+
+        .reservation-details strong,
+        .room-status strong {
+            color: #495057;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .swal-actions {
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .swal-actions .btn {
+            margin: 5px;
+            min-width: 140px;
+        }
+
+        .badge-lg {
+            padding: 8px 12px;
+            font-size: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .swal-wide {
+                width: 95vw !important;
+            }
+
+            .swal-actions .btn {
+                width: 100%;
+                margin: 5px 0;
+                min-width: auto;
+            }
+
+            .reservation-details .col-md-6,
+            .room-status .col-md-6 {
+                margin-bottom: 10px;
+            }
+        }
     </style>
 @stop
 
@@ -394,18 +446,7 @@
                 },
                 events: '{{ route('api.reservas.calendario') }}',
                 eventClick: function(info) {
-                    var mensaje = '';
-                    if (info.event.extendedProps.tipo === 'reserva') {
-                        mensaje = 'Habitación: ' + info.event.extendedProps.habitacion_numero + '\n' +
-                            'Cliente: ' + info.event.extendedProps.cliente_nombre + '\n' +
-                            'Estado: ' + info.event.extendedProps.estado + '\n' +
-                            'Precio: ' + window.simboloMoneda + info.event.extendedProps.precio + '\n' +
-                            'Total: ' + window.simboloMoneda + info.event.extendedProps.total;
-                    } else {
-                        mensaje = 'Habitación: ' + info.event.extendedProps.habitacion_numero + '\n' +
-                            'Estado: ' + info.event.extendedProps.estado;
-                    }
-                    alert(mensaje);
+                    showReservationModal(info.event);
                 },
                 eventDidMount: function(info) {
                     // Personalizar el estilo de los eventos según su tipo
@@ -484,6 +525,199 @@
                 console.error('Error:', error);
                 toastr.error('Error al marcar la notificación como leída');
             });
+        }
+
+        // Función para mostrar modal de reserva con SweetAlert2
+        function showReservationModal(event) {
+            let html = '';
+            let title = '';
+            let actions = [];
+
+            if (event.extendedProps.tipo === 'reserva') {
+                // Es una reserva
+                title = `Reserva - Habitación ${event.extendedProps.habitacion_numero}`;
+                html = `
+                    <div class="reservation-details">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>🏠 Habitación:</strong> ${event.extendedProps.habitacion_numero}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>👤 Cliente:</strong> ${event.extendedProps.cliente_nombre || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>📅 Entrada:</strong> ${event.start ? event.start.toLocaleDateString() : 'N/A'}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>📅 Salida:</strong> ${event.end ? event.end.toLocaleDateString() : 'N/A'}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>📊 Estado:</strong>
+                                <span class="badge badge-${getStatusBadgeClass(event.extendedProps.estado)}">${event.extendedProps.estado}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>💰 Total:</strong> ${window.simboloMoneda || 'Q.'}${event.extendedProps.total || '0'}
+                            </div>
+                        </div>
+                        ${event.extendedProps.cliente_telefono ? `
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>📞 Teléfono:</strong> ${event.extendedProps.cliente_telefono}
+                            </div>
+                        </div>` : ''}
+                    </div>
+                `;
+
+                // Definir acciones según el estado
+                const estado = event.extendedProps.estado;
+                const reservaId = event.extendedProps.reserva_id;
+
+                if (estado === 'Pendiente de Confirmación') {
+                    actions.push({
+                        text: '✅ Confirmar Reserva',
+                        value: 'confirmar',
+                        className: 'btn btn-success'
+                    });
+                    actions.push({
+                        text: '📞 Llamar Cliente',
+                        value: 'llamar',
+                        className: 'btn btn-info'
+                    });
+                } else if (estado === 'Pendiente') {
+                    actions.push({
+                        text: '🔑 Check-in',
+                        value: 'checkin',
+                        className: 'btn btn-primary'
+                    });
+                } else if (estado === 'Check-in') {
+                    actions.push({
+                        text: '🚪 Check-out',
+                        value: 'checkout',
+                        className: 'btn btn-danger'
+                    });
+                }
+
+                // Agregar acción común de ver detalles
+                actions.push({
+                    text: '👁️ Ver Detalles',
+                    value: 'detalles',
+                    className: 'btn btn-secondary'
+                });
+
+            } else {
+                // Es un estado de habitación
+                title = `Estado Habitación ${event.extendedProps.habitacion_numero}`;
+                html = `
+                    <div class="room-status">
+                        <div class="text-center mb-3">
+                            <h4>🏠 Habitación ${event.extendedProps.habitacion_numero}</h4>
+                            <span class="badge badge-lg badge-${getStatusBadgeClass(event.extendedProps.estado)}">${event.extendedProps.estado}</span>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <strong>📅 Fecha:</strong> ${event.start ? event.start.toLocaleDateString() : 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                actions.push({
+                    text: '🏠 Gestionar Habitación',
+                    value: 'gestionar',
+                    className: 'btn btn-primary'
+                });
+            }
+
+            // Mostrar SweetAlert2 con botones dinámicos
+            Swal.fire({
+                title: title,
+                html: html,
+                icon: 'info',
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar',
+                showConfirmButton: false,
+                customClass: {
+                    popup: 'swal-wide',
+                    htmlContainer: 'text-left'
+                },
+                didOpen: () => {
+                    // Agregar botones de acción dinámicamente
+                    const actionsHtml = actions.map(action =>
+                        `<button type="button" class="${action.className} mr-2 mb-2" onclick="handleReservationAction('${action.value}', '${event.extendedProps.reserva_id || event.extendedProps.habitacion_numero}')">${action.text}</button>`
+                    ).join('');
+
+                    if (actionsHtml) {
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'swal-actions mt-3 text-center';
+                        actionsDiv.innerHTML = actionsHtml;
+                        document.querySelector('.swal2-html-container').appendChild(actionsDiv);
+                    }
+                }
+            });
+        }
+
+        // Función para obtener la clase CSS del badge según el estado
+        function getStatusBadgeClass(estado) {
+            switch(estado) {
+                case 'Pendiente de Confirmación':
+                    return 'warning';
+                case 'Pendiente':
+                    return 'info';
+                case 'Check-in':
+                    return 'success';
+                case 'Check-out':
+                    return 'secondary';
+                case 'Cancelada':
+                    return 'danger';
+                case 'Disponible':
+                    return 'success';
+                case 'Limpieza':
+                    return 'warning';
+                case 'Mantenimiento':
+                    return 'danger';
+                case 'Ocupada':
+                    return 'primary';
+                default:
+                    return 'secondary';
+            }
+        }
+
+        // Función para manejar las acciones de la reserva
+        function handleReservationAction(action, id) {
+            switch(action) {
+                case 'confirmar':
+                    if (confirm('¿Confirmar esta reserva?')) {
+                        window.location.href = `/reservas/${id}/confirmar`;
+                    }
+                    break;
+                case 'llamar':
+                    Swal.fire({
+                        title: 'Llamar al Cliente',
+                        text: 'Recuerda confirmar los detalles de la reserva y el método de pago.',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido'
+                    });
+                    break;
+                case 'checkin':
+                    window.location.href = `/reservas/${id}/checkin`;
+                    break;
+                case 'checkout':
+                    window.location.href = `/reservas/${id}/checkout`;
+                    break;
+                case 'detalles':
+                    window.location.href = `/reservas/${id}`;
+                    break;
+                case 'gestionar':
+                    window.location.href = `/habitaciones`;
+                    break;
+                default:
+                    console.log('Acción no reconocida:', action);
+            }
+            Swal.close();
         }
     </script>
 @stop

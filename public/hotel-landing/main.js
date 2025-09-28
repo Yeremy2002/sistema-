@@ -5,48 +5,33 @@
 
 // Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Main script loaded');
-    
     // Inicializar todas las funcionalidades
     initMobileMenu();
     initReservationModal();
     initFloatingCTA();
     initSmoothScroll();
     initPriceCalculator();
-    
-    console.log('✅ All features initialized');
 });
 
 /**
  * Inicializar menú hamburguesa para móviles
  */
 function initMobileMenu() {
-    console.log('📱 Initializing mobile menu...');
-    
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navClose = document.getElementById('nav-close');
     const navOverlay = document.getElementById('nav-overlay');
     const navLinks = document.querySelectorAll('.nav__link');
-    
+
     // Verificar que los elementos existen
     if (!navToggle || !navMenu) {
         console.error('❌ Mobile menu elements not found');
         return;
     }
     
-    console.log('📋 Menu elements found:', {
-        toggle: !!navToggle,
-        menu: !!navMenu,
-        close: !!navClose,
-        overlay: !!navOverlay,
-        links: navLinks.length
-    });
-    
     // Abrir menú
     navToggle.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('🔓 Opening menu');
         navMenu.classList.add('show-menu');
         document.body.classList.add('menu-open');
     });
@@ -55,7 +40,6 @@ function initMobileMenu() {
     if (navClose) {
         navClose.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔒 Closing menu with close button');
             closeMenu();
         });
     }
@@ -64,7 +48,6 @@ function initMobileMenu() {
     if (navOverlay) {
         navOverlay.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔒 Closing menu with overlay');
             closeMenu();
         });
     }
@@ -72,7 +55,6 @@ function initMobileMenu() {
     // Cerrar menú al hacer clic en un enlace
     navLinks.forEach(link => {
         link.addEventListener('click', function() {
-            console.log('🔗 Link clicked, closing menu');
             closeMenu();
         });
     });
@@ -80,7 +62,6 @@ function initMobileMenu() {
     // Cerrar menú con ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && navMenu.classList.contains('show-menu')) {
-            console.log('⌨️ Closing menu with ESC key');
             closeMenu();
         }
     });
@@ -89,81 +70,54 @@ function initMobileMenu() {
         navMenu.classList.remove('show-menu');
         document.body.classList.remove('menu-open');
     }
-    
-    console.log('✅ Mobile menu initialized');
 }
 
 /**
  * Inicializar modal de reservas
  */
 function initReservationModal() {
-    console.log('🏨 Initializing reservation modal...');
-    
     const modal = document.getElementById('reservation-modal');
     const openButtons = document.querySelectorAll('.js-open-reservation');
     const closeButtons = document.querySelectorAll('.js-close-modal');
-    
+
     if (!modal) {
         console.error('❌ Reservation modal not found');
         return;
     }
     
-    console.log('📋 Modal elements found:', {
-        modal: !!modal,
-        openButtons: openButtons.length,
-        closeButtons: closeButtons.length
-    });
-    
     // Abrir modal
     openButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔓 Opening reservation modal');
-            console.log('📋 Modal element:', modal);
-            console.log('📋 Modal display style:', window.getComputedStyle(modal).display);
-            console.log('📋 Modal visibility:', window.getComputedStyle(modal).visibility);
-            console.log('📋 Modal opacity:', window.getComputedStyle(modal).opacity);
-            
+
             // Pre-llenar datos si el botón tiene información
             const roomType = this.getAttribute('data-room');
             const promoType = this.getAttribute('data-promo');
-            
+
             if (roomType) {
                 const roomSelect = document.getElementById('room-type');
                 if (roomSelect) {
                     roomSelect.value = roomType;
-                    console.log('🏠 Pre-selected room:', roomType);
                 }
             }
-            
+
             // Mostrar modal
-            console.log('🔄 Adding show-modal class...');
             modal.classList.add('show-modal');
             document.body.classList.add('modal-open');
-            
+
             // Fallback: forzar estilos directamente si CSS no funciona
             modal.style.display = 'block';
             modal.style.opacity = '1';
             modal.style.visibility = 'visible';
             modal.style.zIndex = '10000';
-            
-            console.log('📋 Modal classes after:', modal.classList.toString());
-            console.log('📋 Body classes after:', document.body.classList.toString());
-            console.log('📧 Applied inline styles as fallback');
-            
+
             // Verificar estilos después del cambio
             setTimeout(() => {
-                console.log('📋 Modal display after:', window.getComputedStyle(modal).display);
-                console.log('📋 Modal visibility after:', window.getComputedStyle(modal).visibility);
-                console.log('📋 Modal opacity after:', window.getComputedStyle(modal).opacity);
-                console.log('📋 Modal z-index after:', window.getComputedStyle(modal).zIndex);
-                
                 // Si aún no es visible, intentar con más fuerza
                 if (window.getComputedStyle(modal).display === 'none') {
-                    console.log('⚠️ Modal still hidden, forcing display with more specificity');
                     modal.setAttribute('style', 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 10000 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.6) !important;');
                 }
-                
+
                 const firstInput = modal.querySelector('input[type="date"], input[type="text"]');
                 if (firstInput) firstInput.focus();
             }, 100);
@@ -174,7 +128,6 @@ function initReservationModal() {
     closeButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔒 Closing reservation modal');
             closeModal();
         });
     });
@@ -182,7 +135,6 @@ function initReservationModal() {
     // Cerrar con ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal.classList.contains('show-modal')) {
-            console.log('⌨️ Closing modal with ESC key');
             closeModal();
         }
     });
@@ -192,15 +144,12 @@ function initReservationModal() {
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('📝 Processing reservation form...');
-            
+
             // Reenviar el evento al script original para que maneje la lógica completa
             // El script original (script.js) se encarga de la API, validaciones y SweetAlert2
             if (window.handleReservationSubmit && typeof window.handleReservationSubmit === 'function') {
-                console.log('🔄 Delegating to original reservation handler');
                 window.handleReservationSubmit(e, this);
             } else {
-                console.warn('⚠️ Original reservation handler not found. Using fallback.');
                 // Fallback temporal - pero se debe cargar script.js para funcionalidad completa
                 const submitButton = this.querySelector('[type="submit"]');
                 const originalText = submitButton ? submitButton.textContent : '';
@@ -233,11 +182,15 @@ function initReservationModal() {
     }
     
     function closeModal() {
-        modal.classList.remove('show-modal');
+        modal.classList.remove('show-modal', 'show');
         document.body.classList.remove('modal-open');
+        // Force hide with inline styles to ensure it closes
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+        document.body.style.overflow = '';
+        console.log('✅ Main.js modal closed');
     }
-    
-    console.log('✅ Reservation modal initialized');
 }
 
 /**
@@ -252,15 +205,13 @@ function initFloatingCTA() {
     window.addEventListener('scroll', function() {
         const heroBottom = hero.offsetTop + hero.offsetHeight;
         const scrollTop = window.pageYOffset;
-        
+
         if (scrollTop > heroBottom) {
             floatingCTA.classList.add('show');
         } else {
             floatingCTA.classList.remove('show');
         }
     });
-    
-    console.log('✅ Floating CTA initialized');
 }
 
 /**
@@ -292,8 +243,6 @@ function initSmoothScroll() {
             }
         });
     });
-    
-    console.log('✅ Smooth scroll initialized');
 }
 
 /**
@@ -318,23 +267,37 @@ function initPriceCalculator() {
         const checkin = new Date(checkinInput.value);
         const checkout = new Date(checkoutInput.value);
         const roomType = roomTypeSelect.value;
-        
+
         if (!checkin || !checkout || !roomType || checkin >= checkout) {
             priceSummary.style.display = 'none';
             return;
         }
-        
+
         const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
         const pricePerNight = roomPrices[roomType];
+
+        // Validar que el precio existe
+        if (!pricePerNight || isNaN(pricePerNight)) {
+            console.warn('Price not found for room type:', roomType);
+            priceSummary.style.display = 'none';
+            return;
+        }
+
         const total = nights * pricePerNight;
-        
-        // Actualizar el resumen
-        document.getElementById('price-room-type').textContent = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
-        document.getElementById('price-dates').textContent = `${checkin.toLocaleDateString()} - ${checkout.toLocaleDateString()}`;
-        document.getElementById('price-nights').textContent = nights + (nights === 1 ? ' noche' : ' noches');
-        document.getElementById('price-per-night').textContent = '$' + pricePerNight.toLocaleString();
-        document.getElementById('price-total').textContent = '$' + total.toLocaleString();
-        
+
+        // Validar que los elementos del DOM existen antes de actualizarlos
+        const priceRoomTypeEl = document.getElementById('price-room-type');
+        const priceDatesEl = document.getElementById('price-dates');
+        const priceNightsEl = document.getElementById('price-nights');
+        const pricePerNightEl = document.getElementById('price-per-night');
+        const priceTotalEl = document.getElementById('price-total');
+
+        if (priceRoomTypeEl) priceRoomTypeEl.textContent = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
+        if (priceDatesEl) priceDatesEl.textContent = `${checkin.toLocaleDateString()} - ${checkout.toLocaleDateString()}`;
+        if (priceNightsEl) priceNightsEl.textContent = nights + (nights === 1 ? ' noche' : ' noches');
+        if (pricePerNightEl) pricePerNightEl.textContent = '$' + pricePerNight.toLocaleString();
+        if (priceTotalEl) priceTotalEl.textContent = '$' + total.toLocaleString();
+
         priceSummary.style.display = 'block';
     }
     
@@ -359,8 +322,6 @@ function initPriceCalculator() {
             checkoutInput.value = minCheckout.toISOString().split('T')[0];
         }
     });
-    
-    console.log('✅ Price calculator initialized');
 }
 
 // Utilidades globales
@@ -380,8 +341,14 @@ window.CasaViejaHotel = {
     closeReservationModal: function() {
         const modal = document.getElementById('reservation-modal');
         if (modal) {
-            modal.classList.remove('show-modal');
+            modal.classList.remove('show-modal', 'show');
             document.body.classList.remove('modal-open');
+            // Force hide with inline styles
+            modal.style.display = 'none';
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            document.body.style.overflow = '';
+            console.log('✅ CasaViejaHotel.closeReservationModal called');
         }
     }
 };

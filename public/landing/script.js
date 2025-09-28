@@ -243,6 +243,7 @@ function openReservationModal(packageType = '') {
     if (reservationModal) {
         reservationModal.classList.add('show');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
 
         // Pre-fill package type if provided
         if (packageType) {
@@ -280,22 +281,49 @@ function openReservationModal(packageType = '') {
             }
         }
 
-        // Focus first input for accessibility
+        // Auto-update room options if dates are already set
         setTimeout(() => {
+            const checkinValue = checkinInput ? checkinInput.value : null;
+            const checkoutValue = checkoutInput ? checkoutInput.value : null;
+
+            if (checkinValue && checkoutValue) {
+                // Force room options update
+                updateRoomOptions();
+            }
+
+            // Focus first input for accessibility
             const firstInput = reservationModal.querySelector('input, select');
             if (firstInput) firstInput.focus();
-        }, 100);
+        }, 200);
 
         // Track modal opening
         trackEvent('reservation', 'modal_open', packageType);
     }
 }
 
-// Close reservation modal
+// Close reservation modal - ENHANCED VERSION
 function closeReservationModal() {
     if (reservationModal) {
-        reservationModal.classList.remove('show');
+        // Remove all possible modal classes
+        reservationModal.classList.remove('show', 'show-modal');
+
+        // Force hide with inline styles
+        reservationModal.style.display = 'none';
+        reservationModal.style.opacity = '0';
+        reservationModal.style.visibility = 'hidden';
+
+        // Reset body styles
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+
+        // DON'T close SweetAlert2 here - let it show above the modal
+        // if (typeof Swal !== 'undefined') {
+        //     Swal.close();
+        // }
+
+        // Limpiar cualquier notificación existente (but not SweetAlert2)
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
 
         // Return focus to trigger element
         const triggerBtn = document.querySelector('.floating-cta__btn, .nav__cta');
@@ -303,6 +331,8 @@ function closeReservationModal() {
 
         // Track modal closing
         trackEvent('reservation', 'modal_close');
+
+        console.log('✅ Modal closed successfully');
     }
 }
 
@@ -478,9 +508,45 @@ async function checkAvailabilityAndSubmit(reservationData, submitBtn, originalTe
         const response = await createReservation(reservationPayload);
 
         if (response.success) {
-            const message = response.fallback
-                ? response.message || '¡Reserva enviada por WhatsApp! Te contactaremos pronto.'
-                : `¡Reserva creada exitosamente!
+            // Primero cerrar el modal INMEDIATAMENTE
+            closeReservationModal();
+
+            // Forzar cierre del modal con estilos directos
+            const modal = document.getElementById('reservation-modal');
+            if (modal) {
+                modal.classList.remove('show', 'show-modal');
+                modal.style.display = 'none';
+                modal.style.opacity = '0';
+                modal.style.visibility = 'hidden';
+            }
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+
+            // Limpiar el formulario
+            form.reset();
+
+            // Esperar un momento antes de mostrar SweetAlert2 para asegurar que el modal se cerró
+            setTimeout(() => {
+            // Luego mostrar el mensaje de éxito usando SweetAlert2 con detalles mejorados
+            if (response.fallback) {
+                showSuccessMessage(response.message || '¡Reserva enviada por WhatsApp! Te contactaremos pronto.');
+            } else {
+                // Usar la función mejorada de SweetAlert2 para reservas exitosas
+                if (typeof window.showReservationSuccess === 'function') {
+                    const nights = calculateNights(reservationData.checkin, reservationData.checkout);
+                    const total = selectedRoom.precio * nights;
+
+                    window.showReservationSuccess({
+                        roomName: selectedRoom.categoria?.nombre || 'Habitación',
+                        roomNumber: selectedRoom.numero,
+                        checkIn: formatDate(reservationData.checkin),
+                        checkOut: formatDate(reservationData.checkout),
+                        nights: nights,
+                        total: total
+                    });
+                } else {
+                    // Fallback a mensaje simple
+                    const message = `¡Reserva creada exitosamente!
 
 Detalles:
 • Habitación: ${selectedRoom.numero} (${selectedRoom.categoria?.nombre || 'N/A'})
@@ -488,11 +554,12 @@ Detalles:
 • Total estimado: ${formatPrice(selectedRoom.precio * calculateNights(reservationData.checkin, reservationData.checkout))}
 
 Te contactaremos pronto para confirmar.`;
+                    showSuccessMessage(message);
+                }
+            }
 
-            showSuccessMessage(message);
-            closeReservationModal();
-            form.reset();
             trackEvent('reservation', response.fallback ? 'submit_fallback' : 'submit_success');
+            }, 100); // Wait 100ms to ensure modal is closed
         } else {
             throw new Error(response.message || 'Error al procesar la reserva');
         }
@@ -504,12 +571,18 @@ Te contactaremos pronto para confirmar.`;
         if (error.message.includes('disponibles') || error.message.includes('alternativas')) {
             const message = createWhatsAppMessage(reservationData);
             const whatsappUrl = generateWhatsAppURL(message, 'availability_fallback');
-            window.open(whatsappUrl, '_blank');
 
-            showErrorMessage(error.message + '\n\nTe hemos redirigido a WhatsApp para ayudarte con alternativas.');
+            // Cerrar modal primero
             closeReservationModal();
             form.reset();
+
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            // Mostrar mensaje explicativo
+            showErrorMessage(error.message + '\n\nTe hemos redirigido a WhatsApp para ayudarte con alternativas.');
         } else {
+            // Para otros errores, mantener el modal abierto para que el usuario pueda corregir
             showErrorMessage(error.message || 'Error al verificar disponibilidad. Por favor, intenta nuevamente.');
         }
 
@@ -519,6 +592,11 @@ Te contactaremos pronto para confirmar.`;
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
         form.querySelectorAll('input, select, textarea').forEach(field => field.disabled = false);
+
+        // Cerrar loading de SweetAlert2 si está abierto
+        if (typeof Swal !== 'undefined' && Swal.isVisible()) {
+            Swal.close();
+        }
     }
 }
 
@@ -675,13 +753,52 @@ function updateRoomSelectOptions(availableRooms, params) {
 
     roomSelect.innerHTML = optionsHTML;
 
+    // Auto-trigger price summary update if only one room is available
+    if (availableRooms.length === 1) {
+        // Pre-select the only available room
+        roomSelect.selectedIndex = 1; // Skip the "Seleccionar" option
+        updatePriceSummary();
+    }
+
     // Show success message with availability info
-    showSuccessMessage(`Se encontraron ${availableRooms.length} habitaciones disponibles para las fechas seleccionadas.`);
+    console.log(`Se encontraron ${availableRooms.length} habitaciones disponibles para las fechas seleccionadas.`);
+    // Remove SweetAlert success message to avoid modal conflicts
 }
 
 // Show warning message
 function showWarningMessage(message) {
-    showNotification(message, 'warning');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Atención',
+            text: message,
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(message, 'warning');
+    }
+}
+
+// Show info message
+function showInfoMessage(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Información',
+            text: message,
+            icon: 'info',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(message, 'info');
+    }
 }
 
 // ===== CLIENT SEARCH FUNCTIONS (Phase 3) =====
@@ -1143,16 +1260,65 @@ function getContactFieldLabel(field) {
 
 // Show success message
 function showSuccessMessage(message) {
-    showNotification(message, 'success');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¡Éxito!',
+            text: message,
+            icon: 'success',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+    } else {
+        showNotification(message, 'success');
+    }
 }
 
 // Show error message
 function showErrorMessage(message) {
-    showNotification(message, 'error');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Error',
+            text: message,
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+    } else {
+        showNotification(message, 'error');
+    }
 }
 
-// Show notification
+// Show notification with improved z-index for modal compatibility
 function showNotification(message, type = 'info') {
+    // Si SweetAlert2 está disponible, usarlo directamente
+    if (typeof Swal !== 'undefined') {
+        const swalIcon = {
+            'success': 'success',
+            'error': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        }[type] || 'info';
+
+        Swal.fire({
+            title: type === 'error' ? 'Error' : type === 'warning' ? 'Atención' : 'Información',
+            text: message,
+            icon: swalIcon,
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+        return;
+    }
+
+    // Fallback a notificaciones custom con z-index corregido
     // Remove existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => notification.remove());
@@ -1169,7 +1335,7 @@ function showNotification(message, type = 'info') {
         </div>
     `;
 
-    // Add styles
+    // Add styles with higher z-index than modal
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -1179,7 +1345,7 @@ function showNotification(message, type = 'info') {
         padding: 16px 20px;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        z-index: 9999;
+        z-index: 2500;
         max-width: 400px;
         animation: slideIn 0.3s ease;
     `;
@@ -1235,9 +1401,6 @@ function trackEvent(category, action, label = '', value = 0) {
             value: value
         });
     }
-
-    // Console log for development
-    console.log('Event tracked:', { category, action, label, value });
 }
 
 // ===== LAZY LOADING =====
@@ -1686,6 +1849,57 @@ window.showMenu = showMenu;
 window.hideMenu = hideMenu;
 window.handleReservationSubmit = handleReservationSubmit;
 
+// ===== GLOBAL FUNCTION EXPORTS =====
+// Expose critical functions to global scope to prevent call issues
+window.updateRoomOptions = updateRoomOptions;
+window.updatePriceSummary = updatePriceSummary;
+window.openReservationModal = openReservationModal;
+window.closeReservationModal = closeReservationModal;
+window.showSuccessMessage = showSuccessMessage;
+window.showErrorMessage = showErrorMessage;
+window.showWarningMessage = showWarningMessage;
+window.showInfoMessage = showInfoMessage;
+
+// CRITICAL FIX: Failsafe modal closer
+window.forceCloseModal = function() {
+    const modal = document.getElementById('reservation-modal');
+    if (modal) {
+        modal.classList.remove('show', 'show-modal');
+        modal.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; z-index: -1 !important;';
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        console.log('⚠️ Failsafe modal close activated');
+    }
+};
+
+// Debug function to test modal functionality
+window.testModalFunctions = function() {
+    console.log('=== TESTING MODAL FUNCTIONS ===');
+    console.log('updateRoomOptions:', typeof window.updateRoomOptions);
+    console.log('updatePriceSummary:', typeof window.updatePriceSummary);
+    console.log('openReservationModal:', typeof window.openReservationModal);
+    console.log('closeReservationModal:', typeof window.closeReservationModal);
+    console.log('Swal available:', typeof Swal !== 'undefined');
+
+    const checkinInput = document.getElementById('checkin');
+    const checkoutInput = document.getElementById('checkout');
+    const roomSelect = document.getElementById('room-type');
+    const priceSummary = document.getElementById('price-summary');
+
+    console.log('DOM Elements:');
+    console.log('- checkin input:', !!checkinInput);
+    console.log('- checkout input:', !!checkoutInput);
+    console.log('- room select:', !!roomSelect);
+    console.log('- price summary:', !!priceSummary);
+
+    if (checkinInput && checkoutInput) {
+        console.log('- checkin value:', checkinInput.value);
+        console.log('- checkout value:', checkoutInput.value);
+    }
+
+    return 'All functions tested. Check console for details.';
+};
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -1711,6 +1925,45 @@ window.addEventListener('resize', debounce(() => {
         handleScroll();
     }
 }, 250));
+
+// ===== FONT LOADING FALLBACK =====
+// Detect font loading failures and activate fallback
+function initFontFallback() {
+    // Set timeout for font loading detection
+    const fontLoadTimeout = 3000; // 3 seconds
+
+    setTimeout(() => {
+        try {
+            // Try to detect if custom fonts loaded by measuring text width
+            const testElement = document.createElement('div');
+            testElement.style.fontFamily = '"Playfair Display", serif';
+            testElement.style.fontSize = '72px';
+            testElement.style.position = 'absolute';
+            testElement.style.left = '-9999px';
+            testElement.textContent = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            document.body.appendChild(testElement);
+
+            const customFontWidth = testElement.offsetWidth;
+
+            testElement.style.fontFamily = 'serif';
+            const fallbackFontWidth = testElement.offsetWidth;
+
+            // If widths are the same, custom font likely didn't load
+            if (Math.abs(customFontWidth - fallbackFontWidth) < 5) {
+                console.warn('Custom fonts may not have loaded, activating fallback');
+                document.documentElement.classList.add('font-fallback-active');
+            }
+
+            document.body.removeChild(testElement);
+        } catch (error) {
+            console.warn('Font detection failed, activating fallback:', error);
+            document.documentElement.classList.add('font-fallback-active');
+        }
+    }, fontLoadTimeout);
+}
+
+// Initialize font fallback detection
+document.addEventListener('DOMContentLoaded', initFontFallback);
 
 // Service Worker registration (for PWA capabilities)
 // Commented out since sw.js file doesn't exist

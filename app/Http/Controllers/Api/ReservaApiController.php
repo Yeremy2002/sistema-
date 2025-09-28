@@ -276,6 +276,18 @@ class ReservaApiController extends Controller
                 'expires_at' => $reserva->expires_at->format('Y-m-d H:i:s')
             ]);
 
+            // FIXED: Enviar notificaciones a recepcionistas sobre nueva reserva pendiente
+            // Esta funcionalidad estaba faltando y causaba que las notificaciones no aparecieran
+            $recepcionistas = \App\Models\User::role('Recepcionista')->active()->get();
+            foreach ($recepcionistas as $recepcionista) {
+                $recepcionista->notify(new \App\Notifications\ReservaPendienteNotification($reserva));
+            }
+
+            \Log::info('API crear reserva - Notificaciones enviadas', [
+                'reserva_id' => $reserva->id,
+                'recepcionistas_notificados' => $recepcionistas->count()
+            ]);
+
             $response = [
                 'success' => true,
                 'message' => 'Reserva creada exitosamente. Debe ser confirmada dentro de 24 horas.',
