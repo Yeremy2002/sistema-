@@ -123,17 +123,66 @@
     <!-- Hero Section -->
     <main id="main-content">
     <section class="hero" id="inicio">
-        <div class="hero__bg parallax-bg" data-speed="0.5">
-            <img src="{{ url('/hotel-landing/images/hero-bg.jpg') }}" alt="Vista panorámica de {{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel' }}" class="hero__bg-img" width="1920" height="1080">
+        <!-- Hero Carousel -->
+        <div class="hero__carousel" id="hero-carousel">
+            @forelse($heroImages as $index => $image)
+                <div class="hero__slide {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
+                    <div class="hero__bg parallax-bg" data-speed="0.5">
+                        <img src="{{ $image['url'] }}" 
+                             alt="{{ $image['alt'] }}" 
+                             class="hero__bg-img" 
+                             width="1920" height="1080" 
+                             loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
+                    </div>
+                </div>
+            @empty
+                <!-- Fallback si no hay imágenes -->
+                <div class="hero__slide active" data-slide="0">
+                    <div class="hero__bg parallax-bg" data-speed="0.5">
+                        <img src="{{ url('/hotel-landing/images/hero-bg.svg') }}" 
+                             alt="Vista panorámica de {{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel' }}" 
+                             class="hero__bg-img" width="1920" height="1080">
+                    </div>
+                </div>
+            @endforelse
+            
+            <!-- Controles del carrusel -->
+            @if(count($heroImages) > 1)
+                <button class="hero__carousel-btn hero__carousel-btn--prev" id="hero-prev" aria-label="Imagen anterior">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <button class="hero__carousel-btn hero__carousel-btn--next" id="hero-next" aria-label="Siguiente imagen">
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+                
+                <!-- Indicadores -->
+                <div class="hero__indicators">
+                    @foreach($heroImages as $index => $image)
+                        <button class="hero__indicator {{ $index === 0 ? 'active' : '' }}" 
+                                data-slide="{{ $index }}" 
+                                aria-label="Ir a imagen {{ $index + 1 }}"></button>
+                    @endforeach
+                </div>
+            @endif
         </div>
         
+        <!-- Contenido del hero -->
         <div class="hero__content container">
-            <h1 class="hero__title">
-                {{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel' }}: Tu hogar en el corazón de la montaña
-            </h1>
-            <p class="hero__subtitle">
-                Habitaciones acogedoras, comida de casa y vistas que enamoran.
-            </p>
+            <div class="hero__text" id="hero-text">
+                @if(count($heroImages) > 0)
+                    @foreach($heroImages as $index => $image)
+                        <div class="hero__text-content {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
+                            <h1 class="hero__title">{{ $image['title'] }}</h1>
+                            <p class="hero__subtitle">{{ $image['subtitle'] }}</p>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="hero__text-content active" data-slide="0">
+                        <h1 class="hero__title">{{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel' }}: Tu hogar en el corazón de la montaña</h1>
+                        <p class="hero__subtitle">Habitaciones acogedoras, comida de casa y vistas que enamoran.</p>
+                    </div>
+                @endif
+            </div>
             
             <div class="hero__actions">
                 <button class="btn btn--primary btn--large js-open-reservation" aria-label="Reservar habitación">
@@ -165,7 +214,7 @@
             <div class="promotions__grid">
                 <div class="promotion-card parallax-card" data-speed="1.0">
                     <div class="promotion-card__image">
-                        <img src="{{ url('/hotel-landing/images/promo-romantic.jpg') }}" alt="Fin de semana romántico" loading="lazy" width="400" height="300">
+                        <img src="{{ url('/hotel-landing/images/promo-romantic.svg') }}" alt="Fin de semana romántico" loading="lazy" width="400" height="300">
                     </div>
                     <div class="promotion-card__content">
                         <h3 class="promotion-card__title">Fin de Semana Romántico</h3>
@@ -182,7 +231,7 @@
                 
                 <div class="promotion-card parallax-card" data-speed="1.2">
                     <div class="promotion-card__image">
-                        <img src="{{ url('/hotel-landing/images/promo-family.jpg') }}" alt="Plan familiar" loading="lazy" width="400" height="300">
+                        <img src="{{ url('/hotel-landing/images/promo-family.svg') }}" alt="Plan familiar" loading="lazy" width="400" height="300">
                     </div>
                     <div class="promotion-card__content">
                         <h3 class="promotion-card__title">Plan Familiar</h3>
@@ -199,7 +248,7 @@
                 
                 <div class="promotion-card parallax-card" data-speed="1.4">
                     <div class="promotion-card__image">
-                        <img src="{{ url('/hotel-landing/images/promo-adventure.jpg') }}" alt="Aventura en la montaña" loading="lazy" width="400" height="300">
+                        <img src="{{ url('/hotel-landing/images/promo-adventure.svg') }}" alt="Aventura en la montaña" loading="lazy" width="400" height="300">
                     </div>
                     <div class="promotion-card__content">
                         <h3 class="promotion-card__title">Aventura en la Montaña</h3>
@@ -224,80 +273,348 @@
             <p class="section__subtitle">Espacios diseñados para tu comodidad y descanso</p>
             
             <div class="rooms__grid">
-                <div class="room-card">
-                    <div class="room-card__image">
-                        <img src="{{ url('/hotel-landing/images/room-standard.jpg') }}" alt="Habitación Estándar" loading="lazy" width="400" height="300">
+                @forelse($habitaciones as $habitacion)
+                    <div class="room-card">
+                        <div class="room-card__image">
+                            @php
+                                $imagenPrincipal = $habitacion->imagenes->first();
+                            @endphp
+                            @if($imagenPrincipal && $imagenPrincipal->ruta)
+                                <img src="{{ asset('storage/' . $imagenPrincipal->ruta) }}" 
+                                     alt="{{ $habitacion->categoria_info->nombre ?? 'Habitación' }}" 
+                                     loading="lazy" width="400" height="300">
+                            @else
+                                <img src="{{ url('/hotel-landing/images/room-standard.svg') }}" 
+                                     alt="{{ $habitacion->categoria_info->nombre ?? 'Habitación' }}" 
+                                     loading="lazy" width="400" height="300">
+                            @endif
+                        </div>
+                        <div class="room-card__content">
+                            <h3 class="room-card__title">{{ $habitacion->categoria_info->nombre ?? 'Habitación' }}</h3>
+                            <div class="room-card__amenities">
+                                <span class="amenity">{{ $habitacion->capacidad ?? 2 }} personas</span>
+                                <span class="amenity">Baño privado</span>
+                                @if($habitacion->categoria_info)
+                                    <span class="amenity">{{ $habitacion->categoria_info->descripcion ?? 'Comodidades completas' }}</span>
+                                @endif
+                                <span class="amenity">WiFi</span>
+                            </div>
+                            <div class="room-card__price">
+                                <span class="room-card__from">Desde</span>
+                                <span class="room-card__amount">Q {{ number_format($habitacion->categoria_info->precio ?? $habitacion->precio ?? 100, 2) }}</span>
+                                <span class="room-card__period">/noche</span>
+                            </div>
+                            <button class="btn btn--primary js-open-reservation" 
+                                    data-room="{{ strtolower($habitacion->categoria_info->nombre ?? 'habitacion') }}">
+                                Reservar
+                            </button>
+                        </div>
                     </div>
-                    <div class="room-card__content">
-                        <h3 class="room-card__title">Habitación Estándar</h3>
-                        <div class="room-card__amenities">
-                            <span class="amenity">2 personas</span>
-                            <span class="amenity">Baño privado</span>
-                            <span class="amenity">Vista al jardín</span>
-                            <span class="amenity">WiFi</span>
+                @empty
+                    <!-- Fallback con habitaciones por defecto si no hay datos -->
+                    <div class="room-card">
+                        <div class="room-card__image">
+                            <img src="{{ url('/hotel-landing/images/room-standard.svg') }}" alt="Habitación Estándar" loading="lazy" width="400" height="300">
                         </div>
-                        <div class="room-card__price">
-                            <span class="room-card__from">Desde</span>
-                            <span class="room-card__amount">$120.000</span>
-                            <span class="room-card__period">/noche</span>
+                        <div class="room-card__content">
+                            <h3 class="room-card__title">Habitación Estándar</h3>
+                            <div class="room-card__amenities">
+                                <span class="amenity">2 personas</span>
+                                <span class="amenity">Baño privado</span>
+                                <span class="amenity">Vista al jardín</span>
+                                <span class="amenity">WiFi</span>
+                            </div>
+                            <div class="room-card__price">
+                                <span class="room-card__from">Desde</span>
+                                <span class="room-card__amount">Q 120.00</span>
+                                <span class="room-card__period">/noche</span>
+                            </div>
+                            <button class="btn btn--primary js-open-reservation" data-room="estandar">
+                                Reservar
+                            </button>
                         </div>
-                        <button class="btn btn--primary js-open-reservation" data-room="estandar">
-                            Reservar
-                        </button>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </section>
+    
+    <!-- Restaurante -->
+    <section class="restaurant section" id="restaurante">
+        <div class="container">
+            <h2 class="section__title">Restaurante Casa Vieja</h2>
+            <p class="section__subtitle">Sabores auténticos de la montaña</p>
+            
+            <div class="restaurant__content">
+                <div class="restaurant__info">
+                    <h3>Cocina Tradicional</h3>
+                    <p>Disfruta de los sabores auténticos de la cocina de montaña, preparados con ingredientes frescos de la región. Nuestro menú combina tradición y creatividad para ofrecerte una experiencia gastronómica única.</p>
+                    <div class="restaurant__features">
+                        <div class="feature">
+                            <i class="ri-restaurant-line"></i>
+                            <span>Especialidades regionales</span>
+                        </div>
+                        <div class="feature">
+                            <i class="ri-leaf-line"></i>
+                            <span>Ingredientes frescos</span>
+                        </div>
+                        <div class="feature">
+                            <i class="ri-fire-line"></i>
+                            <span>Fogata tradicional</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="restaurant__image">
+                    <img src="{{ url('/hotel-landing/images/restaurant.svg') }}" alt="Restaurante Casa Vieja" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Experiencias -->
+    <section class="experiences section" id="experiencias">
+        <div class="container">
+            <h2 class="section__title">Experiencias Únicas</h2>
+            <p class="section__subtitle">Vive la montaña de manera auténtica</p>
+            
+            <div class="experiences__grid">
+                <div class="experience-card">
+                    <div class="experience-card__icon">
+                        <i class="ri-mountain-line"></i>
+                    </div>
+                    <h3 class="experience-card__title">Senderismo Guiado</h3>
+                    <p class="experience-card__description">Explora los senderos de la montaña con guías locales expertos que te mostrarán la flora y fauna única de la región.</p>
+                </div>
+                
+                <div class="experience-card">
+                    <div class="experience-card__icon">
+                        <i class="ri-fire-line"></i>
+                    </div>
+                    <h3 class="experience-card__title">Fogatas Nocturnas</h3>
+                    <p class="experience-card__description">Disfruta de noches mágicas alrededor del fuego, con historias locales y la mejor vista de las estrellas.</p>
+                </div>
+                
+                <div class="experience-card">
+                    <div class="experience-card__icon">
+                        <i class="ri-camera-line"></i>
+                    </div>
+                    <h3 class="experience-card__title">Fotografía de Paisaje</h3>
+                    <p class="experience-card__description">Captura los momentos más hermosos con nuestros tours fotográficos en los mejores miradores.</p>
+                </div>
+                
+                <div class="experience-card">
+                    <div class="experience-card__icon">
+                        <i class="ri-plant-line"></i>
+                    </div>
+                    <h3 class="experience-card__title">Huerta Orgánica</h3>
+                    <p class="experience-card__description">Conoce nuestro huerto orgánico y aprende sobre agricultura sostenible de montaña.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Galería -->
+    <section class="gallery section" id="galeria">
+        <div class="container">
+            <h2 class="section__title">Galería</h2>
+            <p class="section__subtitle">Descubre la belleza de Casa Vieja</p>
+            
+            <div class="gallery__grid">
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-1.svg') }}" alt="Vista panorámica" loading="lazy">
+                </div>
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-2.svg') }}" alt="Habitación" loading="lazy">
+                </div>
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-3.svg') }}" alt="Restaurante" loading="lazy">
+                </div>
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-4.svg') }}" alt="Sendero" loading="lazy">
+                </div>
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-5.svg') }}" alt="Fogata" loading="lazy">
+                </div>
+                <div class="gallery__item">
+                    <img src="{{ url('/hotel-landing/images/gallery-6.svg') }}" alt="Vista nocturna" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Opiniones -->
+    <section class="testimonials section" id="opiniones">
+        <div class="container">
+            <h2 class="section__title">Lo que dicen nuestros huéspedes</h2>
+            <p class="section__subtitle">Experiencias reales de quienes nos han visitado</p>
+            
+            <div class="testimonials__grid">
+                <div class="testimonial-card">
+                    <div class="testimonial__content">
+                        <div class="testimonial__stars">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                        <p class="testimonial__text">"Una experiencia increíble. El lugar es hermoso, la atención excepcional y la comida deliciosa. Sin duda regresaremos."</p>
+                    </div>
+                    <div class="testimonial__author">
+                        <img src="{{ url('/hotel-landing/images/testimonial-1.svg') }}" alt="María Gómez" class="testimonial__avatar">
+                        <div class="testimonial__info">
+                            <h4 class="testimonial__name">María Gómez</h4>
+                            <span class="testimonial__location">Ciudad de Guatemala</span>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="room-card">
-                    <div class="room-card__image">
-                        <img src="{{ url('/hotel-landing/images/room-deluxe.jpg') }}" alt="Habitación Deluxe" loading="lazy" width="400" height="300">
+                <div class="testimonial-card">
+                    <div class="testimonial__content">
+                        <div class="testimonial__stars">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                        <p class="testimonial__text">"Perfecto para desconectar de la ciudad. Las vistas son espectaculares y el ambiente muy acogedor."</p>
                     </div>
-                    <div class="room-card__content">
-                        <h3 class="room-card__title">Habitación Deluxe</h3>
-                        <div class="room-card__amenities">
-                            <span class="amenity">2-3 personas</span>
-                            <span class="amenity">Baño privado</span>
-                            <span class="amenity">Vista a la montaña</span>
-                            <span class="amenity">Balcón</span>
+                    <div class="testimonial__author">
+                        <img src="{{ url('/hotel-landing/images/testimonial-2.svg') }}" alt="Carlos Rodríguez" class="testimonial__avatar">
+                        <div class="testimonial__info">
+                            <h4 class="testimonial__name">Carlos Rodríguez</h4>
+                            <span class="testimonial__location">Antigua Guatemala</span>
                         </div>
-                        <div class="room-card__price">
-                            <span class="room-card__from">Desde</span>
-                            <span class="room-card__amount">$180.000</span>
-                            <span class="room-card__period">/noche</span>
-                        </div>
-                        <button class="btn btn--primary js-open-reservation" data-room="deluxe">
-                            Reservar
-                        </button>
                     </div>
                 </div>
                 
-                <div class="room-card">
-                    <div class="room-card__image">
-                        <img src="{{ url('/hotel-landing/images/room-suite.jpg') }}" alt="Suite Familiar" loading="lazy" width="400" height="300">
+                <div class="testimonial-card">
+                    <div class="testimonial__content">
+                        <div class="testimonial__stars">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                        <p class="testimonial__text">"Un lugar mágico para pasar tiempo en familia. Los niños disfrutaron mucho las actividades al aire libre."</p>
                     </div>
-                    <div class="room-card__content">
-                        <h3 class="room-card__title">Suite Familiar</h3>
-                        <div class="room-card__amenities">
-                            <span class="amenity">4-6 personas</span>
-                            <span class="amenity">2 baños</span>
-                            <span class="amenity">Sala de estar</span>
-                            <span class="amenity">Terraza privada</span>
+                    <div class="testimonial__author">
+                        <img src="{{ url('/hotel-landing/images/testimonial-3.svg') }}" alt="Ana Morales" class="testimonial__avatar">
+                        <div class="testimonial__info">
+                            <h4 class="testimonial__name">Ana Morales</h4>
+                            <span class="testimonial__location">Quetzaltenango</span>
                         </div>
-                        <div class="room-card__price">
-                            <span class="room-card__from">Desde</span>
-                            <span class="room-card__amount">$280.000</span>
-                            <span class="room-card__period">/noche</span>
-                        </div>
-                        <button class="btn btn--primary js-open-reservation" data-room="suite">
-                            Reservar
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
     
-    <!-- Por brevedad, incluyo las secciones principales del HTML original -->
-    <!-- El resto del contenido HTML se puede agregar de manera similar -->
+    <!-- Ubicación y Contacto -->
+    <section class="location section" id="ubicacion">
+        <div class="container">
+            <h2 class="section__title">Ubícanos</h2>
+            <p class="section__subtitle">En el corazón de la montaña guatemalteca</p>
+            
+            <div class="location__content">
+                <div class="location__info">
+                    <div class="location__details">
+                        <div class="detail">
+                            <i class="ri-map-pin-line"></i>
+                            <div>
+                                <h4>Dirección</h4>
+                                <p>Km 15 Carretera a la Montaña<br>San Lucas Sacatepéquez, Guatemala</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail">
+                            <i class="ri-phone-line"></i>
+                            <div>
+                                <h4>Teléfono</h4>
+                                <p>+502 1234-5678<br>+502 8765-4321</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail">
+                            <i class="ri-mail-line"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <p>info@casaviejahotel.com<br>reservas@casaviejahotel.com</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail">
+                            <i class="ri-time-line"></i>
+                            <div>
+                                <h4>Horarios</h4>
+                                <p>Check-in: 3:00 PM<br>Check-out: 12:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="location__map">
+                    <!-- Placeholder para mapa -->
+                    <div class="map-placeholder">
+                        <i class="ri-map-2-line"></i>
+                        <p>Mapa interactivo</p>
+                        <small>Disponible próximamente</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Contacto -->
+    <section class="contact section" id="contacto">
+        <div class="container">
+            <h2 class="section__title">Contáctanos</h2>
+            <p class="section__subtitle">Estamos listos para hacer tu estadía inolvidable</p>
+            
+            <div class="contact__content">
+                <div class="contact__info">
+                    <h3>Hablemos de tu próxima aventura</h3>
+                    <p>Nuestro equipo está disponible para ayudarte a planificar la escapada perfecta a la montaña.</p>
+                    
+                    <div class="contact__methods">
+                        <a href="tel:+50212345678" class="contact__method">
+                            <i class="ri-phone-line"></i>
+                            <div>
+                                <h4>Llámanos</h4>
+                                <span>+502 1234-5678</span>
+                            </div>
+                        </a>
+                        
+                        <a href="https://wa.me/502XXXXXXXX" class="contact__method" target="_blank">
+                            <i class="ri-whatsapp-line"></i>
+                            <div>
+                                <h4>WhatsApp</h4>
+                                <span>Mensaje directo</span>
+                            </div>
+                        </a>
+                        
+                        <a href="mailto:info@casaviejahotel.com" class="contact__method">
+                            <i class="ri-mail-line"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <span>info@casaviejahotel.com</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="contact__cta">
+                    <h3>¡Tu aventura te espera!</h3>
+                    <p>No esperes más para vivir una experiencia única en el corazón de la montaña guatemalteca.</p>
+                    <button class="btn btn--primary btn--large js-open-reservation">
+                        Reservar Ahora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
     
     </main>
 
@@ -502,6 +819,8 @@
     <!-- Scripts -->
     <script src="{{ asset('landing/config.js') }}"></script>
     <script src="{{ asset('landing/sweetalert2-functions.js') }}"></script>
+    <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
+    <script src="{{ asset('landing/hero-carousel.js') }}"></script>
     <script src="{{ asset('landing/script.js') }}"></script>
     <script src="{{ asset('hotel-landing/main.js') }}"></script>
 </body>

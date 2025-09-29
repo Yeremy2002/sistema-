@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Reservación - Casa Vieja Hotel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .api-status {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-dot.online {
+            background: #28a745;
+        }
+        
+        .status-dot.offline {
+            background: #dc3545;
+        }
+        
+        .debug-panel {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .debug-panel h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .debug-output {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏨 Test de Reservación</h1>
+        <p class="subtitle">Formulario de prueba para la API del sistema de gestión hotelera</p>
+        
+        <div class="api-status">
+            <span class="status-dot offline" id="apiStatusDot"></span>
+            <span id="apiStatusText">Verificando conexión con API...</span>
+        </div>
+        
+        <div id="alertContainer"></div>
+        
+        <form id="reservationForm">
+            <div class="row">
+                <div class="form-group">
+                    <label for="fecha_entrada">Fecha de Entrada</label>
+                    <input type="date" id="fecha_entrada" name="fecha_entrada" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fecha_salida">Fecha de Salida</label>
+                    <input type="date" id="fecha_salida" name="fecha_salida" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="habitacion_tipo">Tipo de Habitación</label>
+                <select id="habitacion_tipo" name="habitacion_tipo">
+                    <option value="">Seleccionar tipo...</option>
+                    <option value="estandar">Estándar</option>
+                    <option value="superior">Superior</option>
+                    <option value="suite">Suite</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="cliente_nombre">Nombre Completo</label>
+                <input type="text" id="cliente_nombre" name="cliente_nombre" required placeholder="Juan Pérez">
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label for="cliente_telefono">Teléfono</label>
+                    <input type="tel" id="cliente_telefono" name="cliente_telefono" required placeholder="+502 5555-1234">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cliente_email">Email</label>
+                    <input type="email" id="cliente_email" name="cliente_email" placeholder="juan@ejemplo.com">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="observaciones">Solicitudes Especiales (Opcional)</label>
+                <input type="text" id="observaciones" name="observaciones" placeholder="Habitación con vista, cama extra, etc.">
+            </div>
+            
+            <button type="submit" id="submitBtn">
+                Crear Reserva
+            </button>
+        </form>
+        
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px;">Procesando reserva...</p>
+        </div>
+        
+        <div class="debug-panel">
+            <h3>🔧 Panel de Debug</h3>
+            <div class="debug-output" id="debugOutput">
+                Esperando acciones...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8001/api';
+        const debugLog = document.getElementById('debugOutput');
+        const alertContainer = document.getElementById('alertContainer');
+        
+        // Debug function
+        function debug(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            if (data) {
+                logMessage += '\n' + JSON.stringify(data, null, 2);
+            }
+            debugLog.textContent = logMessage + '\n\n' + debugLog.textContent;
+            console.log(message, data);
+        }
+        
+        // Show alert
+        function showAlert(message, type = 'info') {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Check API connectivity
+        async function checkAPIConnection() {
+            debug('Verificando conexión con API...');
+            const statusDot = document.getElementById('apiStatusDot');
+            const statusText = document.getElementById('apiStatusText');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/reservas/disponibilidad?fecha_entrada=2025-08-20&fecha_salida=2025-08-21`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    statusDot.classList.remove('offline');
+                    statusDot.classList.add('online');
+                    statusText.textContent = `API conectada: ${API_BASE_URL}`;
+                    debug('✅ API conectada exitosamente');
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDot.classList.remove('online');
+                statusDot.classList.add('offline');
+                statusText.textContent = `API no disponible: ${error.message}`;
+                debug('❌ Error conectando con API', error.message);
+                return false;
+            }
+        }
+        
+        // Check availability
+        async function checkAvailability(fechaEntrada, fechaSalida) {
+            debug('Verificando disponibilidad...', { fechaEntrada, fechaSalida });
+            
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/reservas/disponibilidad?fecha_entrada=${fechaEntrada}&fecha_salida=${fechaSalida}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                debug('Disponibilidad recibida', data);
+                return data;
+                
+            } catch (error) {
+                debug('Error verificando disponibilidad', error.message);
+                throw error;
+            }
+        }
+        
+        // Create reservation
+        async function createReservation(reservationData) {
+            debug('Creando reserva...', reservationData);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/reservas`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reservationData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                debug('Reserva creada exitosamente', data);
+                return data;
+                
+            } catch (error) {
+                debug('Error creando reserva', error.message);
+                throw error;
+            }
+        }
+        
+        // Set minimum dates
+        function setMinimumDates() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const fechaEntrada = document.getElementById('fecha_entrada');
+            const fechaSalida = document.getElementById('fecha_salida');
+            
+            fechaEntrada.min = today.toISOString().split('T')[0];
+            fechaEntrada.value = today.toISOString().split('T')[0];
+            
+            fechaSalida.min = tomorrow.toISOString().split('T')[0];
+            fechaSalida.value = tomorrow.toISOString().split('T')[0];
+            
+            // Update fecha_salida minimum when fecha_entrada changes
+            fechaEntrada.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const minCheckout = new Date(selectedDate);
+                minCheckout.setDate(minCheckout.getDate() + 1);
+                fechaSalida.min = minCheckout.toISOString().split('T')[0];
+                
+                if (new Date(fechaSalida.value) <= selectedDate) {
+                    fechaSalida.value = minCheckout.toISOString().split('T')[0];
+                }
+            });
+        }
+        
+        // Handle form submission
+        document.getElementById('reservationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            debug('Formulario enviado');
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingDiv = document.getElementById('loadingDiv');
+            const formData = new FormData(e.target);
+            
+            // Disable form
+            submitBtn.disabled = true;
+            loadingDiv.classList.add('active');
+            
+            try {
+                // Step 1: Check availability
+                const fechaEntrada = formData.get('fecha_entrada');
+                const fechaSalida = formData.get('fecha_salida');
+                
+                const availability = await checkAvailability(fechaEntrada, fechaSalida);
+                
+                if (!availability.success || !availability.data.habitaciones_disponibles.length) {
+                    throw new Error('No hay habitaciones disponibles para las fechas seleccionadas');
+                }
+                
+                debug(`Encontradas ${availability.data.habitaciones_disponibles.length} habitaciones disponibles`);
+                
+                // Step 2: Select a room based on type preference
+                const tipoPreferido = formData.get('habitacion_tipo');
+                let habitacionSeleccionada = availability.data.habitaciones_disponibles[0];
+                
+                if (tipoPreferido) {
+                    const habitacionTipo = availability.data.habitaciones_disponibles.find(h => 
+                        h.categoria.nombre.toLowerCase().includes(tipoPreferido.toLowerCase())
+                    );
+                    if (habitacionTipo) {
+                        habitacionSeleccionada = habitacionTipo;
+                    }
+                }
+                
+                debug('Habitación seleccionada', habitacionSeleccionada);
+                
+                // Step 3: Create reservation
+                const reservationData = {
+                    habitacion_id: habitacionSeleccionada.id,
+                    fecha_entrada: fechaEntrada,
+                    fecha_salida: fechaSalida,
+                    adelanto: 0,
+                    cliente_nombre: formData.get('cliente_nombre'),
+                    cliente_telefono: formData.get('cliente_telefono'),
+                    cliente_email: formData.get('cliente_email') || null,
+                    observaciones: formData.get('observaciones') || null
+                };
+                
+                const reservation = await createReservation(reservationData);
+                
+                // Success!
+                showAlert(`
+                    ✅ ¡Reserva creada exitosamente!<br>
+                    <strong>Número de reserva:</strong> ${reservation.data.reserva_id}<br>
+                    <strong>Habitación:</strong> ${habitacionSeleccionada.numero} (${habitacionSeleccionada.categoria.nombre})<br>
+                    <strong>Total:</strong> $${reservation.data.total}
+                `, 'success');
+                
+                // Reset form
+                e.target.reset();
+                setMinimumDates();
+                
+            } catch (error) {
+                showAlert(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                loadingDiv.classList.remove('active');
+            }
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            debug('Página cargada, inicializando...');
+            
+            // Set minimum dates
+            setMinimumDates();
+            
+            // Check API connection
+            await checkAPIConnection();
+        });
+    </script>
+</body>
+</html>

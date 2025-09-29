@@ -1,0 +1,65 @@
+# Hotel Management System - Cron Job Configuration for cPanel
+# ============================================================
+#
+# These cron jobs need to be added to your cPanel cron job manager.
+#
+# How to add cron jobs in cPanel:
+# 1. Login to your cPanel
+# 2. Go to "Cron Jobs" in the Advanced section
+# 3. Add each command below as a separate cron job
+#
+# IMPORTANT: Replace /home/casaviejagt/public_html with your actual path
+
+# 1. Laravel Scheduler (REQUIRED - runs every minute)
+# This handles all scheduled tasks including reservation expiration,
+# cash register verifications, and other automated processes
+* * * * * cd /home/casaviejagt/public_html && php artisan schedule:run >> /dev/null 2>&1
+
+# 2. Queue Worker Restart (every 15 minutes)
+# Ensures queue workers are running properly
+*/15 * * * * cd /home/casaviejagt/public_html && php artisan queue:restart >> /dev/null 2>&1
+
+# 3. Daily Database Backup (2:00 AM every day)
+# Creates automatic backups of your database
+0 2 * * * cd /home/casaviejagt/public_html/deploy && php database_backup.php create >> /dev/null 2>&1
+
+# 4. Weekly Backup Cleanup (3:00 AM every Sunday)
+# Removes old backups to save disk space (keeps last 10)
+0 3 * * 0 cd /home/casaviejagt/public_html/deploy && php database_backup.php clean 10 >> /dev/null 2>&1
+
+# 5. Log Cleanup (4:00 AM every day)
+# Removes old Laravel log files to prevent disk space issues
+0 4 * * * find /home/casaviejagt/public_html/storage/logs -name "*.log" -mtime +30 -delete >> /dev/null 2>&1
+
+# 6. Clear Cache (5:00 AM every day)
+# Refreshes application cache
+0 5 * * * cd /home/casaviejagt/public_html && php artisan cache:clear >> /dev/null 2>&1
+
+# Alternative Configuration for High-Traffic Sites
+# ================================================
+# If your site has high traffic, you might want to run queue workers continuously.
+# Replace the queue restart job with these:
+
+# Start queue worker every minute (only if not already running)
+# * * * * * cd /home/casaviejagt/public_html && php artisan queue:work --stop-when-empty >> /dev/null 2>&1
+
+# Monitor queue worker process
+# */5 * * * * cd /home/casaviejagt/public_html && pgrep -f "queue:work" > /dev/null || php artisan queue:work --daemon >> /dev/null 2>&1
+
+# Troubleshooting
+# ===============
+# If cron jobs are not working:
+# 1. Check the cron job logs in cPanel
+# 2. Verify the path to your installation
+# 3. Test commands manually via SSH if available
+# 4. Contact your hosting provider for assistance
+#
+# To test if Laravel scheduler is working:
+# php artisan schedule:list    (shows all scheduled commands)
+# php artisan schedule:run     (runs the scheduler manually)
+#
+# Important Notes:
+# - All times are in server timezone
+# - >> /dev/null 2>&1 suppresses output to prevent email spam
+# - Replace paths with your actual cPanel file paths
+# - Some shared hosts may limit cron job frequency

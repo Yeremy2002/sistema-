@@ -25,3 +25,4 @@ yarn-error.log
 # Archivos y carpetas personalizados
 /original
 gestion_hoteles.code-workspace
+gestion_hotel/

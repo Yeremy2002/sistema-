@@ -1,0 +1,63 @@
+# Development files to exclude from production deployment
+.git/
+.gitignore
+.gitattributes
+.env.example
+.env
+.env.local
+.env.testing
+.env.dusk.local
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Laravel development files
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*.php
+
+# Testing files
+tests/
+phpunit.xml
+.phpunit.result.cache
+coverage/
+
+# Development tools
+.php_cs.cache
+.php-cs-fixer.cache
+_ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php
+
+# Documentation (keep only essential)
+README.md
+CRITICAL_FIXES_APPLIED.md
+MODAL_UX_IMPROVEMENTS.md
+gestion_hotel/
+test_fixes_verification.php
+public/test_modal_fixes.html
+
+# Development scripts
+deploy/production_setup.sh
+deploy/exclude_files.txt
