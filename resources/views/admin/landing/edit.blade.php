@@ -9,22 +9,22 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
-                        <i class="fas fa-edit me-2"></i>
+                        <i class="fas fa-edit mr-2"></i>
                         Editar Configuración de Landing Page
                     </h4>
                     <div class="btn-group" role="group">
                         <a href="{{ route('admin.landing.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> Volver
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
                         </a>
                         <a href="{{ route('landing.index') }}" target="_blank" class="btn btn-success">
-                            <i class="fas fa-eye me-1"></i> Vista Previa
+                            <i class="fas fa-eye mr-1"></i> Vista Previa
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($errors->any())
                         <div class="alert alert-danger">
-                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Errores de validación:</h6>
+                            <h6><i class="fas fa-exclamation-triangle mr-2"></i>Errores de validación:</h6>
                             <ul class="mb-0">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -39,35 +39,35 @@
 
                         <!-- Navigation tabs -->
                         <ul class="nav nav-tabs" id="landingTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="hero-tab" data-bs-toggle="tab" data-bs-target="#hero" type="button" role="tab">
-                                    <i class="fas fa-banner me-1"></i>Hero
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link active" id="hero-tab" data-toggle="tab" href="#hero" role="tab" aria-controls="hero" aria-selected="true">
+                                    <i class="fas fa-banner mr-1"></i>Hero
+                                </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="sections-tab" data-bs-toggle="tab" data-bs-target="#sections" type="button" role="tab">
-                                    <i class="fas fa-list me-1"></i>Secciones
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link" id="sections-tab" data-toggle="tab" href="#sections" role="tab" aria-controls="sections" aria-selected="false">
+                                    <i class="fas fa-list mr-1"></i>Secciones
+                                </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab">
-                                    <i class="fas fa-images me-1"></i>Galería
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link" id="gallery-tab" data-toggle="tab" href="#gallery" role="tab" aria-controls="gallery" aria-selected="false">
+                                    <i class="fas fa-images mr-1"></i>Galería
+                                </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="testimonials-tab" data-bs-toggle="tab" data-bs-target="#testimonials" type="button" role="tab">
-                                    <i class="fas fa-comments me-1"></i>Testimonios
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link" id="testimonials-tab" data-toggle="tab" href="#testimonials" role="tab" aria-controls="testimonials" aria-selected="false">
+                                    <i class="fas fa-comments mr-1"></i>Testimonios
+                                </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
-                                    <i class="fas fa-address-book me-1"></i>Contacto
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">
+                                    <i class="fas fa-address-book mr-1"></i>Contacto
+                                </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="seo-tab" data-bs-toggle="tab" data-bs-target="#seo" type="button" role="tab">
-                                    <i class="fas fa-search me-1"></i>SEO
-                                </button>
+                            <li class="nav-item">
+                                <a class="nav-link" id="seo-tab" data-toggle="tab" href="#seo" role="tab" aria-controls="seo" aria-selected="false">
+                                    <i class="fas fa-search mr-1"></i>SEO
+                                </a>
                             </li>
                         </ul>
 
@@ -285,7 +285,7 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
+                                            <i class="fas fa-info-circle mr-2"></i>
                                             La gestión de imágenes de galería se implementará en una siguiente fase.
                                             Por ahora las imágenes se obtienen automáticamente de las habitaciones registradas.
                                         </div>
@@ -301,7 +301,7 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
+                                            <i class="fas fa-info-circle mr-2"></i>
                                             La gestión de testimonios se implementará en una siguiente fase.
                                         </div>
                                     </div>
@@ -396,10 +396,10 @@
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{{ route('admin.landing.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-1"></i> Cancelar
+                                <i class="fas fa-arrow-left mr-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i> Guardar Cambios
+                                <i class="fas fa-save mr-1"></i> Guardar Cambios
                             </button>
                         </div>
                     </form>
@@ -409,32 +409,225 @@
     </div>
 </div>
 
+@section('css')
+<style>
+.tab-pane {
+    min-height: 400px;
+}
+.hero-preview {
+    background-image: url('/hotel-landing/images/hero-bg.svg');
+    background-size: cover;
+    background-position: center;
+    min-height: 200px;
+}
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+.nav-tabs .nav-link.active {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+.nav-tabs .nav-link:hover {
+    border-color: #28a745;
+}
+.preview-updated {
+    animation: pulse 0.5s;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+</style>
+@endsection
+
+@section('js')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tabs manually if needed
+    if (typeof $ !== 'undefined') {
+        $('#landingTabs a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    } else {
+        // Fallback for manual tab switching
+        const tabLinks = document.querySelectorAll('#landingTabs a[data-toggle="tab"]');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active from all tabs and panes
+                tabLinks.forEach(l => l.classList.remove('active'));
+                tabPanes.forEach(p => {
+                    p.classList.remove('show', 'active');
+                });
+                
+                // Add active to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding pane
+                const target = this.getAttribute('href');
+                const targetPane = document.querySelector(target);
+                if (targetPane) {
+                    targetPane.classList.add('show', 'active');
+                }
+            });
+        });
+    }
+    
     // Update opacity preview
     const opacitySlider = document.getElementById('hero_overlay_opacity');
     const opacityValue = document.getElementById('opacity-value');
     const overlay = document.querySelector('.hero-preview .overlay');
     
-    opacitySlider.addEventListener('input', function() {
-        opacityValue.textContent = this.value;
-        overlay.style.backgroundColor = `rgba(0,0,0,${this.value})`;
+    if (opacitySlider && opacityValue && overlay) {
+        opacitySlider.addEventListener('input', function() {
+            opacityValue.textContent = this.value;
+            overlay.style.backgroundColor = `rgba(0,0,0,${this.value})`;
+            animatePreviewUpdate(overlay.parentElement);
+        });
+    }
+    
+    // Update title preview with animation
+    const heroTitle = document.getElementById('hero_title');
+    const previewTitle = document.getElementById('preview-title');
+    if (heroTitle && previewTitle) {
+        heroTitle.addEventListener('input', function() {
+            previewTitle.textContent = this.value || 'Título del Hero';
+            animatePreviewUpdate(previewTitle);
+        });
+    }
+    
+    // Update subtitle preview with animation
+    const heroSubtitle = document.getElementById('hero_subtitle');
+    const previewSubtitle = document.getElementById('preview-subtitle');
+    if (heroSubtitle && previewSubtitle) {
+        heroSubtitle.addEventListener('input', function() {
+            previewSubtitle.textContent = this.value || 'Subtítulo del hero';
+            animatePreviewUpdate(previewSubtitle);
+        });
+    }
+    
+    // Update CTA preview with animation
+    const heroCta = document.getElementById('hero_cta_text');
+    const previewCta = document.getElementById('preview-cta');
+    if (heroCta && previewCta) {
+        heroCta.addEventListener('input', function() {
+            previewCta.textContent = this.value || 'Botón CTA';
+            animatePreviewUpdate(previewCta);
+        });
+    }
+    
+    // Form validation helpers
+    function validateField(field, rules) {
+        const value = field.value.trim();
+        let isValid = true;
+        let message = '';
+        
+        if (rules.required && !value) {
+            isValid = false;
+            message = 'Este campo es requerido';
+        }
+        
+        if (rules.minLength && value.length < rules.minLength) {
+            isValid = false;
+            message = `Mínimo ${rules.minLength} caracteres`;
+        }
+        
+        if (rules.maxLength && value.length > rules.maxLength) {
+            isValid = false;
+            message = `Máximo ${rules.maxLength} caracteres`;
+        }
+        
+        if (rules.email && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            isValid = false;
+            message = 'Email inválido';
+        }
+        
+        if (rules.url && value && !/^https?:\/\/.+/.test(value) && !value.startsWith('#')) {
+            isValid = false;
+            message = 'URL inválida (debe empezar con http/https o #)';
+        }
+        
+        // Visual feedback
+        const feedbackEl = field.parentElement.querySelector('.invalid-feedback');
+        if (feedbackEl) feedbackEl.remove();
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.textContent = message;
+            field.parentElement.appendChild(feedback);
+        }
+        
+        return isValid;
+    }
+    
+    // Add validation to key fields
+    const validationRules = {
+        'hero_title': { required: true, maxLength: 255 },
+        'hero_cta_text': { required: true, maxLength: 100 },
+        'hero_cta_link': { required: true, maxLength: 255, url: true },
+        'contact_email': { email: true },
+        'external_booking_url': { url: true },
+        'meta_title': { maxLength: 60 },
+        'meta_description': { maxLength: 160 }
+    };
+    
+    Object.keys(validationRules).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', () => {
+                validateField(field, validationRules[fieldId]);
+            });
+        }
     });
     
-    // Update title preview
-    document.getElementById('hero_title').addEventListener('input', function() {
-        document.getElementById('preview-title').textContent = this.value;
-    });
+    // Form submission with loading state and validation
+    const form = document.querySelector('form');
+    const submitBtn = form.querySelector('button[type="submit"]');
     
-    // Update subtitle preview
-    document.getElementById('hero_subtitle').addEventListener('input', function() {
-        document.getElementById('preview-subtitle').textContent = this.value;
-    });
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            let isFormValid = true;
+            
+            // Validate all fields
+            Object.keys(validationRules).forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const fieldValid = validateField(field, validationRules[fieldId]);
+                    if (!fieldValid) isFormValid = false;
+                }
+            });
+            
+            if (!isFormValid) {
+                e.preventDefault();
+                alert('Por favor, corrige los errores en el formulario antes de guardar.');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Guardando...';
+            submitBtn.disabled = true;
+        });
+    }
     
-    // Update CTA preview
-    document.getElementById('hero_cta_text').addEventListener('input', function() {
-        document.getElementById('preview-cta').textContent = this.value;
-    });
+    // Add preview update animation
+    function animatePreviewUpdate(element) {
+        element.classList.add('preview-updated');
+        setTimeout(() => element.classList.remove('preview-updated'), 500);
+    }
 });
 </script>
+@endsection
 @endsection

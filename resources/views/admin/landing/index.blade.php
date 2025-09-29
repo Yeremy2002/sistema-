@@ -9,22 +9,22 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
-                        <i class="fas fa-globe me-2"></i>
+                        <i class="fas fa-globe mr-2"></i>
                         Gestión de Landing Page
                     </h4>
                     <div class="btn-group" role="group">
                         <a href="{{ route('landing.index') }}" target="_blank" class="btn btn-success">
-                            <i class="fas fa-eye me-1"></i> Ver Landing
+                            <i class="fas fa-eye mr-1"></i> Ver Landing
                         </a>
                         <a href="{{ route('admin.landing.edit') }}" class="btn btn-primary">
-                            <i class="fas fa-edit me-1"></i> Editar
+                            <i class="fas fa-edit mr-1"></i> Editar
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
+                            <i class="fas fa-check-circle mr-2"></i>
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
@@ -32,7 +32,7 @@
 
                     @if(session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <i class="fas fa-exclamation-circle mr-2"></i>
                             {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
@@ -116,7 +116,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-banner me-2"></i>Sección Hero</h6>
+                                    <h6 class="mb-0"><i class="fas fa-banner mr-2"></i>Sección Hero</h6>
                                 </div>
                                 <div class="card-body">
                                     <table class="table table-sm">
@@ -145,7 +145,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Secciones</h6>
+                                    <h6 class="mb-0"><i class="fas fa-list mr-2"></i>Secciones</h6>
                                 </div>
                                 <div class="card-body">
                                     <table class="table table-sm">
@@ -174,7 +174,7 @@
                         <div class="col-md-6 mt-3">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-address-book me-2"></i>Información de Contacto</h6>
+                                    <h6 class="mb-0"><i class="fas fa-address-book mr-2"></i>Información de Contacto</h6>
                                 </div>
                                 <div class="card-body">
                                     <table class="table table-sm">
@@ -199,7 +199,7 @@
                         <div class="col-md-6 mt-3">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-search me-2"></i>Configuración SEO</h6>
+                                    <h6 class="mb-0"><i class="fas fa-search mr-2"></i>Configuración SEO</h6>
                                 </div>
                                 <div class="card-body">
                                     <table class="table table-sm">
@@ -226,18 +226,18 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-tools me-2"></i>Acciones Rápidas</h6>
+                                    <h6 class="mb-0"><i class="fas fa-tools mr-2"></i>Acciones Rápidas</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('admin.landing.edit') }}" class="btn btn-primary">
-                                            <i class="fas fa-edit me-1"></i> Editar Configuración
+                                            <i class="fas fa-edit mr-1"></i> Editar Configuración
                                         </a>
                                         <a href="{{ route('landing.index') }}" target="_blank" class="btn btn-success">
-                                            <i class="fas fa-external-link-alt me-1"></i> Vista Previa
+                                            <i class="fas fa-external-link-alt mr-1"></i> Vista Previa
                                         </a>
                                         <button type="button" class="btn btn-info" onclick="clearCache()">
-                                            <i class="fas fa-sync-alt me-1"></i> Limpiar Caché
+                                            <i class="fas fa-sync-alt mr-1"></i> Limpiar Caché
                                         </button>
                                     </div>
                                 </div>
