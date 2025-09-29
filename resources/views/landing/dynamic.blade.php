@@ -448,67 +448,112 @@
     <!-- Opiniones -->
     <section class="testimonials section" id="opiniones">
         <div class="container">
-            <h2 class="section__title">Lo que dicen nuestros huéspedes</h2>
+            <h2 class="section__title">{{ $landingSettings->testimonials_title ?? 'Lo que dicen nuestros huéspedes' }}</h2>
             <p class="section__subtitle">Experiencias reales de quienes nos han visitado</p>
             
+            <!-- Testimonios destacados (estáticos) -->
             <div class="testimonials__grid">
-                <div class="testimonial-card">
-                    <div class="testimonial__content">
-                        <div class="testimonial__stars">
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
+                @if($landingSettings && $landingSettings->testimonials)
+                    @foreach($landingSettings->testimonials as $testimonial)
+                    <div class="testimonial-card">
+                        <div class="testimonial__content">
+                            <div class="testimonial__stars">
+                                @for($i = 0; $i < ($testimonial['rating'] ?? 5); $i++)
+                                    <i class="ri-star-fill"></i>
+                                @endfor
+                                @for($i = ($testimonial['rating'] ?? 5); $i < 5; $i++)
+                                    <i class="ri-star-line"></i>
+                                @endfor
+                            </div>
+                            <p class="testimonial__text">"{{ $testimonial['comment'] }}"</p>
                         </div>
-                        <p class="testimonial__text">"Una experiencia increíble. El lugar es hermoso, la atención excepcional y la comida deliciosa. Sin duda regresaremos."</p>
-                    </div>
-                    <div class="testimonial__author">
-                        <img src="{{ url('/hotel-landing/images/testimonial-1.svg') }}" alt="María Gómez" class="testimonial__avatar">
-                        <div class="testimonial__info">
-                            <h4 class="testimonial__name">María Gómez</h4>
-                            <span class="testimonial__location">Ciudad de Guatemala</span>
+                        <div class="testimonial__author">
+                            <img src="{{ url('/hotel-landing/images/testimonial-1.svg') }}" alt="{{ $testimonial['name'] }}" class="testimonial__avatar">
+                            <div class="testimonial__info">
+                                <h4 class="testimonial__name">{{ $testimonial['name'] }}</h4>
+                                <span class="testimonial__location">Cliente verificado</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    @endforeach
+                @else
+                    <!-- Testimonios por defecto -->
+                    <div class="testimonial-card">
+                        <div class="testimonial__content">
+                            <div class="testimonial__stars">
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                            </div>
+                            <p class="testimonial__text">"Una experiencia increíble. El lugar es hermoso, la atención excepcional y la comida deliciosa. Sin duda regresaremos."</p>
+                        </div>
+                        <div class="testimonial__author">
+                            <img src="{{ url('/hotel-landing/images/testimonial-1.svg') }}" alt="María Gómez" class="testimonial__avatar">
+                            <div class="testimonial__info">
+                                <h4 class="testimonial__name">María Gómez</h4>
+                                <span class="testimonial__location">Ciudad de Guatemala</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <div class="testimonial__content">
+                            <div class="testimonial__stars">
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                            </div>
+                            <p class="testimonial__text">"Perfecto para desconectar de la ciudad. Las vistas son espectaculares y el ambiente muy acogedor."</p>
+                        </div>
+                        <div class="testimonial__author">
+                            <img src="{{ url('/hotel-landing/images/testimonial-2.svg') }}" alt="Carlos Rodríguez" class="testimonial__avatar">
+                            <div class="testimonial__info">
+                                <h4 class="testimonial__name">Carlos Rodríguez</h4>
+                                <span class="testimonial__location">Antigua Guatemala</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="testimonial-card">
+                        <div class="testimonial__content">
+                            <div class="testimonial__stars">
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                            </div>
+                            <p class="testimonial__text">"Un lugar mágico para pasar tiempo en familia. Los niños disfrutaron mucho las actividades al aire libre."</p>
+                        </div>
+                        <div class="testimonial__author">
+                            <img src="{{ url('/hotel-landing/images/testimonial-3.svg') }}" alt="Ana Morales" class="testimonial__avatar">
+                            <div class="testimonial__info">
+                                <h4 class="testimonial__name">Ana Morales</h4>
+                                <span class="testimonial__location">Quetzaltenango</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+            
+            <!-- Sección de Facebook Comments -->
+            <div class="facebook-testimonials">
+                <h3 class="facebook-testimonials__title">Comparte tu experiencia</h3>
+                <p class="facebook-testimonials__subtitle">Déjanos saber cómo fue tu estadía y ayuda a otros viajeros</p>
                 
-                <div class="testimonial-card">
-                    <div class="testimonial__content">
-                        <div class="testimonial__stars">
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                        </div>
-                        <p class="testimonial__text">"Perfecto para desconectar de la ciudad. Las vistas son espectaculares y el ambiente muy acogedor."</p>
-                    </div>
-                    <div class="testimonial__author">
-                        <img src="{{ url('/hotel-landing/images/testimonial-2.svg') }}" alt="Carlos Rodríguez" class="testimonial__avatar">
-                        <div class="testimonial__info">
-                            <h4 class="testimonial__name">Carlos Rodríguez</h4>
-                            <span class="testimonial__location">Antigua Guatemala</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="testimonial-card">
-                    <div class="testimonial__content">
-                        <div class="testimonial__stars">
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                        </div>
-                        <p class="testimonial__text">"Un lugar mágico para pasar tiempo en familia. Los niños disfrutaron mucho las actividades al aire libre."</p>
-                    </div>
-                    <div class="testimonial__author">
-                        <img src="{{ url('/hotel-landing/images/testimonial-3.svg') }}" alt="Ana Morales" class="testimonial__avatar">
-                        <div class="testimonial__info">
-                            <h4 class="testimonial__name">Ana Morales</h4>
-                            <span class="testimonial__location">Quetzaltenango</span>
-                        </div>
+                <!-- Plugin de Facebook Comments -->
+                <div class="facebook-comments-wrapper">
+                    <div id="fb-root"></div>
+                    <div class="fb-comments" 
+                         data-href="{{ url('/') }}" 
+                         data-width="100%" 
+                         data-numposts="10"
+                         data-order-by="reverse_time"
+                         data-colorscheme="light">
                     </div>
                 </div>
             </div>
@@ -819,12 +864,86 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" 
+            src="https://connect.facebook.net/es_ES/sdk.js#xfbml=1&version=v19.0"></script>
+    
+    <style>
+        /* Estilos para sección de Facebook testimonials */
+        .facebook-testimonials {
+            margin-top: 4rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--accent-color);
+            text-align: center;
+        }
+        
+        .facebook-testimonials__title {
+            font-family: var(--font-heading);
+            font-size: var(--fs-3xl);
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .facebook-testimonials__subtitle {
+            color: var(--gray-medium);
+            font-size: var(--fs-lg);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .facebook-comments-wrapper {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin: 0 auto;
+            max-width: 800px;
+        }
+        
+        /* Responsive para Facebook comments */
+        @media (max-width: 768px) {
+            .facebook-comments-wrapper {
+                padding: 1rem;
+                margin: 0 1rem;
+            }
+            
+            .facebook-testimonials {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        /* Loading spinner para Facebook */
+        .fb-comments::after {
+            content: 'Cargando comentarios...';
+            display: block;
+            text-align: center;
+            color: var(--gray-medium);
+            padding: 2rem;
+            font-style: italic;
+        }
+        
+        .fb-comments[fb-xfbml-state="rendered"]::after {
+            display: none;
+        }
+    </style>
+    
     <!-- Scripts -->
     <script>
         // Configuración del carrusel desde base de datos
         window.HERO_CAROUSEL_CONFIG = {
             duration: {{ $landingSettings->hero_carousel_duration ?? 5000 }},
             showCarousel: {{ $landingSettings->hero_show_carousel ? 'true' : 'false' }}
+        };
+        
+        // Inicializar Facebook SDK cuando se carga la página
+        window.fbAsyncInit = function() {
+            FB.init({
+                xfbml: true,
+                version: 'v19.0'
+            });
         };
     </script>
     <script src="{{ asset('landing/hero-carousel.js') }}"></script>

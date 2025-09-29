@@ -295,17 +295,108 @@
 
                             <!-- Testimonials Tab -->
                             <div class="tab-pane fade" id="testimonials" role="tabpanel">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">Gestión de Testimonios</h6>
+                                <div class="row">
+                                    <!-- Configuración General -->
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Configuración de Testimonios</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="testimonials_title" class="form-label">Título de la Sección *</label>
+                                                    <input type="text" class="form-control" id="testimonials_title" name="testimonials_title" 
+                                                        value="{{ old('testimonials_title', $settings->testimonials_title) }}" required>
+                                                </div>
+                                                
+                                                <div class="alert alert-success">
+                                                    <h6><i class="fab fa-facebook mr-2"></i>Integración Facebook</h6>
+                                                    <p class="mb-2">Los comentarios de Facebook se mostrarán automáticamente en tu landing page.</p>
+                                                    <p class="mb-0"><strong>Configuración actual:</strong></p>
+                                                    <ul class="mb-0">
+                                                        <li>Plugin: Facebook Comments</li>
+                                                        <li>Comentarios mostrados: 10</li>
+                                                        <li>Orden: Más recientes primero</li>
+                                                        <li>Moderación: Automática por Facebook</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle mr-2"></i>
-                                            La gestión de testimonios se implementará en una siguiente fase.
+                                    
+                                    <!-- Testimonios Destacados -->
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Testimonios Destacados</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="text-muted">Testimonios que aparecerán arriba de los comentarios de Facebook:</p>
+                                                
+                                                <div id="testimonials-list">
+                                                    @if($settings->testimonials && is_array($settings->testimonials))
+                                                        @foreach($settings->testimonials as $index => $testimonial)
+                                                        <div class="testimonial-item border p-3 mb-2 rounded">
+                                                            <div class="row">
+                                                                <div class="col-md-8">
+                                                                    <strong>{{ $testimonial['name'] ?? 'Sin nombre' }}</strong>
+                                                                    <br><small class="text-muted">{{ Str::limit($testimonial['comment'] ?? 'Sin comentario', 60) }}</small>
+                                                                </div>
+                                                                <div class="col-md-4 text-right">
+                                                                    <div class="stars">
+                                                                        @for($i = 0; $i < ($testimonial['rating'] ?? 5); $i++)
+                                                                            <i class="fas fa-star text-warning"></i>
+                                                                        @endfor
+                                                                    </div>
+                                                                    <button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeTestimonial({{ $index }})">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                                
+                                                <button type="button" class="btn btn-success btn-sm" onclick="addTestimonial()">
+                                                    <i class="fas fa-plus mr-1"></i> Agregar Testimonio
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Vista Previa Facebook -->
+                                    <div class="col-md-12 mt-3">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fab fa-facebook mr-2"></i>Vista Previa - Comentarios de Facebook</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle mr-2"></i>
+                                                    <strong>Vista previa del plugin de Facebook:</strong><br>
+                                                    Los comentarios de Facebook aparecerán debajo de los testimonios destacados en tu landing page.
+                                                    Los usuarios podrán comentar directamente desde Facebook y aparecerán automáticamente.
+                                                </div>
+                                                
+                                                <div class="facebook-preview bg-light p-3 rounded">
+                                                    <h6>Cómo se verá:</h6>
+                                                    <div class="border p-2 bg-white rounded">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fab fa-facebook text-primary mr-2"></i>
+                                                            <strong>Comentarios de Facebook</strong>
+                                                        </div>
+                                                        <small class="text-muted">Los comentarios reales aparecerán aquí cuando los usuarios comenten en tu página.</small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- Hidden inputs para testimonials JSON -->
+                                <input type="hidden" name="testimonials" id="testimonials-data" 
+                                       value="{{ old('testimonials', json_encode($settings->testimonials ?? [])) }}">
                             </div>
 
                             <!-- Contact Tab -->
@@ -626,6 +717,76 @@ document.addEventListener('DOMContentLoaded', function() {
     function animatePreviewUpdate(element) {
         element.classList.add('preview-updated');
         setTimeout(() => element.classList.remove('preview-updated'), 500);
+    }
+    
+    // Testimonials management
+    let testimonials = JSON.parse(document.getElementById('testimonials-data').value || '[]');
+    
+    window.addTestimonial = function() {
+        const name = prompt('Nombre del cliente:');
+        if (!name) return;
+        
+        const comment = prompt('Comentario del cliente:');
+        if (!comment) return;
+        
+        const rating = parseInt(prompt('Calificación (1-5 estrellas):', '5'));
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+            alert('Calificación debe ser entre 1 y 5');
+            return;
+        }
+        
+        testimonials.push({
+            name: name,
+            comment: comment,
+            rating: rating
+        });
+        
+        updateTestimonialsList();
+        updateTestimonialsData();
+    };
+    
+    window.removeTestimonial = function(index) {
+        if (confirm('¿Estás seguro de eliminar este testimonio?')) {
+            testimonials.splice(index, 1);
+            updateTestimonialsList();
+            updateTestimonialsData();
+        }
+    };
+    
+    function updateTestimonialsList() {
+        const list = document.getElementById('testimonials-list');
+        list.innerHTML = '';
+        
+        testimonials.forEach((testimonial, index) => {
+            const div = document.createElement('div');
+            div.className = 'testimonial-item border p-3 mb-2 rounded';
+            
+            let stars = '';
+            for (let i = 0; i < testimonial.rating; i++) {
+                stars += '<i class="fas fa-star text-warning"></i>';
+            }
+            
+            div.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>${testimonial.name}</strong>
+                        <br><small class="text-muted">${testimonial.comment.substring(0, 60)}${testimonial.comment.length > 60 ? '...' : ''}</small>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        <div class="stars">${stars}</div>
+                        <button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeTestimonial(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            list.appendChild(div);
+        });
+    }
+    
+    function updateTestimonialsData() {
+        document.getElementById('testimonials-data').value = JSON.stringify(testimonials);
     }
 });
 </script>
