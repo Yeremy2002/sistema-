@@ -146,6 +146,41 @@
                 </div>
             @endforelse
             
+            <!-- Overlay con transparencia configurable -->
+            <div class="hero__overlay" style="background-color: rgba(0, 0, 0, {{ $landingSettings->hero_overlay_opacity ?? 0.4 }})"></div>
+            
+            <!-- Contenido del hero (encima del carrusel) -->
+            <div class="hero__content container">
+                <div class="hero__text" id="hero-text">
+                    @if(count($heroImages) > 0)
+                        @foreach($heroImages as $index => $image)
+                            <div class="hero__text-content {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
+                                <h1 class="hero__title">{{ $image['title'] }}</h1>
+                                <p class="hero__subtitle">{{ $image['subtitle'] }}</p>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="hero__text-content active" data-slide="0">
+                            <h1 class="hero__title">{{ $landingSettings->hero_title ?? ($hotel ? $hotel->nombre : 'Casa Vieja Hotel') }}</h1>
+                            <p class="hero__subtitle">{{ $landingSettings->hero_subtitle ?? 'Habitaciones acogedoras, comida de casa y vistas que enamoran.' }}</p>
+                        </div>
+                    @endif
+                </div>
+                
+                <div class="hero__actions">
+                    <button class="btn btn--primary btn--large js-open-reservation" aria-label="Reservar habitación">
+                        {{ $landingSettings->hero_cta_text ?? 'RESERVA YA' }}
+                    </button>
+                    <a href="https://wa.me/57XXXXXXXXX?text=Hola,%20me%20interesa%20información%20sobre%20{{ $hotel ? urlencode($hotel->nombre) : 'Casa%20Vieja%20Hotel' }}" 
+                       class="btn btn--secondary btn--large" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       aria-label="Contactar por WhatsApp">
+                        Escríbenos por WhatsApp
+                    </a>
+                </div>
+            </div>
+            
             <!-- Controles del carrusel -->
             @if(count($heroImages) > 1)
                 <button class="hero__carousel-btn hero__carousel-btn--prev" id="hero-prev" aria-label="Imagen anterior">
@@ -164,38 +199,6 @@
                     @endforeach
                 </div>
             @endif
-        </div>
-        
-        <!-- Contenido del hero -->
-        <div class="hero__content container">
-            <div class="hero__text" id="hero-text">
-                @if(count($heroImages) > 0)
-                    @foreach($heroImages as $index => $image)
-                        <div class="hero__text-content {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
-                            <h1 class="hero__title">{{ $image['title'] }}</h1>
-                            <p class="hero__subtitle">{{ $image['subtitle'] }}</p>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="hero__text-content active" data-slide="0">
-                        <h1 class="hero__title">{{ $landingSettings->hero_title ?? ($hotel ? $hotel->nombre : 'Casa Vieja Hotel') }}</h1>
-                        <p class="hero__subtitle">{{ $landingSettings->hero_subtitle ?? 'Habitaciones acogedoras, comida de casa y vistas que enamoran.' }}</p>
-                    </div>
-                @endif
-            </div>
-            
-            <div class="hero__actions">
-                <button class="btn btn--primary btn--large js-open-reservation" aria-label="Reservar habitación">
-                    {{ $landingSettings->hero_cta_text ?? 'RESERVA YA' }}
-                </button>
-                <a href="https://wa.me/57XXXXXXXXX?text=Hola,%20me%20interesa%20información%20sobre%20{{ $hotel ? urlencode($hotel->nombre) : 'Casa%20Vieja%20Hotel' }}" 
-                   class="btn btn--secondary btn--large" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   aria-label="Contactar por WhatsApp">
-                    Escríbenos por WhatsApp
-                </a>
-            </div>
         </div>
         
         <div class="hero__scroll">

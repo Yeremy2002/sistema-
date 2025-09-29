@@ -18,7 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSlide = 0;
     let isAnimating = false;
     let autoplayInterval;
-    const autoplayDelay = 6000;
+    
+    // Obtener configuración desde el admin (definida en la vista)
+    const config = window.HERO_CAROUSEL_CONFIG || { duration: 5000, showCarousel: true };
+    const autoplayDelay = config.duration;
+    
+    // Si el carrusel está deshabilitado desde admin, no hacer nada
+    if (!config.showCarousel) {
+        console.log('Hero carousel: Deshabilitado desde configuración admin');
+        return;
+    }
     
     function goToSlide(slideIndex) {
         if (isAnimating || slideIndex === currentSlide) return;
