@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante' }} - Tu hogar en el corazón de la montaña</title>
-    <meta name="description" content="Habitaciones acogedoras, comida de casa y vistas que enamoran en {{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante' }}. Reserva tu experiencia rústica en la montaña.">
-    <meta name="keywords" content="hotel villa de leyva, hotel montaña colombia, hotel rustico boyaca, restaurante villa de leyva, turismo rural colombia, hospedaje montaña">
+    <title>{{ $landingSettings->meta_title ?? ($hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante') }}</title>
+    <meta name="description" content="{{ $landingSettings->meta_description ?? 'Habitaciones acogedoras, comida de casa y vistas que enamoran en ' . ($hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante') . '. Reserva tu experiencia rústica en la montaña.' }}">
+    <meta name="keywords" content="{{ $landingSettings->meta_keywords ?? 'hotel villa de leyva, hotel montaña colombia, hotel rustico boyaca, restaurante villa de leyva, turismo rural colombia, hospedaje montaña' }}">
     <meta name="author" content="{{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante' }}">
     
     <!-- Security Headers -->
@@ -178,15 +178,15 @@
                     @endforeach
                 @else
                     <div class="hero__text-content active" data-slide="0">
-                        <h1 class="hero__title">{{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel' }}: Tu hogar en el corazón de la montaña</h1>
-                        <p class="hero__subtitle">Habitaciones acogedoras, comida de casa y vistas que enamoran.</p>
+                        <h1 class="hero__title">{{ $landingSettings->hero_title ?? ($hotel ? $hotel->nombre : 'Casa Vieja Hotel') }}</h1>
+                        <p class="hero__subtitle">{{ $landingSettings->hero_subtitle ?? 'Habitaciones acogedoras, comida de casa y vistas que enamoran.' }}</p>
                     </div>
                 @endif
             </div>
             
             <div class="hero__actions">
                 <button class="btn btn--primary btn--large js-open-reservation" aria-label="Reservar habitación">
-                    RESERVA YA
+                    {{ $landingSettings->hero_cta_text ?? 'RESERVA YA' }}
                 </button>
                 <a href="https://wa.me/57XXXXXXXXX?text=Hola,%20me%20interesa%20información%20sobre%20{{ $hotel ? urlencode($hotel->nombre) : 'Casa%20Vieja%20Hotel' }}" 
                    class="btn btn--secondary btn--large" 
@@ -817,8 +817,15 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Scripts -->
-    <script src="{{ asset('landing/config.js') }}"></script>
-    <script src="{{ asset('landing/sweetalert2-functions.js') }}"></script>
+    <script>
+        // Configuración del carrusel desde base de datos
+        window.HERO_CAROUSEL_CONFIG = {
+            duration: {{ $landingSettings->hero_carousel_duration ?? 5000 }},
+            showCarousel: {{ $landingSettings->hero_show_carousel ? 'true' : 'false' }}
+        };
+    </script>
+    <script src="{{ asset('landing/hero-carousel.js') }}"></script>
+    <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
     <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
     <script src="{{ asset('landing/hero-carousel.js') }}"></script>
     <script src="{{ asset('landing/script.js') }}"></script>

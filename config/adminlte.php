@@ -421,6 +421,11 @@ return [
                     'icon' => 'fas fa-fw fa-hotel',
                 ],
                 [
+                    'text' => 'Landing Page',
+                    'route'  => 'admin.landing.index',
+                    'icon' => 'fas fa-fw fa-globe',
+                ],
+                [
                     'text' => 'Usuarios',
                     'url'  => 'usuarios',
                     'icon' => 'fas fa-fw fa-users-cog',

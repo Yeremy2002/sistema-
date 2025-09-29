@@ -19,6 +19,7 @@ use App\Http\Controllers\CalendarioController;
 use App\Http\Controllers\Api\ReservaApiController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\Admin\LandingSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -126,6 +127,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/show', [NotificationController::class, 'show'])->name('notifications.show');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    
+    // Rutas de administración de landing page
+    Route::prefix('admin/landing')->name('admin.landing.')->group(function () {
+        Route::get('/', [LandingSettingsController::class, 'index'])->name('index');
+        Route::get('/edit', [LandingSettingsController::class, 'edit'])->name('edit');
+        Route::put('/update', [LandingSettingsController::class, 'update'])->name('update');
+        Route::get('/preview', [LandingSettingsController::class, 'preview'])->name('preview');
+        
+        // Ajax routes for image management
+        Route::post('/gallery/upload', [LandingSettingsController::class, 'uploadGalleryImage'])->name('gallery.upload');
+        Route::delete('/gallery/delete', [LandingSettingsController::class, 'deleteGalleryImage'])->name('gallery.delete');
+    });
 });
 
 // Auth::routes(['register' => false]);

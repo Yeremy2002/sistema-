@@ -8,6 +8,7 @@ use App\Models\Habitacion;
 use App\Models\Categoria;
 use App\Models\Hotel;
 use App\Models\HabitacionImagen;
+use App\Models\LandingSetting;
 use Illuminate\Support\Facades\Storage;
 
 class LandingController extends Controller
@@ -17,19 +18,22 @@ class LandingController extends Controller
      */
     public function index()
     {
+        // Obtener configuraciones de la landing page
+        $landingSettings = LandingSetting::getActive();
+        
         // Obtener datos reales del backend
         $hotel = Hotel::first();
-        $habitaciones = $this->getHabitacionesParaLanding();
+        $habitaciones = $this->getHabitacionesParaLanding($landingSettings->rooms_per_carousel ?? 6);
         $categorias = Categoria::all();
-        $heroImages = $this->getHeroCarouselImages();
+        $heroImages = $this->getHeroCarouselImages($landingSettings->rooms_per_carousel ?? 6);
         
-        return view('landing.dynamic', compact('hotel', 'habitaciones', 'categorias', 'heroImages'));
+        return view('landing.dynamic', compact('landingSettings', 'hotel', 'habitaciones', 'categorias', 'heroImages'));
     }
     
     /**
      * Obtener habitaciones para mostrar en la landing page
      */
-    private function getHabitacionesParaLanding()
+    private function getHabitacionesParaLanding($limit = 6)
     {
         // Obtener una habitación representativa de cada categoría con su imagen principal
         $habitaciones = collect();
@@ -56,7 +60,7 @@ class LandingController extends Controller
     /**
      * Obtener imágenes para el carrusel del hero
      */
-    private function getHeroCarouselImages()
+    private function getHeroCarouselImages($limit = 6)
     {
         // Obtener imágenes destacadas de diferentes categorías para el hero
         $heroImages = collect();
@@ -80,7 +84,7 @@ class LandingController extends Controller
         // Obtener imágenes principales de diferentes categorías
         $imagenes = HabitacionImagen::where('es_principal', true)
             ->with(['habitacion.categoria'])
-            ->limit(6)
+            ->limit($limit)
             ->get();
         
         foreach ($imagenes as $imagen) {
@@ -119,7 +123,7 @@ class LandingController extends Controller
             ]);
         }
         
-        return $heroImages->take(6); // Limitar a 6 imágenes para el carrusel
+        return $heroImages->take($limit); // Limitar imágenes para el carrusel según configuración
     }
     
     /**
