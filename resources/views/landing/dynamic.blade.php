@@ -808,7 +808,7 @@
                 
                 <div class="form__group">
                     <label for="guest-phone" class="form__label">Teléfono</label>
-                    <input type="tel" id="guest-phone" name="guest-phone" class="form__input" placeholder="(502) 5421-4387" maxlength="14" required>
+                    <input type="tel" id="guest-phone" name="guest-phone" class="form__input" placeholder="(502) 5544-5566" maxlength="20" required>
                     <small class="form-help-text">Formato: (código) número</small>
                 </div>
                 
