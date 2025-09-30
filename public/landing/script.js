@@ -1340,8 +1340,10 @@ function validateReservationData(data) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }
 
-    if (checkoutDate <= checkinDate) {
-        errors.push('La fecha de salida debe ser posterior a la fecha de llegada');
+    // Allow same-day stays (check-in and check-out on the same day)
+    // Only validate that checkout is not BEFORE checkin
+    if (checkoutDate < checkinDate) {
+        errors.push('La fecha de salida no puede ser anterior a la fecha de llegada');
     }
 
     // Enhanced email validation
@@ -2251,6 +2253,17 @@ function initializeClientSearchUX() {
     if (nameInput) {
         let isSearching = false;
         
+        // CAPTURE PHASE: Intercept space key BEFORE anything else
+        nameInput.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🚀 CAPTURE PHASE: Espacio detectado!');
+                // Stop propagation to prevent other listeners from blocking
+                e.stopImmediatePropagation();
+                // Let the space through
+                return true;
+            }
+        }, true); // true = use capture phase
+        
         // NO INPUT VALIDATION - let user type freely
         nameInput.addEventListener('input', function(e) {
             let value = e.target.value;
@@ -2289,14 +2302,19 @@ function initializeClientSearchUX() {
             }
         });
         
-        // Also validate on Tab key + DEBUG SPACE KEY
+        // FORCE SPACE TO WORK - Use capture phase and ensure space always passes
         nameInput.addEventListener('keydown', function(e) {
             console.log('🎹 Tecla presionada:', e.key, 'KeyCode:', e.keyCode);
             
             if (e.key === ' ' || e.keyCode === 32) {
                 console.log('🗺️ ¡BARRA ESPACIADORA PRESIONADA!');
                 console.log('🔍 Valor actual antes del espacio:', JSON.stringify(e.target.value));
-                // NO preventDefault - let the space through
+                
+                // Force the space to be added if it's being blocked
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                // DO NOT preventDefault - let the space through
+                return true;
             }
             
             if (e.key === 'Tab') {
@@ -2319,10 +2337,25 @@ function initializeClientSearchUX() {
             }
         });
         
-        // DEBUG: Also monitor keyup events
+        // DEBUG: Also monitor keyup events + FORCE SPACE if missing
         nameInput.addEventListener('keyup', function(e) {
             if (e.key === ' ' || e.keyCode === 32) {
                 console.log('🎆 KEYUP de espacio - Valor actual:', JSON.stringify(e.target.value));
+                
+                // FALLBACK: If space wasn't added by normal means, add it manually
+                const cursorPos = e.target.selectionStart;
+                const textBefore = e.target.value.substring(0, cursorPos);
+                const textAfter = e.target.value.substring(cursorPos);
+                
+                // Check if there's no space at cursor position
+                if (cursorPos > 0 && textBefore.charAt(cursorPos - 1) !== ' ') {
+                    console.log('⚠️ ESPACIO PERDIDO! Agregando manualmente...');
+                    const newValue = textBefore + ' ' + textAfter;
+                    e.target.value = newValue;
+                    // Restore cursor position after the space
+                    e.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
+                    console.log('✅ Espacio agregado manualmente. Nuevo valor:', JSON.stringify(e.target.value));
+                }
             }
         });
     }

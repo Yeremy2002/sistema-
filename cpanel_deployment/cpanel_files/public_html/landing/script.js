@@ -964,8 +964,10 @@ function validateReservationData(data) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }
 
-    if (checkoutDate <= checkinDate) {
-        errors.push('La fecha de salida debe ser posterior a la fecha de llegada');
+    // Allow same-day stays (check-in and check-out on the same day)
+    // Only validate that checkout is not BEFORE checkin
+    if (checkoutDate < checkinDate) {
+        errors.push('La fecha de salida no puede ser anterior a la fecha de llegada');
     }
 
     // Enhanced email validation
