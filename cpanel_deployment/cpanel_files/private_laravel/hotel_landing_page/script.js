@@ -4,15 +4,21 @@ let isScrolling = false;
 let ticking = false;
 
 // ===== DOM ELEMENTS =====
-const header = document.getElementById('header');
-const navMenu = document.getElementById('nav-menu');
-const navToggle = document.getElementById('nav-toggle');
-const navClose = document.getElementById('nav-close');
-const floatingCta = document.getElementById('floating-cta');
-const reservationModal = document.getElementById('reservation-modal');
-const testimonialCards = document.querySelectorAll('.testimonial-card');
-const testimonialPrev = document.querySelector('.testimonial-btn--prev');
-const testimonialNext = document.querySelector('.testimonial-btn--next');
+let header, navMenu, navToggle, navClose, navOverlay, floatingCta, reservationModal, testimonialCards, testimonialPrev, testimonialNext;
+
+// Initialize DOM elements after page load
+function initializeDOMElements() {
+    header = document.getElementById('header');
+    navMenu = document.getElementById('nav-menu');
+    navToggle = document.getElementById('nav-toggle');
+    navClose = document.getElementById('nav-close');
+    navOverlay = document.getElementById('nav-overlay');
+    floatingCta = document.getElementById('floating-cta');
+    reservationModal = document.getElementById('reservation-modal');
+    testimonialCards = document.querySelectorAll('.testimonial-card');
+    testimonialPrev = document.querySelector('.testimonial-btn--prev');
+    testimonialNext = document.querySelector('.testimonial-btn--next');
+}
 
 // ===== UTILITY FUNCTIONS =====
 
@@ -54,11 +60,20 @@ function prefersReducedMotion() {
 function showMenu() {
     if (navMenu) {
         navMenu.classList.add('show-menu');
+        document.body.classList.add('nav-open');
         document.body.style.overflow = 'hidden';
+        
+        // Show overlay
+        if (navOverlay) {
+            navOverlay.classList.add('active');
+        }
 
         // Focus management for accessibility
         const firstLink = navMenu.querySelector('.nav__link');
         if (firstLink) firstLink.focus();
+        
+        // Track menu open event
+        trackEvent('navigation', 'menu_open');
     }
 }
 
@@ -66,10 +81,19 @@ function showMenu() {
 function hideMenu() {
     if (navMenu) {
         navMenu.classList.remove('show-menu');
+        document.body.classList.remove('nav-open');
         document.body.style.overflow = '';
+        
+        // Hide overlay
+        if (navOverlay) {
+            navOverlay.classList.remove('active');
+        }
 
         // Return focus to toggle button
         if (navToggle) navToggle.focus();
+        
+        // Track menu close event
+        trackEvent('navigation', 'menu_close');
     }
 }
 
@@ -224,6 +248,7 @@ function openReservationModal(packageType = '') {
     if (reservationModal) {
         reservationModal.classList.add('show');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
 
         // Pre-fill package type if provided
         if (packageType) {
@@ -261,22 +286,49 @@ function openReservationModal(packageType = '') {
             }
         }
 
-        // Focus first input for accessibility
+        // Auto-update room options if dates are already set
         setTimeout(() => {
+            const checkinValue = checkinInput ? checkinInput.value : null;
+            const checkoutValue = checkoutInput ? checkoutInput.value : null;
+
+            if (checkinValue && checkoutValue) {
+                // Force room options update
+                updateRoomOptions();
+            }
+
+            // Focus first input for accessibility
             const firstInput = reservationModal.querySelector('input, select');
             if (firstInput) firstInput.focus();
-        }, 100);
+        }, 200);
 
         // Track modal opening
         trackEvent('reservation', 'modal_open', packageType);
     }
 }
 
-// Close reservation modal
+// Close reservation modal - ENHANCED VERSION
 function closeReservationModal() {
     if (reservationModal) {
-        reservationModal.classList.remove('show');
+        // Remove all possible modal classes
+        reservationModal.classList.remove('show', 'show-modal');
+
+        // Force hide with inline styles
+        reservationModal.style.display = 'none';
+        reservationModal.style.opacity = '0';
+        reservationModal.style.visibility = 'hidden';
+
+        // Reset body styles
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+
+        // DON'T close SweetAlert2 here - let it show above the modal
+        // if (typeof Swal !== 'undefined') {
+        //     Swal.close();
+        // }
+
+        // Limpiar cualquier notificación existente (but not SweetAlert2)
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
 
         // Return focus to trigger element
         const triggerBtn = document.querySelector('.floating-cta__btn, .nav__cta');
@@ -284,11 +336,15 @@ function closeReservationModal() {
 
         // Track modal closing
         trackEvent('reservation', 'modal_close');
+
+        console.log('✅ Modal closed successfully');
     }
 }
 
 // Handle reservation form submission with availability check
-function handleReservationSubmit(e) {
+function handleReservationSubmit(e, form = null) {
+    // Support both direct form event and delegated calls
+    const targetForm = form || e.target;
     e.preventDefault();
 
     const formData = new FormData(e.target);
@@ -302,8 +358,6 @@ function handleReservationSubmit(e) {
         guestPhone: formData.get('guest-phone'),
         specialRequests: formData.get('special-requests') || ''
     };
-    
-    console.log('Form data collected:', reservationData);
 
     // Validate form data
     if (!validateReservationData(reservationData)) {
@@ -323,44 +377,13 @@ function handleReservationSubmit(e) {
     checkAvailabilityAndSubmit(reservationData, submitBtn, originalText, e.target);
 }
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:8001/api';
+// API Configuration handled by config.js
 
-// Test CORS connectivity
-async function testCORS() {
-    try {
-        console.log('Testing CORS connectivity...');
-        const response = await fetch(`${API_BASE_URL}/test-cors`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            },
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('CORS test successful:', data);
-        return true;
-    } catch (error) {
-        console.error('CORS test failed:', error);
-        return false;
-    }
-}
-
-// Call CORS test when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    testCORS();
-});
-
-// Check room availability
+// Check room availability - COMMENTED OUT - Using checkAvailability from config.js
+/*
 async function checkAvailability(params) {
     console.log('checkAvailability called with params:', params);
     try {
-        // Build URL with query parameters manually to avoid URL constructor issues
         const baseUrl = `${API_BASE_URL}/reservas/disponibilidad`;
         const queryParams = new URLSearchParams({
             fecha_entrada: params.checkin,
@@ -376,13 +399,12 @@ async function checkAvailability(params) {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-            },
-            mode: 'cors' // Explicitly enable CORS
+            }
         });
         
-        console.log('Response received:', response);
+        console.log('Response:', response);
         console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
+        console.log('Response ok:', response.ok);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -396,18 +418,17 @@ async function checkAvailability(params) {
             data: data
         };
     } catch (error) {
-        console.error('Detailed error in checkAvailability:', error);
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
+        console.error('Error:', error);
         return {
             success: false,
             error: error.message
         };
     }
 }
+*/
 
-// Submit reservation to backend
+// Submit reservation to backend - COMMENTED OUT - Using createReservation from config.js
+/*
 async function submitReservation(reservationData) {
     try {
         const response = await fetch(`${API_BASE_URL}/reservas`, {
@@ -436,6 +457,7 @@ async function submitReservation(reservationData) {
         };
     }
 }
+*/
 
 // Check availability and submit reservation
 async function checkAvailabilityAndSubmit(reservationData, submitBtn, originalText, form) {
@@ -452,12 +474,21 @@ async function checkAvailabilityAndSubmit(reservationData, submitBtn, originalTe
 
         const availabilityResponse = await checkAvailability(availabilityParams);
 
-        if (!availabilityResponse.success || !availabilityResponse.data.habitaciones_disponibles.length) {
+        // Extract available rooms from the nested response structure
+        let availableRooms = [];
+        if (availabilityResponse.success && availabilityResponse.data) {
+            // Handle nested data structure: response.data.data or response.data directly
+            const roomsData = availabilityResponse.data.data || availabilityResponse.data;
+            availableRooms = roomsData.habitaciones_disponibles || [];
+        }
+
+        console.log('Available rooms for reservation:', availableRooms);
+
+        if (!availabilityResponse.success || availableRooms.length === 0) {
             throw new Error('No hay habitaciones disponibles para las fechas seleccionadas. Por favor, elige otras fechas.');
         }
 
         // Find suitable room from available rooms
-        const availableRooms = availabilityResponse.data.habitaciones_disponibles;
         const selectedRoom = findSuitableRoom(availableRooms, reservationData.roomType, reservationData.guests);
 
         if (!selectedRoom) {
@@ -478,12 +509,49 @@ async function checkAvailabilityAndSubmit(reservationData, submitBtn, originalTe
             observaciones: reservationData.specialRequests
         };
 
-        const response = await submitReservation(reservationPayload);
+        // Use createReservation from config.js instead of submitReservation
+        const response = await createReservation(reservationPayload);
 
         if (response.success) {
-            const message = response.fallback
-                ? response.message || '¡Reserva enviada por WhatsApp! Te contactaremos pronto.'
-                : `¡Reserva creada exitosamente!
+            // Primero cerrar el modal INMEDIATAMENTE
+            closeReservationModal();
+
+            // Forzar cierre del modal con estilos directos
+            const modal = document.getElementById('reservation-modal');
+            if (modal) {
+                modal.classList.remove('show', 'show-modal');
+                modal.style.display = 'none';
+                modal.style.opacity = '0';
+                modal.style.visibility = 'hidden';
+            }
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+
+            // Limpiar el formulario
+            form.reset();
+
+            // Esperar un momento antes de mostrar SweetAlert2 para asegurar que el modal se cerró
+            setTimeout(() => {
+            // Luego mostrar el mensaje de éxito usando SweetAlert2 con detalles mejorados
+            if (response.fallback) {
+                showSuccessMessage(response.message || '¡Reserva enviada por WhatsApp! Te contactaremos pronto.');
+            } else {
+                // Usar la función mejorada de SweetAlert2 para reservas exitosas
+                if (typeof window.showReservationSuccess === 'function') {
+                    const nights = calculateNights(reservationData.checkin, reservationData.checkout);
+                    const total = selectedRoom.precio * nights;
+
+                    window.showReservationSuccess({
+                        roomName: selectedRoom.categoria?.nombre || 'Habitación',
+                        roomNumber: selectedRoom.numero,
+                        checkIn: formatDate(reservationData.checkin),
+                        checkOut: formatDate(reservationData.checkout),
+                        nights: nights,
+                        total: total
+                    });
+                } else {
+                    // Fallback a mensaje simple
+                    const message = `¡Reserva creada exitosamente!
 
 Detalles:
 • Habitación: ${selectedRoom.numero} (${selectedRoom.categoria?.nombre || 'N/A'})
@@ -491,11 +559,12 @@ Detalles:
 • Total estimado: ${formatPrice(selectedRoom.precio * calculateNights(reservationData.checkin, reservationData.checkout))}
 
 Te contactaremos pronto para confirmar.`;
+                    showSuccessMessage(message);
+                }
+            }
 
-            showSuccessMessage(message);
-            closeReservationModal();
-            form.reset();
             trackEvent('reservation', response.fallback ? 'submit_fallback' : 'submit_success');
+            }, 100); // Wait 100ms to ensure modal is closed
         } else {
             throw new Error(response.message || 'Error al procesar la reserva');
         }
@@ -507,12 +576,18 @@ Te contactaremos pronto para confirmar.`;
         if (error.message.includes('disponibles') || error.message.includes('alternativas')) {
             const message = createWhatsAppMessage(reservationData);
             const whatsappUrl = generateWhatsAppURL(message, 'availability_fallback');
-            window.open(whatsappUrl, '_blank');
 
-            showErrorMessage(error.message + '\n\nTe hemos redirigido a WhatsApp para ayudarte con alternativas.');
+            // Cerrar modal primero
             closeReservationModal();
             form.reset();
+
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            // Mostrar mensaje explicativo
+            showErrorMessage(error.message + '\n\nTe hemos redirigido a WhatsApp para ayudarte con alternativas.');
         } else {
+            // Para otros errores, mantener el modal abierto para que el usuario pueda corregir
             showErrorMessage(error.message || 'Error al verificar disponibilidad. Por favor, intenta nuevamente.');
         }
 
@@ -522,28 +597,31 @@ Te contactaremos pronto para confirmar.`;
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
         form.querySelectorAll('input, select, textarea').forEach(field => field.disabled = false);
+
+        // Cerrar loading de SweetAlert2 si está abierto
+        if (typeof Swal !== 'undefined' && Swal.isVisible()) {
+            Swal.close();
+        }
     }
 }
 
 // Find suitable room from available rooms
-function findSuitableRoom(availableRooms, preferredType, guests) {
+function findSuitableRoom(availableRooms, selectedRoomId, guests) {
     if (!availableRooms || availableRooms.length === 0) {
         return null;
     }
 
     const guestCount = parseInt(guests);
 
-    // First, try to find exact match by room type/category
-    const exactMatch = availableRooms.find(room => {
-        const categoryMatch = room.categoria?.nombre?.toLowerCase().includes(preferredType?.toLowerCase()) ||
-                            room.tipo?.toLowerCase().includes(preferredType?.toLowerCase());
-        const capacityMatch = room.capacidad >= guestCount;
-        return categoryMatch && capacityMatch;
-    });
+    // If a specific room ID was selected, find that room
+    if (selectedRoomId && selectedRoomId !== '') {
+        const selectedRoom = availableRooms.find(room => room.id == selectedRoomId);
+        if (selectedRoom && selectedRoom.capacidad >= guestCount) {
+            return selectedRoom;
+        }
+    }
 
-    if (exactMatch) return exactMatch;
-
-    // If no exact match, find room with sufficient capacity
+    // Otherwise, find any room with sufficient capacity
     const capacityMatch = availableRooms.find(room => room.capacidad >= guestCount);
 
     if (capacityMatch) return capacityMatch;
@@ -562,14 +640,22 @@ function calculateNights(checkin, checkout) {
 
 // Format price for display (simple version, will use config.js version when available)
 function formatPrice(amount) {
-    if (typeof window.formatPrice === 'function') {
-        return window.formatPrice(amount);
+    // Check if there's a formatPrice function from config.js that's different from this one
+    if (typeof window.formatPriceConfig === 'function') {
+        return window.formatPriceConfig(amount);
     }
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0
+    
+    // Get currency symbol from global variable (set when receiving availability data)
+    const currencySymbol = window.hotelCurrencySymbol || '$';
+    
+    // Format the number with thousands separator
+    const formattedNumber = new Intl.NumberFormat('es-GT', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
     }).format(amount);
+    
+    // Return with currency symbol
+    return `${currencySymbol} ${formattedNumber}`;
 }
 
 // Update room options based on availability
@@ -580,6 +666,7 @@ async function updateRoomOptions() {
     const roomSelect = document.getElementById('room-type');
 
     if (!checkinInput.value || !checkoutInput.value || !roomSelect) {
+        console.log('Missing required inputs for availability check');
         return;
     }
 
@@ -595,12 +682,30 @@ async function updateRoomOptions() {
             guests: parseInt(guestsInput.value) || 2
         };
 
+        console.log('Checking availability with params:', availabilityParams);
+        
+        // Check if checkAvailability function is available
+        if (typeof checkAvailability !== 'function') {
+            throw new Error('checkAvailability function not available. Make sure config.js is loaded first.');
+        }
+        
         const response = await checkAvailability(availabilityParams);
-        console.log('Availability response:', response);
+        console.log('Full availability response:', response);
+        
+        // The response structure is: {success: true, data: {data: {habitaciones_disponibles: [...]}}}
+        // We need to check the nested data structure
+        const roomsData = response.data?.data || response.data;
+        console.log('Rooms data extracted:', roomsData);
+        
+        // Store currency symbol globally from the response
+        if (roomsData.moneda) {
+            window.hotelCurrencySymbol = roomsData.moneda;
+            console.log('Currency symbol set to:', window.hotelCurrencySymbol);
+        }
 
-        if (response.success && response.data && response.data.habitaciones_disponibles && response.data.habitaciones_disponibles.length > 0) {
-            console.log('Found', response.data.habitaciones_disponibles.length, 'available rooms');
-            updateRoomSelectOptions(response.data.habitaciones_disponibles, availabilityParams);
+        if (response.success && roomsData && roomsData.habitaciones_disponibles && roomsData.habitaciones_disponibles.length > 0) {
+            console.log('Found', roomsData.habitaciones_disponibles.length, 'available rooms');
+            updateRoomSelectOptions(roomsData.habitaciones_disponibles, availabilityParams);
         } else {
             console.log('No rooms available or error:', response);
             // No rooms available
@@ -631,42 +736,80 @@ function updateRoomSelectOptions(availableRooms, params) {
     const roomSelect = document.getElementById('room-type');
     const nights = calculateNights(params.checkin, params.checkout);
 
-    // Group rooms by category for better UX
-    const roomsByCategory = {};
-
-    availableRooms.forEach(room => {
-        const category = room.categoria?.nombre || 'Habitación';
-        if (!roomsByCategory[category]) {
-            roomsByCategory[category] = [];
-        }
-        roomsByCategory[category].push(room);
-    });
-
-    // Build options HTML
+    // Build options HTML showing individual rooms
     let optionsHTML = '<option value="">Seleccionar habitación disponible</option>';
 
-    Object.keys(roomsByCategory).forEach(category => {
-        const rooms = roomsByCategory[category];
-        const representativeRoom = rooms[0]; // Use first room for category info
-        const totalPrice = representativeRoom.precio * nights;
-        const priceText = `${formatPrice(representativeRoom.precio)}/noche - Total: ${formatPrice(totalPrice)}`;
+    // Sort rooms by numero for better organization
+    availableRooms.sort((a, b) => {
+        const numA = parseInt(a.numero) || 0;
+        const numB = parseInt(b.numero) || 0;
+        return numA - numB;
+    });
 
-        // Create category option
-        const categoryKey = category.toLowerCase().replace(/\s+/g, '_');
-        optionsHTML += `<option value="${categoryKey}" data-price="${representativeRoom.precio}" data-capacity="${representativeRoom.capacidad || 2}">
-            ${category} - ${priceText} (${rooms.length} disponible${rooms.length > 1 ? 's' : ''})
+    // Add each individual room as an option
+    availableRooms.forEach(room => {
+        const totalPrice = room.precio * nights;
+        const categoryName = room.categoria?.nombre || 'Estándar';
+        const priceText = `${formatPrice(room.precio)}/noche - Total: ${formatPrice(totalPrice)}`;
+        
+        // Store room ID as value and additional data as attributes
+        optionsHTML += `<option value="${room.id}" 
+            data-room-number="${room.numero}" 
+            data-price="${room.precio}" 
+            data-capacity="${room.capacidad || 2}"
+            data-category="${categoryName}">
+            Habitación ${room.numero} - ${categoryName} - ${priceText}
         </option>`;
     });
 
     roomSelect.innerHTML = optionsHTML;
 
+    // Auto-trigger price summary update if only one room is available
+    if (availableRooms.length === 1) {
+        // Pre-select the only available room
+        roomSelect.selectedIndex = 1; // Skip the "Seleccionar" option
+        updatePriceSummary();
+    }
+
     // Show success message with availability info
-    showSuccessMessage(`Se encontraron ${availableRooms.length} habitaciones disponibles para las fechas seleccionadas.`);
+    console.log(`Se encontraron ${availableRooms.length} habitaciones disponibles para las fechas seleccionadas.`);
+    // Remove SweetAlert success message to avoid modal conflicts
 }
 
 // Show warning message
 function showWarningMessage(message) {
-    showNotification(message, 'warning');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Atención',
+            text: message,
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(message, 'warning');
+    }
+}
+
+// Show info message
+function showInfoMessage(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Información',
+            text: message,
+            icon: 'info',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(message, 'info');
+    }
 }
 
 // ===== CLIENT SEARCH FUNCTIONS (Phase 3) =====
@@ -680,11 +823,11 @@ async function searchExistingClient(searchTerm) {
     try {
         const response = await searchClient(searchTerm);
 
-        if (response.success && response.data) {
+        // Check if API returned success and has cliente data
+        if (response.success && response.data && response.data.cliente) {
             return {
                 success: true,
-                data: response.data.cliente || response.data,
-                history: response.data.historial_reservas || []
+                data: response.data.cliente
             };
         }
 
@@ -715,12 +858,15 @@ function autoFillClientData(clientData) {
     }
 
     if (phoneInput && clientData.telefono) {
-        phoneInput.value = clientData.telefono;
+        // Apply phone mask when autofilling
+        const formattedPhone = applyPhoneMask(clientData.telefono);
+        phoneInput.value = formattedPhone;
         phoneInput.classList.add('auto-filled');
     }
 
-    // Show success message
-    showSuccessMessage('¡Cliente encontrado! Datos completados automáticamente.');
+    // Show success message - TEMPORARILY DISABLED FOR DEBUG
+    console.log('🚨 autoFillClientData ejecutado para cliente:', clientData.nombre);
+    // showSuccessMessage('¡Cliente encontrado! Datos completados automáticamente.');
 }
 
 // Show client history
@@ -760,38 +906,275 @@ function showClientHistory(clientData, reservations = []) {
     form.insertBefore(historyDiv.firstElementChild, submitButton);
 }
 
-// Enhanced client lookup on email/phone input
+// Show searching indicator
+function showSearchingIndicator(inputElement, searchTerm) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const searchType = searchTerm.includes('@') ? 'correo' : 
+                      (searchTerm.includes(' ') ? 'nombre' : 'teléfono');
+    
+    const indicatorHTML = `
+        <div class="client-search-indicator">
+            <div class="search-indicator__content">
+                <div class="search-indicator__spinner"></div>
+                <span class="search-indicator__text">
+                    <i class="ri-search-line"></i>
+                    Buscando cliente por ${searchType}...
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = indicatorHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Remove searching indicator
+function removeSearchingIndicator() {
+    const indicator = document.querySelector('.client-search-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+// Show client not found message
+function showClientNotFound(searchTerm) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const searchType = searchTerm.includes('@') ? 'correo' : 
+                      (searchTerm.includes(' ') ? 'nombre' : 'teléfono');
+    
+    const notFoundHTML = `
+        <div class="client-search-indicator client-search-indicator--not-found">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-information-line"></i>
+                    Cliente no encontrado por ${searchType}. Será registrado como nuevo cliente.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = notFoundHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--not-found');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 3000);
+}
+
+// Show client lookup error
+function showClientLookupError() {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const errorHTML = `
+        <div class="client-search-indicator client-search-indicator--error">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-error-warning-line"></i>
+                    Error al buscar cliente. Por favor, continúa con el registro.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = errorHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--error');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 3000);
+}
+
+// ===== NEW UX INDICATOR FUNCTIONS =====
+
+// Show typing indicator
+function showTypingIndicator() {
+    console.log('🚀 Ejecutando showTypingIndicator');
+    const form = document.getElementById('reservation-form');
+    if (!form) {
+        console.error('❌ Form no encontrado');
+        return;
+    }
+    
+    const indicatorHTML = `
+        <div class="client-search-indicator client-search-indicator--typing">
+            <div class="search-indicator__content">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="search-indicator__text">
+                    <i class="ri-edit-2-line"></i>
+                    Escribiendo nombre... Escribe tu nombre completo para buscar si ya eres cliente.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    console.log('📍 FormActions encontrado:', formActions);
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = indicatorHTML;
+    if (formActions) {
+        console.log('✅ Insertando indicador antes de formActions');
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        console.log('⚠️ FormActions no encontrado, agregando al final');
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Show client found message
+function showClientFoundMessage(clientName) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const foundHTML = `
+        <div class="client-search-indicator client-search-indicator--found">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-check-double-line"></i>
+                    ¡Cliente encontrado! <strong>${clientName}</strong>. Datos completados automáticamente. Puedes proceder con la reserva.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = foundHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Show new client message
+function showNewClientMessage() {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const newClientHTML = `
+        <div class="client-search-indicator client-search-indicator--new-client">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-user-add-line"></i>
+                    Cliente nuevo. Por favor, completa los datos de contacto para continuar.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = newClientHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--new-client');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 5000);
+}
+
+// Remove all search indicators
+function removeAllSearchIndicators() {
+    const indicators = document.querySelectorAll('.client-search-indicator');
+    indicators.forEach(indicator => indicator.remove());
+}
+
+// Enhanced client lookup with improved UX feedback
 async function handleClientLookup(inputElement, searchTerm) {
+    console.log('🚀 handleClientLookup llamado con searchTerm:', JSON.stringify(searchTerm));
+    console.log('📍 Elemento que lo llamó:', inputElement.id);
     // Clear existing auto-fill styling
     const formInputs = document.querySelectorAll('#reservation-form input');
     formInputs.forEach(input => input.classList.remove('auto-filled'));
 
-    // Remove existing client history
+    // Remove existing client history and search indicators
     const existingHistory = document.querySelector('.client-history');
     if (existingHistory) {
         existingHistory.remove();
     }
+    
+    const existingSearchIndicator = document.querySelector('.client-search-indicator');
+    if (existingSearchIndicator) {
+        existingSearchIndicator.remove();
+    }
 
-    if (!searchTerm || searchTerm.length < 5) {
+    // Validate search term
+    if (!searchTerm || 
+        (searchTerm.includes('@') && searchTerm.length < 5) || 
+        (!searchTerm.includes('@') && !searchTerm.includes(' ') && searchTerm.replace(/\D/g, '').length < 7) ||
+        (searchTerm.includes(' ') && searchTerm.length < 5)) {
         return;
     }
 
+    // Show immediate visual feedback
+    showSearchingIndicator(inputElement, searchTerm);
+    
     // Add loading indicator to input
     inputElement.classList.add('input-loading');
 
     try {
         const result = await searchExistingClient(searchTerm);
 
+        // Remove searching indicator
+        removeSearchingIndicator();
+
         if (result.success && result.data) {
             autoFillClientData(result.data);
             showClientHistory(result.data, result.history);
 
             // Track successful client lookup
-            trackEvent('client', 'found', searchTerm.includes('@') ? 'email' : 'phone');
+            const searchType = searchTerm.includes('@') ? 'email' : 
+                              (searchTerm.includes(' ') ? 'name' : 'phone');
+            trackEvent('client', 'found', searchType);
+        } else {
+            // Show "not found" message for a brief moment
+            showClientNotFound(searchTerm);
         }
 
     } catch (error) {
         console.error('Client lookup error:', error);
+        removeSearchingIndicator();
+        showClientLookupError();
     } finally {
         inputElement.classList.remove('input-loading');
     }
@@ -864,10 +1247,16 @@ function sanitizeEmail(email) {
     return email.toLowerCase().trim().replace(/[^\w@.-]/g, '');
 }
 
-// Sanitize phone input
+// Sanitize phone input - now supports the new phone mask format
 function sanitizePhone(phone) {
     if (typeof phone !== 'string') return '';
     return phone.replace(/[^\d\s\-\+\(\)]/g, '').trim();
+}
+
+// Function to get only numeric digits from phone (for database storage)
+function getNumericPhone(phone) {
+    if (typeof phone !== 'string') return '';
+    return phone.replace(/\D/g, '');
 }
 
 // Enhanced email validation
@@ -901,7 +1290,9 @@ function sanitizeFormData(formData) {
                 break;
             case 'guestPhone':
             case 'phone':
+                // Keep formatted phone for display, but also store numeric version for validation
                 sanitized[key] = sanitizePhone(value);
+                sanitized[key + '_numeric'] = getNumericPhone(value);
                 break;
             case 'guestName':
             case 'name':
@@ -960,9 +1351,12 @@ function validateReservationData(data) {
         errors.push('El formato del correo electrónico no es válido');
     }
 
-    // Enhanced phone validation
-    if (data.guestPhone && !validatePhone(data.guestPhone)) {
-        errors.push('El número de teléfono debe tener entre 7 y 15 dígitos');
+    // Enhanced phone validation - check numeric version for length
+    if (data.guestPhone) {
+        const numericPhone = getNumericPhone(data.guestPhone);
+        if (numericPhone.length < 7 || numericPhone.length > 15) {
+            errors.push('El número de teléfono debe tener entre 7 y 15 dígitos');
+        }
     }
 
     // Validate guests number
@@ -993,53 +1387,6 @@ function getFieldLabel(field) {
     return labels[field] || field;
 }
 
-// Submit reservation to API
-async function submitReservation(data) {
-    try {
-        // Map room types to IDs based on the database structure
-        const roomTypeMap = {
-            'estandar': 1,
-            'superior': 7,
-            'suite': 13,
-            'deluxe': 13 // Map deluxe to suite for now
-        };
-
-        const habitacionId = roomTypeMap[data.roomType] || 1;
-
-        // Use the createReservation function from config.js with proper room mapping
-        const response = await createReservation({
-            habitacion_id: habitacionId,
-            fecha_entrada: data.checkin,
-            fecha_salida: data.checkout,
-            adelanto: 0, // Will be handled by hotel staff
-            cliente_nombre: data.guestName,
-            cliente_telefono: data.guestPhone,
-            cliente_email: data.guestEmail,
-            observaciones: data.specialRequests || `Reserva desde landing page - Tipo de habitación: ${data.roomType}`
-        });
-
-        return response;
-
-    } catch (error) {
-        console.error('API Error:', error);
-
-        // Provide more specific error messages
-        if (error.name === 'AbortError') {
-            throw new Error('La conexión tardó demasiado. Por favor, intenta nuevamente.');
-        } else if (error.message.includes('404')) {
-            throw new Error('Servicio no disponible temporalmente. Te contactaremos por WhatsApp.');
-        } else if (error.message.includes('500')) {
-            throw new Error('Error interno del servidor. Te redirigimos a WhatsApp para completar tu reserva.');
-        }
-
-        // Fallback: redirect to WhatsApp with reservation details
-        const message = createWhatsAppMessage(data);
-        const whatsappUrl = generateWhatsAppURL(message, 'reservation_fallback');
-        window.open(whatsappUrl, '_blank');
-
-        return { success: true, fallback: true, message: 'Reserva enviada por WhatsApp' };
-    }
-}
 
 // Create WhatsApp message with reservation details
 function createWhatsAppMessage(data) {
@@ -1177,16 +1524,65 @@ function getContactFieldLabel(field) {
 
 // Show success message
 function showSuccessMessage(message) {
-    showNotification(message, 'success');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¡Éxito!',
+            text: message,
+            icon: 'success',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+    } else {
+        showNotification(message, 'success');
+    }
 }
 
 // Show error message
 function showErrorMessage(message) {
-    showNotification(message, 'error');
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Error',
+            text: message,
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+    } else {
+        showNotification(message, 'error');
+    }
 }
 
-// Show notification
+// Show notification with improved z-index for modal compatibility
 function showNotification(message, type = 'info') {
+    // Si SweetAlert2 está disponible, usarlo directamente
+    if (typeof Swal !== 'undefined') {
+        const swalIcon = {
+            'success': 'success',
+            'error': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        }[type] || 'info';
+
+        Swal.fire({
+            title: type === 'error' ? 'Error' : type === 'warning' ? 'Atención' : 'Información',
+            text: message,
+            icon: swalIcon,
+            confirmButtonText: 'Entendido',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            heightAuto: false
+        });
+        return;
+    }
+
+    // Fallback a notificaciones custom con z-index corregido
     // Remove existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => notification.remove());
@@ -1203,7 +1599,7 @@ function showNotification(message, type = 'info') {
         </div>
     `;
 
-    // Add styles
+    // Add styles with higher z-index than modal
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -1213,7 +1609,7 @@ function showNotification(message, type = 'info') {
         padding: 16px 20px;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        z-index: 9999;
+        z-index: 2500;
         max-width: 400px;
         animation: slideIn 0.3s ease;
     `;
@@ -1269,9 +1665,6 @@ function trackEvent(category, action, label = '', value = 0) {
             value: value
         });
     }
-
-    // Console log for development
-    console.log('Event tracked:', { category, action, label, value });
 }
 
 // ===== LAZY LOADING =====
@@ -1527,7 +1920,7 @@ if (isPWA()) {
 // ===== INITIALIZATION =====
 
 // Initialize all functionality when DOM is loaded
-function init() {
+function initializeLandingPage() {
     // Navigation event listeners
     if (navToggle) {
         navToggle.addEventListener('click', showMenu);
@@ -1535,6 +1928,11 @@ function init() {
 
     if (navClose) {
         navClose.addEventListener('click', hideMenu);
+    }
+
+    // Overlay click to close menu
+    if (navOverlay) {
+        navOverlay.addEventListener('click', hideMenu);
     }
 
     // Navigation links
@@ -1589,30 +1987,37 @@ function init() {
     // Client lookup inputs
     const emailInput = document.getElementById('guest-email');
     const phoneInput = document.getElementById('guest-phone');
+    const nameInput = document.getElementById('guest-name');
 
     // Debounced functions
     const debouncedUpdateRooms = debounce(updateRoomOptions, 1000);
     const debouncedUpdatePrice = debounce(updatePriceSummary, 500);
-    const debouncedClientLookup = debounce(handleClientLookup, 1500);
+    const debouncedClientLookup = debounce(handleClientLookup, 800);
+    
+    // Initialize improved client search UX
+    initializeClientSearchUX();
 
-    // Client lookup event listeners
-    if (emailInput) {
-        emailInput.addEventListener('input', (e) => {
-            const email = e.target.value.trim();
-            if (email.includes('@') && email.length > 5) {
-                debouncedClientLookup(e.target, email);
-            }
-        });
-    }
+    // Client lookup event listeners - TEMPORARILY DISABLED FOR DEBUG
+    console.log('⚠️ Email y Phone listeners desactivados temporalmente');
+    // if (emailInput) {
+    //     emailInput.addEventListener('input', (e) => {
+    //         const email = e.target.value.trim();
+    //         if (email.includes('@') && email.length > 5) {
+    //             debouncedClientLookup(e.target, email);
+    //         }
+    //     });
+    // }
 
-    if (phoneInput) {
-        phoneInput.addEventListener('input', (e) => {
-            const phone = e.target.value.trim();
-            if (phone.length > 7) {
-                debouncedClientLookup(e.target, phone);
-            }
-        });
-    }
+    // if (phoneInput) {
+    //     phoneInput.addEventListener('input', (e) => {
+    //         const phone = e.target.value.trim();
+    //         if (phone.length > 7) {
+    //             debouncedClientLookup(e.target, phone);
+    //         }
+    //     });
+    // }
+
+    // Note: Client search for name is now handled by initializeClientSearchUX()
 
     if (checkinInput) {
         checkinInput.addEventListener('change', (e) => {
@@ -1713,13 +2118,60 @@ window.openReservationModal = openReservationModal;
 window.closeReservationModal = closeReservationModal;
 window.showMenu = showMenu;
 window.hideMenu = hideMenu;
+window.handleReservationSubmit = handleReservationSubmit;
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// ===== GLOBAL FUNCTION EXPORTS =====
+// Expose critical functions to global scope to prevent call issues
+window.updateRoomOptions = updateRoomOptions;
+window.updatePriceSummary = updatePriceSummary;
+window.openReservationModal = openReservationModal;
+window.closeReservationModal = closeReservationModal;
+window.showSuccessMessage = showSuccessMessage;
+window.showErrorMessage = showErrorMessage;
+window.showWarningMessage = showWarningMessage;
+window.showInfoMessage = showInfoMessage;
+
+// CRITICAL FIX: Failsafe modal closer
+window.forceCloseModal = function() {
+    const modal = document.getElementById('reservation-modal');
+    if (modal) {
+        modal.classList.remove('show', 'show-modal');
+        modal.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; z-index: -1 !important;';
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        console.log('⚠️ Failsafe modal close activated');
+    }
+};
+
+// Debug function to test modal functionality
+window.testModalFunctions = function() {
+    console.log('=== TESTING MODAL FUNCTIONS ===');
+    console.log('updateRoomOptions:', typeof window.updateRoomOptions);
+    console.log('updatePriceSummary:', typeof window.updatePriceSummary);
+    console.log('openReservationModal:', typeof window.openReservationModal);
+    console.log('closeReservationModal:', typeof window.closeReservationModal);
+    console.log('Swal available:', typeof Swal !== 'undefined');
+
+    const checkinInput = document.getElementById('checkin');
+    const checkoutInput = document.getElementById('checkout');
+    const roomSelect = document.getElementById('room-type');
+    const priceSummary = document.getElementById('price-summary');
+
+    console.log('DOM Elements:');
+    console.log('- checkin input:', !!checkinInput);
+    console.log('- checkout input:', !!checkoutInput);
+    console.log('- room select:', !!roomSelect);
+    console.log('- price summary:', !!priceSummary);
+
+    if (checkinInput && checkoutInput) {
+        console.log('- checkin value:', checkinInput.value);
+        console.log('- checkout value:', checkoutInput.value);
+    }
+
+    return 'All functions tested. Check console for details.';
+};
+
+// Initialization is now handled by initializeWhenReady() function at the end of the file
 
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
@@ -1739,6 +2191,428 @@ window.addEventListener('resize', debounce(() => {
         handleScroll();
     }
 }, 250));
+
+// ===== FONT LOADING FALLBACK =====
+// Detect font loading failures and activate fallback
+function initFontFallback() {
+    // Set timeout for font loading detection
+    const fontLoadTimeout = 3000; // 3 seconds
+
+    setTimeout(() => {
+        try {
+            // Try to detect if custom fonts loaded by measuring text width
+            const testElement = document.createElement('div');
+            testElement.style.fontFamily = '"Playfair Display", serif';
+            testElement.style.fontSize = '72px';
+            testElement.style.position = 'absolute';
+            testElement.style.left = '-9999px';
+            testElement.textContent = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            document.body.appendChild(testElement);
+
+            const customFontWidth = testElement.offsetWidth;
+
+            testElement.style.fontFamily = 'serif';
+            const fallbackFontWidth = testElement.offsetWidth;
+
+            // If widths are the same, custom font likely didn't load
+            if (Math.abs(customFontWidth - fallbackFontWidth) < 5) {
+                console.warn('Custom fonts may not have loaded, activating fallback');
+                document.documentElement.classList.add('font-fallback-active');
+            }
+
+            document.body.removeChild(testElement);
+        } catch (error) {
+            console.warn('Font detection failed, activating fallback:', error);
+            document.documentElement.classList.add('font-fallback-active');
+        }
+    }, fontLoadTimeout);
+}
+
+// Initialize font fallback detection
+document.addEventListener('DOMContentLoaded', initFontFallback);
+
+// ===== IMPROVED CLIENT SEARCH UX SYSTEM =====
+
+// Initialize the improved UX flow for client search - SIMPLE APPROACH
+let clientSearchUXInitialized = false;
+function initializeClientSearchUX() {
+    if (clientSearchUXInitialized) {
+        console.log('⚠️ initializeClientSearchUX ya fue inicializado, saltando...');
+        return;
+    }
+    clientSearchUXInitialized = true;
+    console.log('🚀 Inicializando ClientSearchUX por primera vez...');
+    const nameInput = document.getElementById('guest-name');
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+    const specialRequestsInput = document.getElementById('special-requests');
+    
+    // Initially disable all fields except name
+    setFieldsDisabledState(true, true, false); // (disabled, name enabled, submit disabled)
+    
+    if (nameInput) {
+        let isSearching = false;
+        
+        // CAPTURE PHASE: Intercept space key BEFORE anything else
+        nameInput.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🚀 CAPTURE PHASE: Espacio detectado!');
+                // Stop propagation to prevent other listeners from blocking
+                e.stopImmediatePropagation();
+                // Let the space through
+                return true;
+            }
+        }, true); // true = use capture phase
+        
+        // NO INPUT VALIDATION - let user type freely
+        nameInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            let previousValue = e.target.getAttribute('data-previous-value') || '';
+            
+            console.log('📝 Input event - Anterior:', JSON.stringify(previousValue));
+            console.log('📝 Input event - Actual:', JSON.stringify(value));
+            
+            // Detect if space was added
+            if (value.includes(' ') && !previousValue.includes(' ')) {
+                console.log('✨ ¡ESPACIO AGREGADO EXITOSAMENTE!');
+            }
+            
+            // Store current value for next comparison
+            e.target.setAttribute('data-previous-value', value);
+            
+            // NO MODIFICATION OF THE VALUE - let user type anything
+        });
+        
+        // Main validation: when user tries to move to next field
+        nameInput.addEventListener('blur', async function(e) {
+            const name = e.target.value.trim();
+            console.log('🔍 Usuario salió del campo nombre. Validando:', name);
+            
+            // Only search if we have a reasonable name
+            if (name.length >= 3) {
+                if (!isSearching) {
+                    isSearching = true;
+                    await validateClientName(name);
+                    isSearching = false;
+                }
+            } else {
+                // Name too short, enable fields for new client
+                console.log('ℹ️ Nombre muy corto, habilitando campos para nuevo cliente');
+                enableFieldsForNewClient();
+            }
+        });
+        
+        // FORCE SPACE TO WORK - Use capture phase and ensure space always passes
+        nameInput.addEventListener('keydown', function(e) {
+            console.log('🎹 Tecla presionada:', e.key, 'KeyCode:', e.keyCode);
+            
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🗺️ ¡BARRA ESPACIADORA PRESIONADA!');
+                console.log('🔍 Valor actual antes del espacio:', JSON.stringify(e.target.value));
+                
+                // Force the space to be added if it's being blocked
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                // DO NOT preventDefault - let the space through
+                return true;
+            }
+            
+            if (e.key === 'Tab') {
+                // Let the blur event handle the validation
+                console.log('📝 Usuario presionó Tab, blur se ejecutará automáticamente');
+            }
+            
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Trigger validation and move to email field
+                const name = e.target.value.trim();
+                if (name.length >= 3) {
+                    validateClientName(name).then(() => {
+                        const emailField = document.getElementById('guest-email');
+                        if (emailField && !emailField.disabled) {
+                            emailField.focus();
+                        }
+                    });
+                }
+            }
+        });
+        
+        // DEBUG: Also monitor keyup events + FORCE SPACE if missing
+        nameInput.addEventListener('keyup', function(e) {
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🎆 KEYUP de espacio - Valor actual:', JSON.stringify(e.target.value));
+                
+                // FALLBACK: If space wasn't added by normal means, add it manually
+                const cursorPos = e.target.selectionStart;
+                const textBefore = e.target.value.substring(0, cursorPos);
+                const textAfter = e.target.value.substring(cursorPos);
+                
+                // Check if there's no space at cursor position
+                if (cursorPos > 0 && textBefore.charAt(cursorPos - 1) !== ' ') {
+                    console.log('⚠️ ESPACIO PERDIDO! Agregando manualmente...');
+                    const newValue = textBefore + ' ' + textAfter;
+                    e.target.value = newValue;
+                    // Restore cursor position after the space
+                    e.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
+                    console.log('✅ Espacio agregado manualmente. Nuevo valor:', JSON.stringify(e.target.value));
+                }
+            }
+        });
+    }
+    
+    // Initialize phone mask with Guatemala code (502) pre-populated and editable
+    if (phoneInput) {
+        // Pre-populate with Guatemala code if empty
+        if (!phoneInput.value || phoneInput.value.trim() === '') {
+            phoneInput.value = '(502) ';
+            phoneInput.setAttribute('data-default-code', '502');
+        }
+        
+        phoneInput.addEventListener('focus', function(e) {
+            // If field is empty or has placeholder, set default code
+            if (!e.target.value || e.target.value.trim() === '') {
+                e.target.value = '(502) ';
+            }
+            // Move cursor to end (after the code, ready for 8-digit number)
+            setTimeout(() => {
+                e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+            }, 0);
+        });
+        
+        phoneInput.addEventListener('input', function(e) {
+            applyPhoneMask(e.target);
+            console.log('📞 Teléfono formateado:', e.target.value);
+        });
+        
+        phoneInput.addEventListener('keydown', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const value = e.target.value;
+            
+            // Allow: backspace, delete, tab, escape, enter
+            if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                // Allow: Ctrl+A, Command+A
+                (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+                // Allow: home, end, left, right, down, up
+                (e.keyCode >= 35 && e.keyCode <= 40)) {
+                
+                // Prevent deleting below minimum format "(XXX) "
+                if (e.keyCode === 8 && cursorPos <= 6) {
+                    e.preventDefault();
+                    return;
+                }
+                return;
+            }
+            
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+    }
+}
+
+// NEW SIMPLE APPROACH: Validate client name when user moves to next field
+async function validateClientName(name) {
+    console.log('🔍 Validando cliente:', name);
+    
+    // Clean up name (remove extra spaces)
+    const cleanName = name.replace(/\s+/g, ' ').trim();
+    
+    try {
+        const result = await searchExistingClient(cleanName);
+        
+        if (result.success && result.data) {
+            // Client found! Show welcome message and auto-fill
+            console.log('🎉 Cliente encontrado:', result.data.nombre);
+
+            // Auto-fill email and phone only
+            autoFillClientDataSilent(result.data);
+
+            // Show welcome SweetAlert
+            showWelcomeMessage(result.data.nombre);
+
+            // Enable all fields including submit button (allow client to edit and confirm)
+            setFieldsDisabledState(false, true, true); // all fields enabled, name enabled, submit enabled
+
+            // Track successful client lookup
+            trackEvent('client', 'found', 'name');
+
+        } else {
+            // Client not found - enable all fields for new client registration
+            console.log('👤 Cliente no encontrado, habilitando campos para nuevo cliente');
+            enableFieldsForNewClient();
+        }
+        
+    } catch (error) {
+        console.error('Error al validar cliente:', error);
+        // On error, enable fields so user can continue
+        enableFieldsForNewClient();
+    }
+}
+
+// Enable all fields for new client registration
+function enableFieldsForNewClient() {
+    setFieldsDisabledState(false, true, true); // Enable all fields
+    removeAllSearchIndicators();
+    
+    // Optional: Show subtle message that it's a new client
+    console.log('✨ Habilitando campos para nuevo cliente');
+}
+
+// Auto-fill client data without showing success message
+function autoFillClientDataSilent(clientData) {
+    if (!clientData) return;
+
+    const nameInput = document.getElementById('guest-name');
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+
+    if (nameInput && clientData.nombre) {
+        nameInput.value = clientData.nombre;
+        nameInput.classList.add('auto-filled');
+    }
+
+    if (emailInput && clientData.email) {
+        emailInput.value = clientData.email;
+        emailInput.classList.add('auto-filled');
+    }
+
+    if (phoneInput && clientData.telefono) {
+        // Apply phone mask when autofilling
+        phoneInput.value = clientData.telefono;
+        applyPhoneMask(phoneInput);
+        phoneInput.classList.add('auto-filled');
+    }
+
+    console.log('✨ Datos auto-completados para:', clientData.nombre);
+}
+
+// Show welcome message with SweetAlert
+function showWelcomeMessage(clientName) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¡Bienvenido!',
+            text: `Hola ${clientName}, continúa con tu reserva!`,
+            icon: 'success',
+            confirmButtonText: 'Continuar',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(`Bienvenido ${clientName}! Continúa con tu reserva.`, 'success');
+    }
+}
+
+// Set fields disabled/enabled state
+function setFieldsDisabledState(disabled, nameEnabled = true, submitEnabled = false) {
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+    const specialRequestsInput = document.getElementById('special-requests');
+    const submitButton = document.querySelector('#reservation-form .btn--primary');
+    const nameInput = document.getElementById('guest-name');
+    
+    // Email, phone, and special requests
+    if (emailInput) {
+        emailInput.disabled = disabled;
+        emailInput.style.opacity = disabled ? '0.5' : '1';
+        emailInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    if (phoneInput) {
+        phoneInput.disabled = disabled;
+        phoneInput.style.opacity = disabled ? '0.5' : '1';
+        phoneInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    if (specialRequestsInput) {
+        specialRequestsInput.disabled = disabled;
+        specialRequestsInput.style.opacity = disabled ? '0.5' : '1';
+        specialRequestsInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    
+    // Name field
+    if (nameInput) {
+        nameInput.disabled = !nameEnabled;
+        nameInput.style.opacity = nameEnabled ? '1' : '0.5';
+        nameInput.style.cursor = nameEnabled ? 'text' : 'not-allowed';
+    }
+    
+    // Submit button
+    if (submitButton) {
+        submitButton.disabled = !submitEnabled && disabled;
+        submitButton.style.opacity = (!submitEnabled && disabled) ? '0.5' : '1';
+        submitButton.style.cursor = (!submitEnabled && disabled) ? 'not-allowed' : 'pointer';
+    }
+}
+
+// Apply phone mask with Guatemala code (502) pre-populated
+// Format: (502) 5421-4387 or (XXX) XXXX-XXXX for international
+function applyPhoneMask(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length > 0) {
+        // Format: (XXX) XXXX-XXXX
+        // First 3 digits = area/country code
+        // Next 8+ digits = phone number with dash after 4th digit
+        if (value.length <= 3) {
+            formattedValue = `(${value}`;
+        } else if (value.length <= 7) {
+            // (502) 5421
+            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3)}`;
+        } else {
+            // (502) 5421-4387
+            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3, 7)}-${value.substring(7, 11)}`;
+        }
+    } else {
+        // If user deletes everything, restore default Guatemala code
+        formattedValue = '(502) ';
+    }
+    
+    input.value = formattedValue;
+    
+    // NO CLIENT LOOKUP - Just format the phone number
+}
+
+// Get raw phone number (without formatting)
+function getRawPhoneNumber(formattedPhone) {
+    return formattedPhone.replace(/[^\d]/g, '');
+}
+
+// Validate phone number format
+function isValidPhoneNumber(phone) {
+    const rawPhone = getRawPhoneNumber(phone);
+    return rawPhone.length >= 8 && rawPhone.length <= 11;
+}
+
+// ===== INITIALIZATION =====
+// Wait for both DOM and all dependencies to be loaded
+function initializeWhenReady() {
+    // Check if required dependencies are available
+    const dependenciesReady = typeof checkAvailability === 'function' && 
+                             typeof generateWhatsAppURL === 'function' &&
+                             typeof apiRequest === 'function';
+    
+    if (dependenciesReady) {
+        console.log('✓ All dependencies loaded, initializing...');
+        // Initialize DOM elements
+        initializeDOMElements();
+        // Initialize main functionality
+        initializeLandingPage();
+    } else {
+        // Wait a bit more and try again
+        setTimeout(initializeWhenReady, 100);
+        console.log('⏳ Waiting for dependencies to load...');
+    }
+}
+
+// Start initialization after DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWhenReady);
+} else {
+    // DOM already loaded, start immediately
+    initializeWhenReady();
+}
 
 // Service Worker registration (for PWA capabilities)
 // Commented out since sw.js file doesn't exist

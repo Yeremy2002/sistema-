@@ -2360,22 +2360,49 @@ function initializeClientSearchUX() {
         });
     }
     
-    // Initialize phone mask for when phone field is enabled (NO CLIENT SEARCH)
+    // Initialize phone mask with Guatemala code (502) pre-populated and editable
     if (phoneInput) {
+        // Pre-populate with Guatemala code if empty
+        if (!phoneInput.value || phoneInput.value.trim() === '') {
+            phoneInput.value = '(502) ';
+            phoneInput.setAttribute('data-default-code', '502');
+        }
+        
+        phoneInput.addEventListener('focus', function(e) {
+            // If field is empty or has placeholder, set default code
+            if (!e.target.value || e.target.value.trim() === '') {
+                e.target.value = '(502) ';
+            }
+            // Move cursor to end (after the code, ready for 8-digit number)
+            setTimeout(() => {
+                e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+            }, 0);
+        });
+        
         phoneInput.addEventListener('input', function(e) {
             applyPhoneMask(e.target);
             console.log('📞 Teléfono formateado:', e.target.value);
         });
         
         phoneInput.addEventListener('keydown', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const value = e.target.value;
+            
             // Allow: backspace, delete, tab, escape, enter
             if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
                 // Allow: Ctrl+A, Command+A
                 (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
                 // Allow: home, end, left, right, down, up
                 (e.keyCode >= 35 && e.keyCode <= 40)) {
+                
+                // Prevent deleting below minimum format "(XXX) "
+                if (e.keyCode === 8 && cursorPos <= 6) {
+                    e.preventDefault();
+                    return;
+                }
                 return;
             }
+            
             // Ensure that it is a number and stop the keypress
             if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
                 e.preventDefault();
@@ -2518,20 +2545,28 @@ function setFieldsDisabledState(disabled, nameEnabled = true, submitEnabled = fa
     }
 }
 
-// Apply phone mask (502) 5421-4387
+// Apply phone mask with Guatemala code (502) pre-populated
+// Format: (502) 5421-4387 or (XXX) XXXX-XXXX for international
 function applyPhoneMask(input) {
     let value = input.value.replace(/\D/g, ''); // Remove all non-digits
     let formattedValue = '';
     
     if (value.length > 0) {
-        // Format: (502) 5421-4387
+        // Format: (XXX) XXXX-XXXX
+        // First 3 digits = area/country code
+        // Next 8+ digits = phone number with dash after 4th digit
         if (value.length <= 3) {
             formattedValue = `(${value}`;
         } else if (value.length <= 7) {
+            // (502) 5421
             formattedValue = `(${value.substring(0, 3)}) ${value.substring(3)}`;
         } else {
+            // (502) 5421-4387
             formattedValue = `(${value.substring(0, 3)}) ${value.substring(3, 7)}-${value.substring(7, 11)}`;
         }
+    } else {
+        // If user deletes everything, restore default Guatemala code
+        formattedValue = '(502) ';
     }
     
     input.value = formattedValue;
