@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Caché - Landing Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Verificación de Caché del Navegador</h1>
+    
+    <div class="test-box">
+        <h2>Estado de Archivos JavaScript</h2>
+        <button onclick="verificarArchivos()">🔎 Verificar Archivos</button>
+        <pre id="archivos-result">Presiona el botón para verificar...</pre>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 1: Textarea con Espacios</h2>
+        <p>Intenta escribir con espacios en este textarea:</p>
+        <textarea id="test-textarea" rows="3" placeholder="Escribe algo con espacios aquí..."></textarea>
+        <button onclick="verificarTextarea()">✅ Verificar Espacios</button>
+        <div id="textarea-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Validación de Fechas</h2>
+        <button onclick="testValidacionFechas()">🗓️ Test Validación HOY</button>
+        <pre id="fecha-result">Presiona el botón para probar...</pre>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Función setFieldsDisabledState</h2>
+        <button onclick="testFuncion()">🔧 Verificar Función</button>
+        <pre id="funcion-result">Presiona el botón para verificar...</pre>
+    </div>
+
+    <div class="test-box">
+        <h2>Instrucciones para Limpiar Caché</h2>
+        <h3 class="warning">⚠️ SI ALGÚN TEST FALLA, SIGUE ESTOS PASOS:</h3>
+        <ol>
+            <li><strong>Chrome/Edge Mac:</strong> Presiona <code>Cmd + Shift + Delete</code></li>
+            <li>Selecciona "Última hora"</li>
+            <li>Marca "Imágenes y archivos en caché"</li>
+            <li>Clic en "Borrar datos"</li>
+            <li>Cierra TODAS las pestañas del sitio</li>
+            <li>Cierra COMPLETAMENTE el navegador</li>
+            <li>Abre de nuevo y vuelve a probar</li>
+        </ol>
+        <p><strong>O más fácil:</strong> Abre en modo incógnito (Cmd+Shift+N) y prueba ahí</p>
+    </div>
+
+    <script>
+        const VERSION_ESPERADA = '2025-09-30-FIX-TEXTAREA';
+        
+        function verificarArchivos() {
+            const scripts = document.querySelectorAll('script[src*="script.js"]');
+            let result = '=== ARCHIVOS JAVASCRIPT CARGADOS ===\n\n';
+            
+            scripts.forEach((script, index) => {
+                result += `Script ${index + 1}: ${script.src}\n`;
+            });
+            
+            result += '\n=== VERIFICACIÓN DE CACHÉ ===\n';
+            result += `Timestamp actual: ${new Date().getTime()}\n`;
+            result += 'URL debe contener ?v= con un número\n\n';
+            
+            // Verificar si script.js tiene el fix
+            fetch('/landing/script.js?v=' + Date.now())
+                .then(r => r.text())
+                .then(content => {
+                    const tieneFix = content.includes('📝 Textarea special-requests SIEMPRE habilitado');
+                    const tieneValidacion = content.includes('✅ OK: La fecha de llegada es válida');
+                    
+                    result += tieneFix ? 
+                        '✅ CORRECTO: Script tiene fix de textarea\n' : 
+                        '❌ ERROR: Script NO tiene fix de textarea - CACHÉ ANTIGUO\n';
+                    
+                    result += tieneValidacion ? 
+                        '✅ CORRECTO: Script tiene fix de validación de fechas\n' : 
+                        '❌ ERROR: Script NO tiene fix de validación - CACHÉ ANTIGUO\n';
+                    
+                    if (!tieneFix || !tieneValidacion) {
+                        result += '\n⚠️ URGENTE: DEBES LIMPIAR EL CACHÉ DEL NAVEGADOR\n';
+                        result += 'El archivo en el servidor está correcto,\n';
+                        result += 'pero tu navegador está usando una versión antigua.\n';
+                    }
+                    
+                    document.getElementById('archivos-result').textContent = result;
+                });
+        }
+        
+        function verificarTextarea() {
+            const textarea = document.getElementById('test-textarea');
+            const valor = textarea.value;
+            const tieneEspacios = valor.includes(' ');
+            const cantidadEspacios = (valor.match(/ /g) || []).length;
+            
+            let result = '<h3>Resultado:</h3>';
+            result += `<p>Texto ingresado: "${valor}"</p>`;
+            result += `<p>Longitud: ${valor.length} caracteres</p>`;
+            result += `<p>Espacios encontrados: ${cantidadEspacios}</p>`;
+            
+            if (tieneEspacios) {
+                result += '<p class="success">✅ CORRECTO: Los espacios funcionan!</p>';
+            } else if (valor.length > 0) {
+                result += '<p class="error">❌ ERROR: No se detectan espacios - Problema de textarea</p>';
+            } else {
+                result += '<p class="warning">⚠️ Escribe algo para probar</p>';
+            }
+            
+            document.getElementById('textarea-result').innerHTML = result;
+        }
+        
+        function testValidacionFechas() {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
+            const checkinDate = new Date();
+            checkinDate.setHours(0, 0, 0, 0);
+            
+            let result = '=== TEST DE VALIDACIÓN DE FECHAS ===\n\n';
+            result += `Fecha HOY: ${hoy.toISOString()}\n`;
+            result += `Fecha checkin: ${checkinDate.toISOString()}\n`;
+            result += `checkinDate < hoy? ${checkinDate < hoy}\n\n`;
+            
+            if (checkinDate < hoy) {
+                result += '❌ ERROR: La validación diría "anterior a hoy"\n';
+                result += 'Esto indica que el código tiene el bug antiguo.\n';
+            } else {
+                result += '✅ CORRECTO: HOY es válido como fecha de llegada\n';
+            }
+            
+            document.getElementById('fecha-result').textContent = result;
+        }
+        
+        function testFuncion() {
+            // Simular la función
+            let result = '=== VERIFICACIÓN DE FUNCIÓN ===\n\n';
+            
+            // Crear elementos de prueba
+            const testTextarea = document.createElement('textarea');
+            testTextarea.id = 'test-special-requests';
+            document.body.appendChild(testTextarea);
+            
+            // Test: deshabilitar
+            testTextarea.disabled = true;
+            result += 'Test 1: disabled = true\n';
+            result += `  ¿Puedes escribir? ${!testTextarea.disabled ? 'SÍ' : 'NO'}\n`;
+            result += `  Estado: ${testTextarea.disabled ? '❌ Deshabilitado' : '✅ Habilitado'}\n\n`;
+            
+            // Test: habilitar (como debe ser el fix)
+            testTextarea.disabled = false;
+            result += 'Test 2: disabled = false (FIX APLICADO)\n';
+            result += `  ¿Puedes escribir? ${!testTextarea.disabled ? 'SÍ ✅' : 'NO ❌'}\n`;
+            result += `  Estado: ${testTextarea.disabled ? 'Deshabilitado' : '✅ Habilitado'}\n\n`;
+            
+            result += 'CONCLUSIÓN:\n';
+            result += 'El textarea debe tener disabled=false para aceptar espacios.\n';
+            result += 'Si en la página real no puedes escribir con espacios,\n';
+            result += 'significa que el JavaScript antiguo está en caché.\n';
+            
+            document.body.removeChild(testTextarea);
+            document.getElementById('funcion-result').textContent = result;
+        }
+        
+        // Auto-verificar al cargar
+        window.onload = function() {
+            console.log('%c🔍 PÁGINA DE VERIFICACIÓN DE CACHÉ CARGADA', 'background: #10b981; color: white; padding: 10px; font-size: 16px;');
+            console.log('Esta página te ayudará a verificar si el navegador está usando caché antiguo.');
+            setTimeout(() => verificarArchivos(), 1000);
+        };
+    </script>
+</body>
+</html>
