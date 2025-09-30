@@ -574,26 +574,106 @@ Te contactaremos pronto para confirmar.`;
     } catch (error) {
         console.error('Error in availability check or reservation:', error);
 
+        // Extraer el mensaje de error real del JSON si existe
+        let errorMessage = error.message || 'Error desconocido';
+        
+        // Si el error viene con formato JSON, extraerlo
+        const jsonMatch = errorMessage.match(/\{"success":false,"message":"([^"]+)"\}/);
+        if (jsonMatch && jsonMatch[1]) {
+            errorMessage = jsonMatch[1];
+        }
+        
+        console.log('📢 Mensaje de error procesado:', errorMessage);
+
         // If it's an availability issue, offer WhatsApp alternative
-        if (error.message.includes('disponibles') || error.message.includes('alternativas')) {
-            const message = createWhatsAppMessage(reservationData);
-            const whatsappUrl = generateWhatsAppURL(message, 'availability_fallback');
-
-            // Cerrar modal primero
-            closeReservationModal();
-            form.reset();
-
-            // Abrir WhatsApp
-            window.open(whatsappUrl, '_blank');
-
-            // Mostrar mensaje explicativo
-            showErrorMessage(error.message + '\n\nTe hemos redirigido a WhatsApp para ayudarte con alternativas.');
+        if (errorMessage.includes('disponible') || errorMessage.includes('disponibles') || 
+            errorMessage.includes('alternativas') || errorMessage.includes('reservado')) {
+            
+            // NO CERRAR EL MODAL - Permitir que el usuario elija otra habitación
+            // closeReservationModal(); <- COMENTADO
+            
+            // Recargar las opciones de habitaciones disponibles
+            const checkinInput = document.getElementById('checkin');
+            const checkoutInput = document.getElementById('checkout');
+            
+            if (checkinInput.value && checkoutInput.value) {
+                console.log('🔄 Recargando habitaciones disponibles después del error...');
+                updateRoomOptions();
+            }
+            
+            // Mostrar error con opciones claras
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Habitación no disponible',
+                    html: `
+                        <p><strong>${errorMessage}</strong></p>
+                        <br>
+                        <p>La habitación que seleccionaste fue reservada por otro cliente hace un momento.</p>
+                        <br>
+                        <p><strong>¿Qué deseas hacer?</strong></p>
+                        <ul style="text-align: left; padding-left: 20px;">
+                            <li>✅ Elige otra habitación del listado actualizado</li>
+                            <li>💬 O consulta por WhatsApp para más opciones</li>
+                        </ul>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '✅ Elegir otra habitación',
+                    cancelButtonText: '<i class="ri-whatsapp-fill"></i> Consultar por WhatsApp',
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#25D366',
+                    customClass: {
+                        popup: 'swal-modal-overlay'
+                    },
+                    zIndex: 10000
+                }).then((result) => {
+                    if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                        // Usuario eligió WhatsApp
+                        const message = createWhatsAppMessage(reservationData);
+                        const whatsappUrl = generateWhatsAppURL(message, 'availability_fallback');
+                        window.open(whatsappUrl, '_blank');
+                        trackEvent('reservation', 'whatsapp_alternative');
+                        
+                        // Cerrar modal solo si elige WhatsApp
+                        closeReservationModal();
+                        form.reset();
+                    } else if (result.isConfirmed) {
+                        // Usuario eligió seguir en el modal y elegir otra habitación
+                        // Hacer focus en el select de habitaciones
+                        const roomSelect = document.getElementById('room-type');
+                        if (roomSelect) {
+                            roomSelect.focus();
+                            // Highlight el select para llamar la atención
+                            roomSelect.style.border = '2px solid #f59e0b';
+                            roomSelect.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.1)';
+                            setTimeout(() => {
+                                roomSelect.style.border = '';
+                                roomSelect.style.boxShadow = '';
+                            }, 3000);
+                        }
+                        trackEvent('reservation', 'retry_with_different_room');
+                    }
+                });
+            } else {
+                // Fallback sin SweetAlert
+                const choice = confirm(errorMessage + '\n\n¿Deseas elegir otra habitación (OK) o consultar por WhatsApp (Cancelar)?');
+                if (!choice) {
+                    const message = createWhatsAppMessage(reservationData);
+                    const whatsappUrl = generateWhatsAppURL(message, 'availability_fallback');
+                    window.open(whatsappUrl, '_blank');
+                    closeReservationModal();
+                    form.reset();
+                }
+            }
+            
+            // NO RESETEAR EL FORM - mantener los datos del usuario
+            // form.reset(); <- COMENTADO
         } else {
             // Para otros errores, mantener el modal abierto para que el usuario pueda corregir
-            showErrorMessage(error.message || 'Error al verificar disponibilidad. Por favor, intenta nuevamente.');
+            showErrorMessage(errorMessage);
         }
 
-        trackEvent('reservation', 'availability_error', error.message);
+        trackEvent('reservation', 'availability_error', errorMessage);
     } finally {
         // Restore form state
         submitBtn.innerHTML = originalText;
