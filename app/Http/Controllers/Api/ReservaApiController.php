@@ -247,8 +247,19 @@ class ReservaApiController extends Controller
         }
 
         // Calcular total y noches
+        // Para estadías del mismo día (0 noches), cobrar como 1 día completo
         $noches = $fechaEntrada->diffInDays($fechaSalida);
-        $total = $habitacion->precio * $noches;
+        $nochesCobrar = $noches === 0 ? 1 : $noches;
+        $total = $habitacion->precio * $nochesCobrar;
+        
+        \Log::info('API crear reserva - Cálculo de total', [
+            'fecha_entrada' => $fechaEntrada->format('Y-m-d'),
+            'fecha_salida' => $fechaSalida->format('Y-m-d'),
+            'noches_reales' => $noches,
+            'noches_a_cobrar' => $nochesCobrar,
+            'precio_habitacion' => $habitacion->precio,
+            'total_calculado' => $total
+        ]);
 
         try {
             // Crear la reserva con expiración de 24 horas para confirmación

@@ -57,11 +57,20 @@ class Reserva extends Model
 
     public function getDiasEstanciaAttribute()
     {
-        return $this->fecha_entrada->diffInDays($this->fecha_salida);
+        $dias = $this->fecha_entrada->diffInDays($this->fecha_salida);
+        // Para estadías del mismo día (0 días), considerar como 1 día
+        return $dias === 0 ? 1 : $dias;
     }
 
-    public function getTotalAttribute()
+    public function getTotalAttribute($value)
     {
+        // Si ya hay un total guardado en la base de datos, usarlo
+        // Esto previene recalcular cuando ya se guardó un total específico
+        if ($value !== null && $value > 0) {
+            return $value;
+        }
+        
+        // Si no hay total guardado, calcular usando días de estancia
         return $this->diasEstancia * $this->habitacion->precio;
     }
 
