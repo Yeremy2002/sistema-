@@ -2278,8 +2278,9 @@ function initializeClientSearchUX() {
     const phoneInput = document.getElementById('guest-phone');
     const specialRequestsInput = document.getElementById('special-requests');
     
-    // Initially disable all fields except name
-    setFieldsDisabledState(true, true, false); // (disabled, name enabled, submit disabled)
+    // FIX: NO DESHABILITAR CAMPOS - Dejar todo habilitado desde el inicio
+    // El textarea de special-requests estaba deshabilitado y causaba que no aceptara espacios
+    setFieldsDisabledState(false, true, true); // (disabled=false, name enabled, submit enabled)
     
     if (nameInput) {
         let isSearching = false;
@@ -2555,10 +2556,13 @@ function setFieldsDisabledState(disabled, nameEnabled = true, submitEnabled = fa
         phoneInput.style.opacity = disabled ? '0.5' : '1';
         phoneInput.style.cursor = disabled ? 'not-allowed' : 'text';
     }
+    
+    // FIX: NUNCA DESHABILITAR EL TEXTAREA - Siempre debe estar habilitado
     if (specialRequestsInput) {
-        specialRequestsInput.disabled = disabled;
-        specialRequestsInput.style.opacity = disabled ? '0.5' : '1';
-        specialRequestsInput.style.cursor = disabled ? 'not-allowed' : 'text';
+        specialRequestsInput.disabled = false; // <- SIEMPRE HABILITADO
+        specialRequestsInput.style.opacity = '1';
+        specialRequestsInput.style.cursor = 'text';
+        console.log('📝 Textarea special-requests SIEMPRE habilitado');
     }
     
     // Name field
