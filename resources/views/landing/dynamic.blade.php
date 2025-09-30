@@ -947,9 +947,9 @@
         };
     </script>
     <!-- Cargar scripts en el orden correcto -->
-    <script src="{{ asset('landing/config.js') }}"></script>
-    <script src="{{ asset('landing/hero-carousel.js') }}"></script>
-    <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
-    <script src="{{ asset('landing/script.js') }}"></script>
+    <script src="{{ asset('landing/config.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('landing/hero-carousel.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('landing/navigation-fixes.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('landing/script.js') }}?v={{ time() }}"></script>
 </body>
 </html>
