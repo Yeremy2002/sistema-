@@ -45,17 +45,57 @@ class ReservaController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        // Obtener configuración del hotel para validación
+        $hotel = Hotel::getInfo();
+        
+        // Reglas de validación dinámicas según configuración de estadías por horas
+        $validationRules = [
             'habitacion_id' => 'required|exists:habitacions,id',
             'nombre_cliente' => 'required|string|max:255',
             'documento_identidad' => 'required|string|max:255',
             'telefono' => 'required|string|max:20',
             'fecha_entrada' => 'required|date',
-            'fecha_salida' => 'required|date|after:fecha_entrada',
             'observaciones' => 'nullable|string',
             'adelanto' => 'nullable|numeric|min:0',
             'nit' => 'nullable|string|max:255'
-        ]);
+        ];
+        
+        // Si NO se permiten estadías por horas, usar validación tradicional
+        if (!$hotel->permitir_estancias_horas) {
+            $validationRules['fecha_salida'] = 'required|date|after:fecha_entrada';
+        } else {
+            // Si se permiten estadías por horas, validación más flexible
+            $validationRules['fecha_salida'] = 'required|date|after_or_equal:fecha_entrada';
+        }
+        
+        $request->validate($validationRules);
+        
+        // ===================== VALIDACIÓN DE ESTADÍAS POR HORAS =====================
+        if ($hotel->permitir_estancias_horas) {
+            $fechaEntrada = \Carbon\Carbon::parse($request->fecha_entrada);
+            $fechaSalida = \Carbon\Carbon::parse($request->fecha_salida);
+            
+            // Si es el mismo día, validar que cumpla con las reglas de estadías por horas
+            if ($fechaEntrada->toDateString() === $fechaSalida->toDateString()) {
+                // Verificar que se cumpla el mínimo de horas
+                $horasDiferencia = $fechaSalida->diffInHours($fechaEntrada);
+                $minimoHoras = $hotel->minimo_horas_estancia ?? 2;
+                
+                if ($horasDiferencia < $minimoHoras) {
+                    return back()->with('error', 'Para estadías del mismo día, se requiere un mínimo de ' . $minimoHoras . ' horas.')->withInput();
+                }
+                
+                // Verificar que el checkout sea antes de la hora límite del mismo día
+                $horaLimite = $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00';
+                list($limitHour, $limitMin) = explode(':', $horaLimite);
+                $fechaLimite = \Carbon\Carbon::parse($request->fecha_salida)->setTime($limitHour, $limitMin, 0);
+                
+                if ($fechaSalida->gt($fechaLimite)) {
+                    return back()->with('error', 'Para estadías del mismo día, el check-out debe ser antes de las ' . $horaLimite . '.')->withInput();
+                }
+            }
+        }
+        // =================== FIN VALIDACIÓN DE ESTADÍAS POR HORAS =================
 
         // ===================== VALIDACIÓN DE DISPONIBILIDAD =====================
         // Antes de crear la reserva, validamos que NO existan reservas (Pendiente de Confirmación, Pendiente o Check-in)
@@ -152,12 +192,27 @@ class ReservaController extends Controller
         $reserva->documento_cliente = $request->documento_identidad; // Mapear documento_identidad a documento_cliente
         $reserva->telefono_cliente = $request->telefono;           // Mapear telefono a telefono_cliente
 
-        // Configurar la fecha de entrada con la hora específica de check-in (14:00)
-        $fechaEntrada = \Carbon\Carbon::parse($request->fecha_entrada)->setTime(14, 0, 0);
+        // Configurar la fecha de entrada con la hora específica de check-in
+        $horaCheckinEstandar = $hotel->checkin_hora_inicio ? $hotel->checkin_hora_inicio->format('H:i') : '14:00';
+        list($checkinHour, $checkinMin) = explode(':', $horaCheckinEstandar);
+        $fechaEntrada = \Carbon\Carbon::parse($request->fecha_entrada)->setTime($checkinHour, $checkinMin, 0);
         $reserva->fecha_entrada = $fechaEntrada;
 
-        // Configurar la fecha de salida con la hora específica de check-out (12:30)
-        $fechaSalida = \Carbon\Carbon::parse($request->fecha_salida)->setTime(12, 30, 0);
+        // Configurar la fecha de salida
+        $fechaEntradaObj = \Carbon\Carbon::parse($request->fecha_entrada);
+        $fechaSalidaObj = \Carbon\Carbon::parse($request->fecha_salida);
+        
+        if ($hotel->permitir_estancias_horas && $fechaEntradaObj->toDateString() === $fechaSalidaObj->toDateString()) {
+            // Para estadías del mismo día, usar la hora límite configurada
+            $horaLimite = $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00';
+            list($limitHour, $limitMin) = explode(':', $horaLimite);
+            $fechaSalida = \Carbon\Carbon::parse($request->fecha_salida)->setTime($limitHour, $limitMin, 0);
+        } else {
+            // Para estadías tradicionales, usar la hora estándar de checkout
+            $horaCheckoutEstandar = $hotel->checkout_hora_inicio ? $hotel->checkout_hora_inicio->format('H:i') : '12:30';
+            list($checkoutHour, $checkoutMin) = explode(':', $horaCheckoutEstandar);
+            $fechaSalida = \Carbon\Carbon::parse($request->fecha_salida)->setTime($checkoutHour, $checkoutMin, 0);
+        }
         $reserva->fecha_salida = $fechaSalida;
 
         $reserva->observaciones = $request->observaciones;
@@ -430,16 +485,53 @@ class ReservaController extends Controller
 
         // Si la petición es POST, procesar el check-in
         if (request()->isMethod('post')) {
-            $data = request()->validate([
+            // Reglas de validación dinámicas según configuración de estadías por horas
+            $validationRules = [
                 'nombre_cliente' => 'required|string|max:255',
                 'documento_identidad' => 'required|string|max:255',
                 'telefono' => 'required|string|max:20',
                 'fecha_entrada' => 'required|date',
-                'fecha_salida' => 'required|date|after:fecha_entrada',
                 'adelanto' => 'nullable|numeric|min:0',
                 'nit' => 'nullable|string|max:255',
                 'observaciones' => 'nullable|string',
-            ]);
+            ];
+            
+            // Si NO se permiten estadías por horas, usar validación tradicional
+            if (!$hotel->permitir_estancias_horas) {
+                $validationRules['fecha_salida'] = 'required|date|after:fecha_entrada';
+            } else {
+                // Si se permiten estadías por horas, validación más flexible
+                $validationRules['fecha_salida'] = 'required|date|after_or_equal:fecha_entrada';
+            }
+            
+            $data = request()->validate($validationRules);
+            
+            // ===================== VALIDACIÓN DE ESTADÍAS POR HORAS =====================
+            if ($hotel->permitir_estancias_horas) {
+                $fechaEntrada = \Carbon\Carbon::parse($data['fecha_entrada']);
+                $fechaSalida = \Carbon\Carbon::parse($data['fecha_salida']);
+                
+                // Si es el mismo día, validar que cumpla con las reglas de estadías por horas
+                if ($fechaEntrada->toDateString() === $fechaSalida->toDateString()) {
+                    // Verificar que se cumpla el mínimo de horas
+                    $horasDiferencia = $fechaSalida->diffInHours($fechaEntrada);
+                    $minimoHoras = $hotel->minimo_horas_estancia ?? 2;
+                    
+                    if ($horasDiferencia < $minimoHoras) {
+                        return back()->with('error', 'Para estadías del mismo día, se requiere un mínimo de ' . $minimoHoras . ' horas.')->withInput();
+                    }
+                    
+                    // Verificar que el checkout sea antes de la hora límite del mismo día
+                    $horaLimite = $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00';
+                    list($limitHour, $limitMin) = explode(':', $horaLimite);
+                    $fechaLimite = \Carbon\Carbon::parse($data['fecha_salida'])->setTime($limitHour, $limitMin, 0);
+                    
+                    if ($fechaSalida->gt($fechaLimite)) {
+                        return back()->with('error', 'Para estadías del mismo día, el check-out debe ser antes de las ' . $horaLimite . '.')->withInput();
+                    }
+                }
+            }
+            // =================== FIN VALIDACIÓN DE ESTADÍAS POR HORAS =================
 
             $nit = $data['nit'] ?: $data['documento_identidad'];
             $nombreCliente = strtoupper($data['nombre_cliente']);

@@ -789,11 +789,10 @@
                     <div class="form__group">
                         <label for="room-type" class="form__label">Tipo de habitación</label>
                         <select id="room-type" name="room-type" class="form__select" required>
-                            <option value="">Seleccionar</option>
-                            <option value="estandar">Habitación Estándar</option>
-                            <option value="deluxe">Habitación Deluxe</option>
-                            <option value="suite">Suite Familiar</option>
+                            <option value="">Primero selecciona las fechas</option>
+                            <!-- Las habitaciones se cargarán dinámicamente -->
                         </select>
+                        <small class="form-help-text">Las opciones aparecen después de seleccionar las fechas</small>
                     </div>
                 </div>
                 

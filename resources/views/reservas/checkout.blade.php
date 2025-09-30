@@ -56,31 +56,14 @@
                         <p><strong>Consumos Adicionales:</strong> {{ $hotel->simbolo_moneda }}{{ number_format(0, 2) }}
                         </p>
                         <p><strong>Descuentos:</strong> {{ $hotel->simbolo_moneda }}{{ number_format(0, 2) }}</p>
-                        <p><strong>Anticipo registrado:</strong>
-                            {{ $hotel->simbolo_moneda }}{{ number_format($reserva->adelanto, 2) }}</p>
 
                         <p><strong>Total a Pagar:</strong> {{ $hotel->simbolo_moneda }}
-                            <span class="{{ $saldoPendiente < 0 ? 'text-danger font-weight-bold' : '' }}">
-                                {{ number_format($saldoPendiente, 2) }}
+                            <span class="h5 text-primary">
+                                {{ number_format($reserva->total, 2) }}
                             </span>
                         </p>
-                        @if($saldoPendiente < 0)
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>¡SALDO NEGATIVO!</strong><br>
-                                El anticipo ({{ $hotel->simbolo_moneda }}{{ number_format($reserva->adelanto, 2) }}) 
-                                excede el total de la reserva ({{ $hotel->simbolo_moneda }}{{ number_format($reserva->total, 2) }}).
-                                <br><strong>Se requiere checkout forzado por administrador.</strong>
-                            </div>
-                        @endif
                         <p><strong>Estado de Pago:</strong> 
-                            @if($saldoPendiente < 0)
-                                <span class="text-danger">Saldo Negativo</span>
-                            @elseif($saldoPendiente == 0)
-                                <span class="text-success">Pagado</span>
-                            @else
-                                Pendiente
-                            @endif
+                            <span class="text-warning">Pendiente de Pago</span>
                         </p>
                     </div>
                 </div>
@@ -101,22 +84,101 @@
                                     name="descuento_adicional" value="0" min="0">
                             </div>
                             <div class="form-group">
-                                <label>Métodos de Pago</label>
+                                <label>Método de Pago Principal</label>
+                                <div class="mb-3">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="metodo_pago_principal" 
+                                               id="metodo_efectivo" value="efectivo" checked>
+                                        <label class="form-check-label" for="metodo_efectivo">
+                                            <i class="fas fa-money-bill-wave text-success"></i> Efectivo
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="metodo_pago_principal" 
+                                               id="metodo_tarjeta" value="tarjeta">
+                                        <label class="form-check-label" for="metodo_tarjeta">
+                                            <i class="fas fa-credit-card text-primary"></i> Tarjeta (+5% recargo)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="metodo_pago_principal" 
+                                               id="metodo_transferencia" value="transferencia">
+                                        <label class="form-check-label" for="metodo_transferencia">
+                                            <i class="fas fa-exchange-alt text-info"></i> Transferencia
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campos específicos por método de pago -->
+                            <div id="pago_efectivo_section" class="payment-section">
+                                <div class="form-group">
+                                    <label for="pago_efectivo">Monto Recibido en Efectivo</label>
+                                    <input type="number" step="0.01" class="form-control" id="pago_efectivo"
+                                        name="pago_efectivo" value="0" min="0">
+                                    <small class="form-text text-muted">Puede ingresar un monto mayor para calcular el vuelto</small>
+                                </div>
+                                <div id="cambio_section" class="alert alert-success" style="display: none;">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                    <strong>Vuelto/Cambio a entregar: </strong>
+                                    <span id="cambio_amount" class="h5">{{ $hotel->simbolo_moneda }}0.00</span>
+                                </div>
+                            </div>
+
+                            <div id="pago_tarjeta_section" class="payment-section" style="display: none;">
+                                <div class="form-group">
+                                    <label for="pago_tarjeta">Monto Base (sin recargo)</label>
+                                    <input type="number" step="0.01" class="form-control" id="pago_tarjeta"
+                                        name="pago_tarjeta" value="0" min="0" readonly>
+                                </div>
+                                <div class="card border-warning">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-warning"><i class="fas fa-credit-card"></i> Desglose Pago con Tarjeta</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Monto base:</small><br>
+                                                <span id="tarjeta_base">{{ $hotel->simbolo_moneda }}0.00</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Recargo (5%):</small><br>
+                                                <span id="tarjeta_recargo" class="text-warning">{{ $hotel->simbolo_moneda }}0.00</span>
+                                            </div>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div class="text-center">
+                                            <strong>Total con recargo: <span id="tarjeta_total" class="h6 text-warning">{{ $hotel->simbolo_moneda }}0.00</span></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="pago_transferencia_section" class="payment-section" style="display: none;">
+                                <div class="form-group">
+                                    <label for="pago_transferencia">Monto Transferido</label>
+                                    <input type="number" step="0.01" class="form-control" id="pago_transferencia"
+                                        name="pago_transferencia" value="0" min="0" readonly>
+                                </div>
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <label for="pago_efectivo">Efectivo</label>
-                                        <input type="number" step="0.01" class="form-control" id="pago_efectivo"
-                                            name="pago_efectivo" value="0" min="0">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="transferencia_banco">Banco</label>
+                                            <select class="form-control" id="transferencia_banco" name="transferencia_banco">
+                                                <option value="">Seleccionar banco...</option>
+                                                <option value="BAM">BAM</option>
+                                                <option value="BANRURAL">Banrural</option>
+                                                <option value="BANCO_INDUSTRIAL">Banco Industrial</option>
+                                                <option value="BANTRAB">Bantrab</option>
+                                                <option value="AGROMERCANTIL">Banco Agromercantil</option>
+                                                <option value="OTRO">Otro</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label for="pago_tarjeta">Tarjeta</label>
-                                        <input type="number" step="0.01" class="form-control" id="pago_tarjeta"
-                                            name="pago_tarjeta" value="0" min="0">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="pago_transferencia">Transferencia</label>
-                                        <input type="number" step="0.01" class="form-control" id="pago_transferencia"
-                                            name="pago_transferencia" value="0" min="0">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="transferencia_referencia">Número de Referencia/Hilera</label>
+                                            <input type="text" class="form-control" id="transferencia_referencia" 
+                                                   name="transferencia_referencia" placeholder="Ej: 123456789">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -124,7 +186,7 @@
                                 <label for="monto_total">Total a Pagar</label>
                                 <input type="number" step="0.01" class="form-control" id="monto_total"
                                     name="monto_total"
-                                    value="{{ old('monto_total', $reserva->total - $reserva->adelanto) }}" readonly>
+                                    value="{{ old('monto_total', $reserva->total) }}" readonly>
                             </div>
                             <div class="form-group">
                                 <label for="observaciones">Observaciones</label>
@@ -135,60 +197,13 @@
                                 @enderror
                             </div>
 
-                            @if($saldoPendiente < 0)
-                                @if($esAdmin)
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-shield-alt"></i>
-                                        <strong>Checkout Forzado - Solo Administrador</strong><br>
-                                        Este checkout tiene saldo negativo y requiere autorización administrativa.
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="justificacion_checkout_forzado">Justificación del Checkout Forzado *</label>
-                                        <textarea class="form-control @error('justificacion_checkout_forzado') is-invalid @enderror" 
-                                                  id="justificacion_checkout_forzado" name="justificacion_checkout_forzado" 
-                                                  rows="3" required placeholder="Explique por qué se autoriza este checkout con saldo negativo...">{{ old('justificacion_checkout_forzado') }}</textarea>
-                                        @error('justificacion_checkout_forzado')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input @error('autorizacion_checkout_forzado') is-invalid @enderror" 
-                                               type="checkbox" id="autorizacion_checkout_forzado" name="autorizacion_checkout_forzado" 
-                                               value="1" {{ old('autorizacion_checkout_forzado') ? 'checked' : '' }} required>
-                                        <label class="form-check-label" for="autorizacion_checkout_forzado">
-                                            <strong>Autorizo explícitamente este checkout forzado con saldo negativo</strong>
-                                        </label>
-                                        @error('autorizacion_checkout_forzado')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <input type="hidden" name="checkout_forzado" value="1">
-                                @else
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-lock"></i>
-                                        <strong>Acceso Denegado</strong><br>
-                                        Solo un administrador puede procesar un checkout con saldo negativo.
-                                        Contacte a un administrador para continuar.
-                                    </div>
-                                @endif
-                            @endif
                             
                             <div id="feedback_pago" class="mt-2"></div>
                             <input type="hidden" name="post_checkout_accion" id="post_checkout_accion" value="limpieza">
                             
-                            @if($saldoPendiente < 0 && !$esAdmin)
-                                <button type="button" class="btn btn-secondary" disabled>
-                                    <i class="fas fa-lock"></i> Checkout Bloqueado
-                                </button>
-                            @else
-                                <button type="submit" class="btn {{ $saldoPendiente < 0 ? 'btn-warning' : 'btn-success' }}">
-                                    @if($saldoPendiente < 0)
-                                        <i class="fas fa-exclamation-triangle"></i> Checkout Forzado
-                                    @else
-                                        Registrar Check-out
-                                    @endif
-                                </button>
-                            @endif
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-sign-out-alt"></i> Registrar Check-out
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -200,9 +215,72 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            function actualizarTotal() {
+            // Variables globales
             const totalReserva = {{ $reserva->total }};
-            const adelanto = {{ $reserva->adelanto }};
+            const simboloMoneda = '{{ $hotel->simbolo_moneda }}';
+            
+            // Manejar cambios en método de pago
+            function cambiarMetodoPago() {
+                const metodo = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('.payment-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Resetear valores
+                document.getElementById('pago_efectivo').value = '0';
+                document.getElementById('pago_tarjeta').value = '0';
+                document.getElementById('pago_transferencia').value = '0';
+                
+                // Mostrar sección correspondiente y asignar valor
+                const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
+                const totalPagar = totalReserva - descuento;
+                
+                if (metodo === 'efectivo') {
+                    document.getElementById('pago_efectivo_section').style.display = 'block';
+                    document.getElementById('pago_efectivo').value = totalPagar.toFixed(2);
+                } else if (metodo === 'tarjeta') {
+                    document.getElementById('pago_tarjeta_section').style.display = 'block';
+                    document.getElementById('pago_tarjeta').value = totalPagar.toFixed(2);
+                    calcularRecargoTarjeta(totalPagar);
+                } else if (metodo === 'transferencia') {
+                    document.getElementById('pago_transferencia_section').style.display = 'block';
+                    document.getElementById('pago_transferencia').value = totalPagar.toFixed(2);
+                }
+                
+                actualizarTotal();
+            }
+            
+            // Calcular recargo de tarjeta
+            function calcularRecargoTarjeta(montoBase) {
+                const recargo = montoBase * 0.05;
+                const totalConRecargo = montoBase + recargo;
+                
+                document.getElementById('tarjeta_base').textContent = simboloMoneda + montoBase.toFixed(2);
+                document.getElementById('tarjeta_recargo').textContent = simboloMoneda + recargo.toFixed(2);
+                document.getElementById('tarjeta_total').textContent = simboloMoneda + totalConRecargo.toFixed(2);
+            }
+            
+            // Calcular vuelto en efectivo
+            function calcularVuelto() {
+                const metodo = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
+                if (metodo !== 'efectivo') return;
+                
+                const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
+                const totalPagar = totalReserva - descuento;
+                const montoRecibido = parseFloat(document.getElementById('pago_efectivo').value) || 0;
+                const vuelto = montoRecibido - totalPagar;
+                
+                if (vuelto > 0) {
+                    document.getElementById('cambio_amount').textContent = simboloMoneda + vuelto.toFixed(2);
+                    document.getElementById('cambio_section').style.display = 'block';
+                } else {
+                    document.getElementById('cambio_section').style.display = 'none';
+                }
+            }
+            
+            function actualizarTotal() {
             const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
             const efectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
             const tarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
@@ -210,19 +288,17 @@
             const totalPagar = totalReserva - adelanto - descuento;
             document.getElementById('monto_total').value = totalPagar.toFixed(2);
             
-            // Verificar si es checkout forzado
-            const saldoNegativo = {{ $saldoPendiente }} < 0;
-            const esCheckoutForzado = document.querySelector('input[name="checkout_forzado"]');
+            // Calcular vuelto si es efectivo
+            calcularVuelto();
             
-            // Solo aplicar validaciones si NO es checkout forzado
-            if (!saldoNegativo || !esCheckoutForzado) {
+            // Aplicar validaciones normales
                 // Validación visual: suma de pagos debe ser igual al total a pagar
                 const sumaPagos = efectivo + tarjeta + transferencia;
                 const feedback = document.getElementById('feedback_pago');
                 let msg = '';
-                if (descuento > (totalReserva - adelanto)) {
+                if (descuento > totalReserva) {
                     msg =
-                        '<div class="alert alert-danger p-2">El descuento no puede ser mayor al total menos el adelanto.</div>';
+                        '<div class="alert alert-danger p-2">El descuento no puede ser mayor al total de la reserva.</div>';
                     document.getElementById('descuento_adicional').classList.add('is-invalid');
                 } else {
                     document.getElementById('descuento_adicional').classList.remove('is-invalid');
@@ -237,18 +313,22 @@
                     document.getElementById('monto_total').style.backgroundColor = '';
                 }
                 feedback.innerHTML = msg;
-            } else {
-                // Para checkout forzado, limpiar validaciones visuales
-                const feedback = document.getElementById('feedback_pago');
-                feedback.innerHTML = '';
-                document.getElementById('descuento_adicional').classList.remove('is-invalid');
-                document.getElementById('monto_total').style.backgroundColor = '';
-            }
         }
-            document.getElementById('descuento_adicional').addEventListener('input', actualizarTotal);
+            // Event listeners para cambios de método de pago
+            document.querySelectorAll('input[name="metodo_pago_principal"]').forEach(radio => {
+                radio.addEventListener('change', cambiarMetodoPago);
+            });
+            
+            // Event listeners para actualización de totales
+            document.getElementById('descuento_adicional').addEventListener('input', function() {
+                cambiarMetodoPago(); // Recalcular con nuevo descuento
+            });
             document.getElementById('pago_efectivo').addEventListener('input', actualizarTotal);
             document.getElementById('pago_tarjeta').addEventListener('input', actualizarTotal);
             document.getElementById('pago_transferencia').addEventListener('input', actualizarTotal);
+            
+            // Inicializar
+            cambiarMetodoPago();
             actualizarTotal();
 
             // Función para verificar si SweetAlert2 está disponible
@@ -262,124 +342,86 @@
                 });
             }
 
-            // Validación simplificada al enviar el formulario
+            // Validación al enviar el formulario
             document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            console.log('Form submit event triggered');
-            
-            // Verificar si es checkout forzado
-            const checkoutForzadoInput = document.querySelector('input[name="checkout_forzado"]');
-            const esCheckoutForzado = checkoutForzadoInput && checkoutForzadoInput.value === '1';
-            const saldoNegativo = {{ $saldoPendiente }} < 0;
-            
-            console.log('Debug checkout:');
-            console.log('checkoutForzadoInput:', checkoutForzadoInput);
-            console.log('esCheckoutForzado:', esCheckoutForzado);
-            console.log('saldoNegativo:', saldoNegativo);
-            console.log('saldoPendiente:', {{ $saldoPendiente }});
-            
-            // Para checkout forzado, validaciones básicas
-            if (saldoNegativo && esCheckoutForzado) {
-                const justificacion = document.getElementById('justificacion_checkout_forzado');
-                const autorizacion = document.getElementById('autorizacion_checkout_forzado');
-                
-                if (!justificacion || !justificacion.value.trim()) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Justificación requerida',
-                        text: 'Debe proporcionar una justificación para el checkout forzado.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                } else if (!autorizacion || !autorizacion.checked) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Autorización requerida',
-                        text: 'Debe autorizar explícitamente el checkout forzado.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                }
-                
-                // Confirmar checkout forzado
-                e.preventDefault();
-                Swal.fire({
-                    title: '¿Confirmar checkout forzado?',
-                    text: '¿Está seguro de realizar un checkout con saldo negativo?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Sí, proceder',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        console.log('Checkout forzado confirmado, enviando formulario...');
-                        // Para checkout forzado, establecer acción por defecto
-                        document.getElementById('post_checkout_accion').value = 'limpieza';
-                        
-                        // Crear un nuevo formulario con todos los datos necesarios
-                        const originalForm = document.getElementById('checkout-form');
-                        const newForm = document.createElement('form');
-                        newForm.method = 'POST';
-                        newForm.action = originalForm.action;
-                        
-                        // Agregar token CSRF
-                        const csrfToken = document.querySelector('input[name="_token"]').value;
-                        const csrfInput = document.createElement('input');
-                        csrfInput.type = 'hidden';
-                        csrfInput.name = '_token';
-                        csrfInput.value = csrfToken;
-                        newForm.appendChild(csrfInput);
-                        
-                        // Agregar todos los campos del formulario original
-                        const inputs = originalForm.querySelectorAll('input, select, textarea');
-                        inputs.forEach(input => {
-                            if (input.name && input.name !== '_token') {
-                                const newInput = document.createElement('input');
-                                newInput.type = 'hidden';
-                                newInput.name = input.name;
-                                if (input.type === 'checkbox') {
-                                    newInput.value = input.checked ? input.value : '';
-                                } else {
-                                    newInput.value = input.value;
-                                }
-                                newForm.appendChild(newInput);
-                                console.log('Campo agregado: ' + input.name + ' = ' + newInput.value);
-                            }
-                        });
-                        
-                        document.body.appendChild(newForm);
-                        console.log('Enviando formulario...');
-                        newForm.submit();
-                    }
-                });
-                return;
-            }
             
             // Para checkout normal, validaciones básicas de pago
             const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
             const efectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
             const tarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
             const transferencia = parseFloat(document.getElementById('pago_transferencia').value) || 0;
-            const totalReserva = {{ $reserva->total }};
-            const adelanto = {{ $reserva->adelanto }};
-            const totalPagar = totalReserva - adelanto - descuento;
-            const sumaPagos = efectivo + tarjeta + transferencia;
+            const totalPagar = totalReserva - descuento;
+            const metodoPago = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
+            let montoAPagar = 0;
             
-            if (Math.abs(sumaPagos - totalPagar) > 0.01) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error en los pagos',
-                    text: 'La suma de los pagos (' + sumaPagos.toFixed(2) + ') no coincide con el total a pagar (' + totalPagar.toFixed(2) + ').',
-                    confirmButtonColor: '#3085d6'
-                });
-                e.preventDefault();
-                return;
+            // Validaciones específicas por método de pago
+            if (metodoPago === 'efectivo') {
+                montoAPagar = efectivo;
+                if (efectivo < totalPagar) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Monto insuficiente',
+                        text: 'El monto recibido en efectivo (' + simboloMoneda + efectivo.toFixed(2) + ') es menor al total a pagar (' + simboloMoneda + totalPagar.toFixed(2) + ').',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    e.preventDefault();
+                    return;
+                }
+            } else if (metodoPago === 'tarjeta') {
+                const recargoTarjeta = tarjeta * 0.05;
+                montoAPagar = tarjeta + recargoTarjeta;
+                if (Math.abs(tarjeta - totalPagar) > 0.01) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en pago con tarjeta',
+                        text: 'El monto base de la tarjeta debe ser igual al total a pagar.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    e.preventDefault();
+                    return;
+                }
+            } else if (metodoPago === 'transferencia') {
+                montoAPagar = transferencia;
+                
+                // Validar que se haya seleccionado un banco
+                const banco = document.getElementById('transferencia_banco').value;
+                if (!banco) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Banco requerido',
+                        text: 'Debe seleccionar el banco de la transferencia.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Validar referencia
+                const referencia = document.getElementById('transferencia_referencia').value.trim();
+                if (!referencia) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Referencia requerida',
+                        text: 'Debe ingresar el número de referencia o hilera de la transferencia.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    e.preventDefault();
+                    return;
+                }
+                
+                if (Math.abs(transferencia - totalPagar) > 0.01) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en transferencia',
+                        text: 'El monto transferido debe ser igual al total a pagar.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    e.preventDefault();
+                    return;
+                }
             }
             
-            // Para checkout normal, establecer acción por defecto
+            // Establecer acción por defecto
             document.getElementById('post_checkout_accion').value = 'limpieza';
             // Permitir que el formulario se envíe normalmente
         });

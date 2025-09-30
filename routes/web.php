@@ -120,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 
     // Rutas de reportes
+    Route::get('/reportes/ocupacion', [\App\Http\Controllers\ReporteController::class, 'ocupacion'])->name('reportes.ocupacion');
     Route::get('/reportes/ingresos', [\App\Http\Controllers\ReporteController::class, 'ingresos'])->name('reportes.ingresos');
 
     // Rutas de notificaciones

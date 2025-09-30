@@ -194,6 +194,47 @@
                     <small class="form-text text-muted">Si está habilitado, permite hacer check-in antes de la hora estándar con confirmación del recepcionista.</small>
                 </div>
 
+                <h4 class="mt-4 mb-3">Estadías por Horas</h4>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="permitir_estancias_horas" 
+                               name="permitir_estancias_horas" value="1"
+                               {{ old('permitir_estancias_horas', $hotel->permitir_estancias_horas ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="permitir_estancias_horas">
+                            <strong>Permitir estadías por horas (mismo día)</strong>
+                        </label>
+                    </div>
+                    <small class="form-text text-muted">Si está habilitado, permite hacer check-in y check-out el mismo día para clientes que solo necesitan la habitación por unas horas.</small>
+                </div>
+                
+                <div class="row" id="configuracion_estancias_horas" style="display: none;">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="minimo_horas_estancia">Mínimo de horas de estadía</label>
+                            <input type="number" class="form-control @error('minimo_horas_estancia') is-invalid @enderror"
+                                id="minimo_horas_estancia" name="minimo_horas_estancia" min="1" max="12"
+                                value="{{ old('minimo_horas_estancia', $hotel->minimo_horas_estancia ?? 2) }}">
+                            @error('minimo_horas_estancia')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Número mínimo de horas que debe durar una estadía del mismo día.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="checkout_mismo_dia_limite">Hora límite check-out mismo día</label>
+                            <input type="time" class="form-control @error('checkout_mismo_dia_limite') is-invalid @enderror"
+                                id="checkout_mismo_dia_limite" name="checkout_mismo_dia_limite"
+                                value="{{ old('checkout_mismo_dia_limite', $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00') }}">
+                            @error('checkout_mismo_dia_limite')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Hora límite para hacer check-out en estadías del mismo día.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <h4 class="mt-4 mb-3">Configuración de Reservas Vencidas</h4>
                 
                 <div class="row">
@@ -290,10 +331,59 @@
 
 @section('js')
     <script>
-        // Mostrar el nombre del archivo seleccionado en el input file
-        $('.custom-file-input').on('change', function() {
-            let fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        $(document).ready(function() {
+            // Mostrar el nombre del archivo seleccionado en el input file
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+            
+            // Controlar visibilidad de configuración de estadías por horas
+            function toggleEstanciasHoras() {
+                const checkbox = $('#permitir_estancias_horas');
+                const configuracion = $('#configuracion_estancias_horas');
+                const minimoHoras = $('#minimo_horas_estancia');
+                const checkoutLimite = $('#checkout_mismo_dia_limite');
+                
+                if (checkbox.is(':checked')) {
+                    configuracion.slideDown();
+                    minimoHoras.attr('required', true);
+                    checkoutLimite.attr('required', true);
+                } else {
+                    configuracion.slideUp();
+                    minimoHoras.attr('required', false);
+                    checkoutLimite.attr('required', false);
+                }
+            }
+            
+            // Inicializar estado al cargar la página
+            toggleEstanciasHoras();
+            
+            // Manejar cambio del checkbox
+            $('#permitir_estancias_horas').on('change', toggleEstanciasHoras);
+            
+            // Validación adicional del formulario
+            $('form').on('submit', function(e) {
+                const permitirEstancias = $('#permitir_estancias_horas').is(':checked');
+                const minimoHoras = parseInt($('#minimo_horas_estancia').val());
+                const checkoutLimite = $('#checkout_mismo_dia_limite').val();
+                
+                if (permitirEstancias) {
+                    if (!minimoHoras || minimoHoras < 1 || minimoHoras > 12) {
+                        e.preventDefault();
+                        alert('El mínimo de horas de estadía debe estar entre 1 y 12 horas.');
+                        $('#minimo_horas_estancia').focus();
+                        return false;
+                    }
+                    
+                    if (!checkoutLimite) {
+                        e.preventDefault();
+                        alert('Debe especificar una hora límite para check-out del mismo día.');
+                        $('#checkout_mismo_dia_limite').focus();
+                        return false;
+                    }
+                }
+            });
         });
     </script>
 @stop

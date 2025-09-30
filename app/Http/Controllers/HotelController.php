@@ -35,6 +35,9 @@ class HotelController extends Controller
       'checkout_hora_inicio' => 'required|date_format:H:i',
       'checkout_hora_fin' => 'required|date_format:H:i',
       'permitir_checkin_anticipado' => 'nullable|boolean',
+      'permitir_estancias_horas' => 'nullable|boolean',
+      'minimo_horas_estancia' => 'required_if:permitir_estancias_horas,1|nullable|integer|min:1|max:12',
+      'checkout_mismo_dia_limite' => 'required_if:permitir_estancias_horas,1|nullable|date_format:H:i',
       'reservas_vencidas_horas' => 'required|integer|min:1|max:168',
       'scheduler_frecuencia' => 'required|in:12h,24h,48h,72h',
       'notificacion_intervalo_segundos' => 'required|integer|min:10|max:300',
@@ -67,6 +70,9 @@ class HotelController extends Controller
     $hotel->checkout_hora_inicio = $request->checkout_hora_inicio;
     $hotel->checkout_hora_fin = $request->checkout_hora_fin;
     $hotel->permitir_checkin_anticipado = $request->has('permitir_checkin_anticipado');
+    $hotel->permitir_estancias_horas = $request->has('permitir_estancias_horas');
+    $hotel->minimo_horas_estancia = $request->minimo_horas_estancia ?? 2;
+    $hotel->checkout_mismo_dia_limite = $request->checkout_mismo_dia_limite;
     $hotel->reservas_vencidas_horas = $request->reservas_vencidas_horas;
     $hotel->scheduler_frecuencia = $request->scheduler_frecuencia;
     $hotel->notificacion_intervalo_segundos = $request->notificacion_intervalo_segundos;

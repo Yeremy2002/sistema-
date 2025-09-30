@@ -252,6 +252,11 @@
             // Constantes para las horas de check-in y check-out
             const CHECKIN_HOUR = '14:00';
             const CHECKOUT_HOUR = '12:30';
+            
+            // Configuración de estadías por horas desde el hotel
+            const PERMITIR_ESTANCIAS_HORAS = {{ $hotel->permitir_estancias_horas ? 'true' : 'false' }};
+            const MINIMO_HORAS_ESTANCIA = {{ $hotel->minimo_horas_estancia ?? 2 }};
+            const CHECKOUT_MISMO_DIA_LIMITE = '{{ $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00' }}';
 
             const fechaEntrada = document.getElementById('fecha_entrada');
             const fechaSalida = document.getElementById('fecha_salida');
@@ -288,10 +293,30 @@
                 const entrada = new Date(this.value);
                 setCheckInTime(entrada);
 
-                // La fecha de salida debe ser al menos un día después
-                const minSalida = new Date(entrada);
-                minSalida.setDate(minSalida.getDate() + 1);
-                setCheckOutTime(minSalida);
+                let minSalida;
+                if (PERMITIR_ESTANCIAS_HORAS) {
+                    // Si se permiten estadías por horas, la fecha de salida puede ser la misma
+                    minSalida = new Date(entrada);
+                    // Pero debe ser al menos X horas después del check-in
+                    minSalida.setHours(minSalida.getHours() + MINIMO_HORAS_ESTANCIA);
+                    
+                    // Si la fecha límite del mismo día se pasa, debe ser al día siguiente
+                    const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
+                    const limitTime = new Date(entrada);
+                    limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
+                    
+                    if (minSalida > limitTime) {
+                        // Si el tiempo mínimo excede el límite del mismo día, pasar al siguiente día
+                        minSalida = new Date(entrada);
+                        minSalida.setDate(minSalida.getDate() + 1);
+                        setCheckOutTime(minSalida);
+                    }
+                } else {
+                    // Comportamiento tradicional: la fecha de salida debe ser al menos un día después
+                    minSalida = new Date(entrada);
+                    minSalida.setDate(minSalida.getDate() + 1);
+                    setCheckOutTime(minSalida);
+                }
 
                 // Convertir a formato YYYY-MM-DD sin dependencia de toISOString
                 const salida_año = minSalida.getFullYear();
@@ -299,10 +324,10 @@
                 const salida_dia = String(minSalida.getDate()).padStart(2, '0');
                 const fechaSalidaStr = `${salida_año}-${salida_mes}-${salida_dia}`;
 
-                console.log('Fecha salida calculada:', fechaSalidaStr);
+                console.log('Fecha salida calculada:', fechaSalidaStr, 'Estadías por horas:', PERMITIR_ESTANCIAS_HORAS);
 
-                fechaSalida.min = fechaSalidaStr;
-                if (!fechaSalida.value || new Date(fechaSalida.value) <= entrada) {
+                fechaSalida.min = PERMITIR_ESTANCIAS_HORAS ? entrada.toISOString().split('T')[0] : fechaSalidaStr;
+                if (!fechaSalida.value || new Date(fechaSalida.value) < entrada) {
                     fechaSalida.value = fechaSalidaStr;
                 }
             });
@@ -369,13 +394,47 @@
                 const salida = new Date(document.getElementById('fecha_salida').value);
                 const feedback = document.getElementById('feedback_checkin');
                 let msg = '';
-                if (entrada && salida && salida <= entrada) {
-                    msg =
-                        '<div class="alert alert-danger p-2">La fecha de salida debe ser posterior a la de entrada.</div>';
-                    document.getElementById('fecha_salida').classList.add('is-invalid');
-                } else {
-                    document.getElementById('fecha_salida').classList.remove('is-invalid');
+                
+                if (entrada && salida) {
+                    if (PERMITIR_ESTANCIAS_HORAS) {
+                        // Para estadías por horas, validar que si es el mismo día, cumpla con los requisitos
+                        const esMismoDia = entrada.toDateString() === salida.toDateString();
+                        
+                        if (esMismoDia) {
+                            // Verificar que la hora de salida esté dentro del límite permitido
+                            const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
+                            const limitTime = new Date(entrada);
+                            limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
+                            
+                            // Para validación, usar la hora límite de checkout del mismo día
+                            const salidaConHora = new Date(salida);
+                            salidaConHora.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
+                            
+                            if (salidaConHora > limitTime) {
+                                msg = '<div class="alert alert-warning p-2">Para estadías del mismo día, el check-out debe ser antes de las ' + CHECKOUT_MISMO_DIA_LIMITE + '.</div>';
+                            } else {
+                                msg = '<div class="alert alert-info p-2"><i class="fas fa-clock"></i> <strong>Estadía por horas:</strong> Check-out el mismo día hasta las ' + CHECKOUT_MISMO_DIA_LIMITE + '.</div>';
+                            }
+                        } else if (salida < entrada) {
+                            msg = '<div class="alert alert-danger p-2">La fecha de salida no puede ser anterior a la de entrada.</div>';
+                            document.getElementById('fecha_salida').classList.add('is-invalid');
+                        }
+                    } else {
+                        // Validación tradicional
+                        if (salida <= entrada) {
+                            msg = '<div class="alert alert-danger p-2">La fecha de salida debe ser posterior a la de entrada.</div>';
+                            document.getElementById('fecha_salida').classList.add('is-invalid');
+                        } else {
+                            document.getElementById('fecha_salida').classList.remove('is-invalid');
+                        }
+                    }
+                    
+                    // Remover clase de error si no hay error
+                    if (!msg.includes('alert-danger')) {
+                        document.getElementById('fecha_salida').classList.remove('is-invalid');
+                    }
                 }
+                
                 feedback.innerHTML = msg;
             }
             if (fechaEntrada) {
@@ -390,9 +449,34 @@
                 const entrada = new Date(document.getElementById('fecha_entrada').value);
                 const salida = new Date(document.getElementById('fecha_salida').value);
                 let errorMsg = '';
-                if (entrada && salida && salida <= entrada) {
-                    errorMsg = 'La fecha de salida debe ser posterior a la de entrada.';
+                
+                if (entrada && salida) {
+                    if (PERMITIR_ESTANCIAS_HORAS) {
+                        const esMismoDia = entrada.toDateString() === salida.toDateString();
+                        
+                        if (salida < entrada) {
+                            errorMsg = 'La fecha de salida no puede ser anterior a la de entrada.';
+                        } else if (esMismoDia) {
+                            // Verificar que si es mismo día, esté dentro del horario permitido
+                            const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
+                            const limitTime = new Date(entrada);
+                            limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
+                            
+                            const salidaConHora = new Date(salida);
+                            salidaConHora.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
+                            
+                            if (salidaConHora > limitTime) {
+                                errorMsg = 'Para estadías del mismo día, el check-out debe realizarse antes de las ' + CHECKOUT_MISMO_DIA_LIMITE + '.';
+                            }
+                        }
+                    } else {
+                        // Validación tradicional
+                        if (salida <= entrada) {
+                            errorMsg = 'La fecha de salida debe ser posterior a la de entrada.';
+                        }
+                    }
                 }
+                
                 if (errorMsg) {
                     e.preventDefault();
                     Swal.fire({
