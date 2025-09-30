@@ -4,6 +4,7 @@
 // Auto-detect environment and set appropriate base URL
 const detectBaseURL = () => {
     const currentHost = window.location.hostname;
+    const currentPort = window.location.port || '80';
     
     // Production environment
     if (currentHost === 'casaviejahotel.com' || currentHost === 'www.casaviejahotel.com') {
@@ -15,9 +16,14 @@ const detectBaseURL = () => {
         return 'https://staging.casaviejahotel.com/api';
     }
     
-    // Local development - check common Laravel ports
-    const commonPorts = [8000, 8001, 8080];
-    return `http://localhost:8001/api`; // Default Laravel Sail port
+    // Local development - handle both localhost and 127.0.0.1
+    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        // Use the same host and port that's being used to access the landing page
+        return `http://${currentHost}:${currentPort}/api`;
+    }
+    
+    // Default fallback
+    return `http://localhost:8001/api`;
 };
 
 const API_CONFIG = {
@@ -143,13 +149,20 @@ async function apiRequest(endpoint, options = {}, timeout = null) {
  */
 async function checkAvailability(params) {
     try {
+        // Build query parameters - using 'huespedes' instead of 'numero_huespedes'
         const queryParams = new URLSearchParams({
             fecha_entrada: params.checkin,
             fecha_salida: params.checkout,
-            numero_huespedes: params.guests || 2,
-            categoria_id: params.categoryId || '',
-            nivel_id: params.levelId || ''
+            huespedes: params.guests || 2  // Changed from 'numero_huespedes' to 'huespedes'
         });
+        
+        // Only add optional params if they exist
+        if (params.categoryId) {
+            queryParams.append('categoria_id', params.categoryId);
+        }
+        if (params.levelId) {
+            queryParams.append('nivel_id', params.levelId);
+        }
         
         const response = await apiRequest(
             `${API_CONFIG.ENDPOINTS.DISPONIBILIDAD}?${queryParams}`,
@@ -157,11 +170,20 @@ async function checkAvailability(params) {
             API_CONFIG.TIMEOUT.AVAILABILITY
         );
         
-        return response;
+        // Return in the expected format for script.js
+        return {
+            success: true,
+            data: response
+        };
         
     } catch (error) {
         console.error('Error checking availability:', error);
-        throw error;
+        // Return error in expected format
+        return {
+            success: false,
+            error: error.message,
+            data: { habitaciones_disponibles: [] }
+        };
     }
 }
 
@@ -181,11 +203,21 @@ async function createReservation(reservationData) {
             API_CONFIG.TIMEOUT.RESERVATION
         );
         
-        return response;
+        // Return in the expected format for script.js
+        return {
+            success: true,
+            data: response,
+            message: 'Reserva creada exitosamente'
+        };
         
     } catch (error) {
         console.error('Error creating reservation:', error);
-        throw error;
+        // Return error in expected format
+        return {
+            success: false,
+            error: error.message,
+            message: 'Error al crear la reserva'
+        };
     }
 }
 
@@ -201,11 +233,21 @@ async function searchClient(searchTerm) {
         });
         
         const response = await apiRequest(`${API_CONFIG.ENDPOINTS.BUSCAR_CLIENTE}?${queryParams}`);
-        return response;
+        
+        // Return in the expected format for script.js
+        return {
+            success: true,
+            data: response
+        };
         
     } catch (error) {
         console.error('Error searching client:', error);
-        throw error;
+        // Return error in expected format
+        return {
+            success: false,
+            error: error.message,
+            data: null
+        };
     }
 }
 
@@ -385,14 +427,20 @@ function validateDateRange(checkin, checkout) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Normalizar fechas a medianoche para comparación correcta
+    checkinDate.setHours(0, 0, 0, 0);
+    checkoutDate.setHours(0, 0, 0, 0);
+    
     const errors = [];
     
+    // Permitir fecha de hoy y futuras (no solo futuras)
     if (checkinDate < today) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }
     
-    if (checkoutDate <= checkinDate) {
-        errors.push('La fecha de salida debe ser posterior a la fecha de llegada');
+    // Permitir estadías del mismo día (checkout >= checkin, no solo >)
+    if (checkoutDate < checkinDate) {
+        errors.push('La fecha de salida no puede ser anterior a la fecha de llegada');
     }
     
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
@@ -400,7 +448,7 @@ function validateDateRange(checkin, checkout) {
     return {
         valid: errors.length === 0,
         errors,
-        nights
+        nights: nights === 0 ? 1 : nights // Contar mismo día como 1 noche
     };
 }
 

@@ -1346,7 +1346,12 @@ function validateReservationData(data) {
     const checkoutDate = new Date(data.checkout);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // Normalizar fechas a medianoche para comparación correcta
+    checkinDate.setHours(0, 0, 0, 0);
+    checkoutDate.setHours(0, 0, 0, 0);
 
+    // Permitir reservas desde hoy (>=, no solo >)
     if (checkinDate < today) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }

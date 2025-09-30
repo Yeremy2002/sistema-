@@ -427,14 +427,20 @@ function validateDateRange(checkin, checkout) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Normalizar fechas a medianoche para comparación correcta
+    checkinDate.setHours(0, 0, 0, 0);
+    checkoutDate.setHours(0, 0, 0, 0);
+    
     const errors = [];
     
+    // Permitir fecha de hoy y futuras (no solo futuras)
     if (checkinDate < today) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }
     
-    if (checkoutDate <= checkinDate) {
-        errors.push('La fecha de salida debe ser posterior a la fecha de llegada');
+    // Permitir estadías del mismo día (checkout >= checkin, no solo >)
+    if (checkoutDate < checkinDate) {
+        errors.push('La fecha de salida no puede ser anterior a la fecha de llegada');
     }
     
     const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
@@ -442,7 +448,7 @@ function validateDateRange(checkin, checkout) {
     return {
         valid: errors.length === 0,
         errors,
-        nights
+        nights: nights === 0 ? 1 : nights // Contar mismo día como 1 noche
     };
 }
 
