@@ -256,7 +256,7 @@
             // Configuración de estadías por horas desde el hotel
             const PERMITIR_ESTANCIAS_HORAS = {{ $hotel->permitir_estancias_horas ? 'true' : 'false' }};
             const MINIMO_HORAS_ESTANCIA = {{ $hotel->minimo_horas_estancia ?? 2 }};
-            const CHECKOUT_MISMO_DIA_LIMITE = '{{ $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00' }}';
+            const CHECKOUT_MISMO_DIA_LIMITE = '{{ $hotel->checkout_mismo_dia_limite ?? '20:00' }}';
 
             const fechaEntrada = document.getElementById('fecha_entrada');
             const fechaSalida = document.getElementById('fecha_salida');
