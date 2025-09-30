@@ -2617,6 +2617,44 @@ function isValidPhoneNumber(phone) {
     return rawPhone.length >= 8 && rawPhone.length <= 11;
 }
 
+// ===== FORÇA TEXTAREA SPECIAL-REQUESTS A ACEPTAR ESPACIOS =====
+function forceTextareaSpacesWorking() {
+    const textarea = document.getElementById('special-requests');
+    if (!textarea) {
+        console.warn('⚠️ Textarea special-requests no encontrado');
+        return;
+    }
+    
+    console.log('🔧 Forzando textarea a aceptar espacios...');
+    
+    // Remover TODOS los event listeners previos clonando el elemento
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+    
+    // Asegurar que esté habilitado
+    newTextarea.disabled = false;
+    newTextarea.readOnly = false;
+    newTextarea.style.pointerEvents = 'auto';
+    newTextarea.style.userSelect = 'text';
+    
+    // Event listener en CAPTURE PHASE para interceptar espacios ANTES que cualquier otro
+    newTextarea.addEventListener('keydown', function(e) {
+        if (e.key === ' ' || e.keyCode === 32) {
+            console.log('✅ Espacio detectado en textarea - PERMITIDO');
+            // NO hacer preventDefault - dejar pasar el espacio
+            e.stopImmediatePropagation(); // Evitar que otros listeners lo bloqueen
+            return true;
+        }
+    }, true); // true = capture phase (se ejecuta PRIMERO)
+    
+    // Monitorear cambios
+    newTextarea.addEventListener('input', function(e) {
+        console.log('📝 Textarea actualizado:', JSON.stringify(e.target.value));
+    });
+    
+    console.log('✅ Textarea configurado para aceptar espacios');
+}
+
 // ===== INITIALIZATION =====
 // Wait for both DOM and all dependencies to be loaded
 function initializeWhenReady() {
@@ -2631,6 +2669,8 @@ function initializeWhenReady() {
         initializeDOMElements();
         // Initialize main functionality
         initializeLandingPage();
+        // CRÍTICO: Forzar textarea a aceptar espacios DESPUÉS de toda inicialización
+        setTimeout(forceTextareaSpacesWorking, 500);
     } else {
         // Wait a bit more and try again
         setTimeout(initializeWhenReady, 100);
