@@ -87,12 +87,34 @@ class ClienteController extends Controller
   {
     $query = $request->get('q');
 
-    $clientes = Cliente::where('nombre', 'like', "%{$query}%")
+    // Search for a single client by name (for landing page integration)
+    $cliente = Cliente::where('nombre', 'like', "%{$query}%")
       ->orWhere('nit', 'like', "%{$query}%")
       ->orWhere('dpi', 'like', "%{$query}%")
-      ->get();
+      ->orWhere('email', 'like', "%{$query}%")
+      ->orWhere('telefono', 'like', "%{$query}%")
+      ->first();
 
-    return response()->json($clientes);
+    if ($cliente) {
+      // Get client's reservation history
+      $historial = $cliente->reservas()
+        ->whereIn('estado', ['Check-out', 'Pendiente', 'Check-in'])
+        ->orderBy('fecha_entrada', 'desc')
+        ->limit(5)
+        ->get(['id', 'fecha_entrada', 'fecha_salida', 'estado', 'total']);
+
+      return response()->json([
+        'success' => true,
+        'cliente' => $cliente,
+        'historial_reservas' => $historial
+      ]);
+    }
+
+    return response()->json([
+      'success' => false,
+      'cliente' => null,
+      'historial_reservas' => []
+    ]);
   }
 
   /**

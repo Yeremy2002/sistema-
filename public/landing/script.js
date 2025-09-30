@@ -858,12 +858,15 @@ function autoFillClientData(clientData) {
     }
 
     if (phoneInput && clientData.telefono) {
-        phoneInput.value = clientData.telefono;
+        // Apply phone mask when autofilling
+        const formattedPhone = applyPhoneMask(clientData.telefono);
+        phoneInput.value = formattedPhone;
         phoneInput.classList.add('auto-filled');
     }
 
-    // Show success message
-    showSuccessMessage('¡Cliente encontrado! Datos completados automáticamente.');
+    // Show success message - TEMPORARILY DISABLED FOR DEBUG
+    console.log('🚨 autoFillClientData ejecutado para cliente:', clientData.nombre);
+    // showSuccessMessage('¡Cliente encontrado! Datos completados automáticamente.');
 }
 
 // Show client history
@@ -903,38 +906,275 @@ function showClientHistory(clientData, reservations = []) {
     form.insertBefore(historyDiv.firstElementChild, submitButton);
 }
 
-// Enhanced client lookup on email/phone input
+// Show searching indicator
+function showSearchingIndicator(inputElement, searchTerm) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const searchType = searchTerm.includes('@') ? 'correo' : 
+                      (searchTerm.includes(' ') ? 'nombre' : 'teléfono');
+    
+    const indicatorHTML = `
+        <div class="client-search-indicator">
+            <div class="search-indicator__content">
+                <div class="search-indicator__spinner"></div>
+                <span class="search-indicator__text">
+                    <i class="ri-search-line"></i>
+                    Buscando cliente por ${searchType}...
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = indicatorHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Remove searching indicator
+function removeSearchingIndicator() {
+    const indicator = document.querySelector('.client-search-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+// Show client not found message
+function showClientNotFound(searchTerm) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const searchType = searchTerm.includes('@') ? 'correo' : 
+                      (searchTerm.includes(' ') ? 'nombre' : 'teléfono');
+    
+    const notFoundHTML = `
+        <div class="client-search-indicator client-search-indicator--not-found">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-information-line"></i>
+                    Cliente no encontrado por ${searchType}. Será registrado como nuevo cliente.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = notFoundHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--not-found');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 3000);
+}
+
+// Show client lookup error
+function showClientLookupError() {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const errorHTML = `
+        <div class="client-search-indicator client-search-indicator--error">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-error-warning-line"></i>
+                    Error al buscar cliente. Por favor, continúa con el registro.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = errorHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--error');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 3000);
+}
+
+// ===== NEW UX INDICATOR FUNCTIONS =====
+
+// Show typing indicator
+function showTypingIndicator() {
+    console.log('🚀 Ejecutando showTypingIndicator');
+    const form = document.getElementById('reservation-form');
+    if (!form) {
+        console.error('❌ Form no encontrado');
+        return;
+    }
+    
+    const indicatorHTML = `
+        <div class="client-search-indicator client-search-indicator--typing">
+            <div class="search-indicator__content">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="search-indicator__text">
+                    <i class="ri-edit-2-line"></i>
+                    Escribiendo nombre... Escribe tu nombre completo para buscar si ya eres cliente.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    console.log('📍 FormActions encontrado:', formActions);
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = indicatorHTML;
+    if (formActions) {
+        console.log('✅ Insertando indicador antes de formActions');
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        console.log('⚠️ FormActions no encontrado, agregando al final');
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Show client found message
+function showClientFoundMessage(clientName) {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const foundHTML = `
+        <div class="client-search-indicator client-search-indicator--found">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-check-double-line"></i>
+                    ¡Cliente encontrado! <strong>${clientName}</strong>. Datos completados automáticamente. Puedes proceder con la reserva.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = foundHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+}
+
+// Show new client message
+function showNewClientMessage() {
+    const form = document.getElementById('reservation-form');
+    if (!form) return;
+    
+    const newClientHTML = `
+        <div class="client-search-indicator client-search-indicator--new-client">
+            <div class="search-indicator__content">
+                <span class="search-indicator__text">
+                    <i class="ri-user-add-line"></i>
+                    Cliente nuevo. Por favor, completa los datos de contacto para continuar.
+                </span>
+            </div>
+        </div>
+    `;
+    
+    const formActions = form.querySelector('.form__actions');
+    const indicatorDiv = document.createElement('div');
+    indicatorDiv.innerHTML = newClientHTML;
+    if (formActions) {
+        form.insertBefore(indicatorDiv.firstElementChild, formActions);
+    } else {
+        form.appendChild(indicatorDiv.firstElementChild);
+    }
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.client-search-indicator--new-client');
+        if (indicator) {
+            indicator.remove();
+        }
+    }, 5000);
+}
+
+// Remove all search indicators
+function removeAllSearchIndicators() {
+    const indicators = document.querySelectorAll('.client-search-indicator');
+    indicators.forEach(indicator => indicator.remove());
+}
+
+// Enhanced client lookup with improved UX feedback
 async function handleClientLookup(inputElement, searchTerm) {
+    console.log('🚀 handleClientLookup llamado con searchTerm:', JSON.stringify(searchTerm));
+    console.log('📍 Elemento que lo llamó:', inputElement.id);
     // Clear existing auto-fill styling
     const formInputs = document.querySelectorAll('#reservation-form input');
     formInputs.forEach(input => input.classList.remove('auto-filled'));
 
-    // Remove existing client history
+    // Remove existing client history and search indicators
     const existingHistory = document.querySelector('.client-history');
     if (existingHistory) {
         existingHistory.remove();
     }
+    
+    const existingSearchIndicator = document.querySelector('.client-search-indicator');
+    if (existingSearchIndicator) {
+        existingSearchIndicator.remove();
+    }
 
-    if (!searchTerm || searchTerm.length < 5) {
+    // Validate search term
+    if (!searchTerm || 
+        (searchTerm.includes('@') && searchTerm.length < 5) || 
+        (!searchTerm.includes('@') && !searchTerm.includes(' ') && searchTerm.replace(/\D/g, '').length < 7) ||
+        (searchTerm.includes(' ') && searchTerm.length < 5)) {
         return;
     }
 
+    // Show immediate visual feedback
+    showSearchingIndicator(inputElement, searchTerm);
+    
     // Add loading indicator to input
     inputElement.classList.add('input-loading');
 
     try {
         const result = await searchExistingClient(searchTerm);
 
+        // Remove searching indicator
+        removeSearchingIndicator();
+
         if (result.success && result.data) {
             autoFillClientData(result.data);
             showClientHistory(result.data, result.history);
 
             // Track successful client lookup
-            trackEvent('client', 'found', searchTerm.includes('@') ? 'email' : 'phone');
+            const searchType = searchTerm.includes('@') ? 'email' : 
+                              (searchTerm.includes(' ') ? 'name' : 'phone');
+            trackEvent('client', 'found', searchType);
+        } else {
+            // Show "not found" message for a brief moment
+            showClientNotFound(searchTerm);
         }
 
     } catch (error) {
         console.error('Client lookup error:', error);
+        removeSearchingIndicator();
+        showClientLookupError();
     } finally {
         inputElement.classList.remove('input-loading');
     }
@@ -1007,10 +1247,16 @@ function sanitizeEmail(email) {
     return email.toLowerCase().trim().replace(/[^\w@.-]/g, '');
 }
 
-// Sanitize phone input
+// Sanitize phone input - now supports the new phone mask format
 function sanitizePhone(phone) {
     if (typeof phone !== 'string') return '';
     return phone.replace(/[^\d\s\-\+\(\)]/g, '').trim();
+}
+
+// Function to get only numeric digits from phone (for database storage)
+function getNumericPhone(phone) {
+    if (typeof phone !== 'string') return '';
+    return phone.replace(/\D/g, '');
 }
 
 // Enhanced email validation
@@ -1044,7 +1290,9 @@ function sanitizeFormData(formData) {
                 break;
             case 'guestPhone':
             case 'phone':
+                // Keep formatted phone for display, but also store numeric version for validation
                 sanitized[key] = sanitizePhone(value);
+                sanitized[key + '_numeric'] = getNumericPhone(value);
                 break;
             case 'guestName':
             case 'name':
@@ -1101,9 +1349,12 @@ function validateReservationData(data) {
         errors.push('El formato del correo electrónico no es válido');
     }
 
-    // Enhanced phone validation
-    if (data.guestPhone && !validatePhone(data.guestPhone)) {
-        errors.push('El número de teléfono debe tener entre 7 y 15 dígitos');
+    // Enhanced phone validation - check numeric version for length
+    if (data.guestPhone) {
+        const numericPhone = getNumericPhone(data.guestPhone);
+        if (numericPhone.length < 7 || numericPhone.length > 15) {
+            errors.push('El número de teléfono debe tener entre 7 y 15 dígitos');
+        }
     }
 
     // Validate guests number
@@ -1734,30 +1985,37 @@ function initializeLandingPage() {
     // Client lookup inputs
     const emailInput = document.getElementById('guest-email');
     const phoneInput = document.getElementById('guest-phone');
+    const nameInput = document.getElementById('guest-name');
 
     // Debounced functions
     const debouncedUpdateRooms = debounce(updateRoomOptions, 1000);
     const debouncedUpdatePrice = debounce(updatePriceSummary, 500);
-    const debouncedClientLookup = debounce(handleClientLookup, 1500);
+    const debouncedClientLookup = debounce(handleClientLookup, 800);
+    
+    // Initialize improved client search UX
+    initializeClientSearchUX();
 
-    // Client lookup event listeners
-    if (emailInput) {
-        emailInput.addEventListener('input', (e) => {
-            const email = e.target.value.trim();
-            if (email.includes('@') && email.length > 5) {
-                debouncedClientLookup(e.target, email);
-            }
-        });
-    }
+    // Client lookup event listeners - TEMPORARILY DISABLED FOR DEBUG
+    console.log('⚠️ Email y Phone listeners desactivados temporalmente');
+    // if (emailInput) {
+    //     emailInput.addEventListener('input', (e) => {
+    //         const email = e.target.value.trim();
+    //         if (email.includes('@') && email.length > 5) {
+    //             debouncedClientLookup(e.target, email);
+    //         }
+    //     });
+    // }
 
-    if (phoneInput) {
-        phoneInput.addEventListener('input', (e) => {
-            const phone = e.target.value.trim();
-            if (phone.length > 7) {
-                debouncedClientLookup(e.target, phone);
-            }
-        });
-    }
+    // if (phoneInput) {
+    //     phoneInput.addEventListener('input', (e) => {
+    //         const phone = e.target.value.trim();
+    //         if (phone.length > 7) {
+    //             debouncedClientLookup(e.target, phone);
+    //         }
+    //     });
+    // }
+
+    // Note: Client search for name is now handled by initializeClientSearchUX()
 
     if (checkinInput) {
         checkinInput.addEventListener('change', (e) => {
@@ -1970,6 +2228,297 @@ function initFontFallback() {
 
 // Initialize font fallback detection
 document.addEventListener('DOMContentLoaded', initFontFallback);
+
+// ===== IMPROVED CLIENT SEARCH UX SYSTEM =====
+
+// Initialize the improved UX flow for client search - SIMPLE APPROACH
+let clientSearchUXInitialized = false;
+function initializeClientSearchUX() {
+    if (clientSearchUXInitialized) {
+        console.log('⚠️ initializeClientSearchUX ya fue inicializado, saltando...');
+        return;
+    }
+    clientSearchUXInitialized = true;
+    console.log('🚀 Inicializando ClientSearchUX por primera vez...');
+    const nameInput = document.getElementById('guest-name');
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+    const specialRequestsInput = document.getElementById('special-requests');
+    
+    // Initially disable all fields except name
+    setFieldsDisabledState(true, true, false); // (disabled, name enabled, submit disabled)
+    
+    if (nameInput) {
+        let isSearching = false;
+        
+        // NO INPUT VALIDATION - let user type freely
+        nameInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            let previousValue = e.target.getAttribute('data-previous-value') || '';
+            
+            console.log('📝 Input event - Anterior:', JSON.stringify(previousValue));
+            console.log('📝 Input event - Actual:', JSON.stringify(value));
+            
+            // Detect if space was added
+            if (value.includes(' ') && !previousValue.includes(' ')) {
+                console.log('✨ ¡ESPACIO AGREGADO EXITOSAMENTE!');
+            }
+            
+            // Store current value for next comparison
+            e.target.setAttribute('data-previous-value', value);
+            
+            // NO MODIFICATION OF THE VALUE - let user type anything
+        });
+        
+        // Main validation: when user tries to move to next field
+        nameInput.addEventListener('blur', async function(e) {
+            const name = e.target.value.trim();
+            console.log('🔍 Usuario salió del campo nombre. Validando:', name);
+            
+            // Only search if we have a reasonable name
+            if (name.length >= 3) {
+                if (!isSearching) {
+                    isSearching = true;
+                    await validateClientName(name);
+                    isSearching = false;
+                }
+            } else {
+                // Name too short, enable fields for new client
+                console.log('ℹ️ Nombre muy corto, habilitando campos para nuevo cliente');
+                enableFieldsForNewClient();
+            }
+        });
+        
+        // Also validate on Tab key + DEBUG SPACE KEY
+        nameInput.addEventListener('keydown', function(e) {
+            console.log('🎹 Tecla presionada:', e.key, 'KeyCode:', e.keyCode);
+            
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🗺️ ¡BARRA ESPACIADORA PRESIONADA!');
+                console.log('🔍 Valor actual antes del espacio:', JSON.stringify(e.target.value));
+                // NO preventDefault - let the space through
+            }
+            
+            if (e.key === 'Tab') {
+                // Let the blur event handle the validation
+                console.log('📝 Usuario presionó Tab, blur se ejecutará automáticamente');
+            }
+            
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Trigger validation and move to email field
+                const name = e.target.value.trim();
+                if (name.length >= 3) {
+                    validateClientName(name).then(() => {
+                        const emailField = document.getElementById('guest-email');
+                        if (emailField && !emailField.disabled) {
+                            emailField.focus();
+                        }
+                    });
+                }
+            }
+        });
+        
+        // DEBUG: Also monitor keyup events
+        nameInput.addEventListener('keyup', function(e) {
+            if (e.key === ' ' || e.keyCode === 32) {
+                console.log('🎆 KEYUP de espacio - Valor actual:', JSON.stringify(e.target.value));
+            }
+        });
+    }
+    
+    // Initialize phone mask for when phone field is enabled (NO CLIENT SEARCH)
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            applyPhoneMask(e.target);
+            console.log('📞 Teléfono formateado:', e.target.value);
+        });
+        
+        phoneInput.addEventListener('keydown', function(e) {
+            // Allow: backspace, delete, tab, escape, enter
+            if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                // Allow: Ctrl+A, Command+A
+                (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+                // Allow: home, end, left, right, down, up
+                (e.keyCode >= 35 && e.keyCode <= 40)) {
+                return;
+            }
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+    }
+}
+
+// NEW SIMPLE APPROACH: Validate client name when user moves to next field
+async function validateClientName(name) {
+    console.log('🔍 Validando cliente:', name);
+    
+    // Clean up name (remove extra spaces)
+    const cleanName = name.replace(/\s+/g, ' ').trim();
+    
+    try {
+        const result = await searchExistingClient(cleanName);
+        
+        if (result.success && result.data) {
+            // Client found! Show welcome message and auto-fill
+            console.log('🎉 Cliente encontrado:', result.data.nombre);
+
+            // Auto-fill data
+            autoFillClientDataSilent(result.data);
+
+            // Show welcome SweetAlert
+            showWelcomeMessage(result.data.nombre);
+
+            // Show client history
+            showClientHistory(result.data, result.history);
+
+            // Enable all fields including submit button (allow client to edit and confirm)
+            setFieldsDisabledState(false, true, true); // all fields enabled, name enabled, submit enabled
+
+            // Track successful client lookup
+            trackEvent('client', 'found', 'name');
+
+        } else {
+            // Client not found - enable all fields for new client registration
+            console.log('👤 Cliente no encontrado, habilitando campos para nuevo cliente');
+            enableFieldsForNewClient();
+        }
+        
+    } catch (error) {
+        console.error('Error al validar cliente:', error);
+        // On error, enable fields so user can continue
+        enableFieldsForNewClient();
+    }
+}
+
+// Enable all fields for new client registration
+function enableFieldsForNewClient() {
+    setFieldsDisabledState(false, true, true); // Enable all fields
+    removeAllSearchIndicators();
+    
+    // Optional: Show subtle message that it's a new client
+    console.log('✨ Habilitando campos para nuevo cliente');
+}
+
+// Auto-fill client data without showing success message
+function autoFillClientDataSilent(clientData) {
+    if (!clientData) return;
+
+    const nameInput = document.getElementById('guest-name');
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+
+    if (nameInput && clientData.nombre) {
+        nameInput.value = clientData.nombre;
+        nameInput.classList.add('auto-filled');
+    }
+
+    if (emailInput && clientData.email) {
+        emailInput.value = clientData.email;
+        emailInput.classList.add('auto-filled');
+    }
+
+    if (phoneInput && clientData.telefono) {
+        // Apply phone mask when autofilling
+        phoneInput.value = clientData.telefono;
+        applyPhoneMask(phoneInput);
+        phoneInput.classList.add('auto-filled');
+    }
+
+    console.log('✨ Datos auto-completados para:', clientData.nombre);
+}
+
+// Show welcome message with SweetAlert
+function showWelcomeMessage(clientName) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¡Bienvenido!',
+            text: `Hola ${clientName}, continúa con tu reserva!`,
+            icon: 'success',
+            confirmButtonText: 'Continuar',
+            customClass: {
+                popup: 'swal-modal-overlay'
+            },
+            zIndex: 10000
+        });
+    } else {
+        showNotification(`Bienvenido ${clientName}! Continúa con tu reserva.`, 'success');
+    }
+}
+
+// Set fields disabled/enabled state
+function setFieldsDisabledState(disabled, nameEnabled = true, submitEnabled = false) {
+    const emailInput = document.getElementById('guest-email');
+    const phoneInput = document.getElementById('guest-phone');
+    const specialRequestsInput = document.getElementById('special-requests');
+    const submitButton = document.querySelector('#reservation-form .btn--primary');
+    const nameInput = document.getElementById('guest-name');
+    
+    // Email, phone, and special requests
+    if (emailInput) {
+        emailInput.disabled = disabled;
+        emailInput.style.opacity = disabled ? '0.5' : '1';
+        emailInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    if (phoneInput) {
+        phoneInput.disabled = disabled;
+        phoneInput.style.opacity = disabled ? '0.5' : '1';
+        phoneInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    if (specialRequestsInput) {
+        specialRequestsInput.disabled = disabled;
+        specialRequestsInput.style.opacity = disabled ? '0.5' : '1';
+        specialRequestsInput.style.cursor = disabled ? 'not-allowed' : 'text';
+    }
+    
+    // Name field
+    if (nameInput) {
+        nameInput.disabled = !nameEnabled;
+        nameInput.style.opacity = nameEnabled ? '1' : '0.5';
+        nameInput.style.cursor = nameEnabled ? 'text' : 'not-allowed';
+    }
+    
+    // Submit button
+    if (submitButton) {
+        submitButton.disabled = !submitEnabled && disabled;
+        submitButton.style.opacity = (!submitEnabled && disabled) ? '0.5' : '1';
+        submitButton.style.cursor = (!submitEnabled && disabled) ? 'not-allowed' : 'pointer';
+    }
+}
+
+// Apply phone mask (502) 5421-4387
+function applyPhoneMask(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length > 0) {
+        // Format: (502) 5421-4387
+        if (value.length <= 3) {
+            formattedValue = `(${value}`;
+        } else if (value.length <= 7) {
+            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3)}`;
+        } else {
+            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3, 7)}-${value.substring(7, 11)}`;
+        }
+    }
+    
+    input.value = formattedValue;
+    
+    // NO CLIENT LOOKUP - Just format the phone number
+}
+
+// Get raw phone number (without formatting)
+function getRawPhoneNumber(formattedPhone) {
+    return formattedPhone.replace(/[^\d]/g, '');
+}
+
+// Validate phone number format
+function isValidPhoneNumber(phone) {
+    const rawPhone = getRawPhoneNumber(phone);
+    return rawPhone.length >= 8 && rawPhone.length <= 11;
+}
 
 // ===== INITIALIZATION =====
 // Wait for both DOM and all dependencies to be loaded
