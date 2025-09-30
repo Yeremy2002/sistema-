@@ -422,24 +422,24 @@ function formatPrice(amount, currency = 'COP') {
  * @returns {object} - Validation result
  */
 function validateDateRange(checkin, checkout) {
-    const checkinDate = new Date(checkin);
-    const checkoutDate = new Date(checkout);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // USAR COMPARACIÓN DE STRINGS PARA EVITAR PROBLEMAS DE ZONA HORARIA
+    const checkinStr = checkin; // Formato: YYYY-MM-DD
+    const checkoutStr = checkout; // Formato: YYYY-MM-DD
+    const todayStr = new Date().toISOString().split('T')[0]; // Solo YYYY-MM-DD
     
-    // Normalizar fechas a medianoche para comparación correcta
-    checkinDate.setHours(0, 0, 0, 0);
-    checkoutDate.setHours(0, 0, 0, 0);
+    // Crear objetos Date para cálculo de noches
+    const checkinDate = new Date(checkin + 'T00:00:00');
+    const checkoutDate = new Date(checkout + 'T00:00:00');
     
     const errors = [];
     
-    // Permitir fecha de hoy y futuras (no solo futuras)
-    if (checkinDate < today) {
+    // Permitir fecha de hoy y futuras - COMPARAR STRINGS
+    if (checkinStr < todayStr) {
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     }
     
-    // Permitir estadías del mismo día (checkout >= checkin, no solo >)
-    if (checkoutDate < checkinDate) {
+    // Permitir estadías del mismo día - COMPARAR STRINGS
+    if (checkoutStr < checkinStr) {
         errors.push('La fecha de salida no puede ser anterior a la fecha de llegada');
     }
     

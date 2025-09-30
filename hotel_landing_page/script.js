@@ -1340,30 +1340,25 @@ function validateReservationData(data) {
         errors.push('El nombre solo debe contener letras y espacios');
     }
 
-    // Validate dates
-    const checkinDate = new Date(data.checkin);
-    const checkoutDate = new Date(data.checkout);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Validate dates - USAR COMPARACIÓN DE STRINGS PARA EVITAR PROBLEMAS DE ZONA HORARIA
+    const checkinStr = data.checkin; // Formato: YYYY-MM-DD
+    const checkoutStr = data.checkout; // Formato: YYYY-MM-DD
+    const todayStr = new Date().toISOString().split('T')[0]; // Obtener solo YYYY-MM-DD
     
-    // Normalizar fechas a medianoche para comparación correcta
-    checkinDate.setHours(0, 0, 0, 0);
-    checkoutDate.setHours(0, 0, 0, 0);
+    // También crear objetos Date para otras validaciones
+    const checkinDate = new Date(data.checkin + 'T00:00:00');
+    const checkoutDate = new Date(data.checkout + 'T00:00:00');
     
-    // DEBUG: Log de fechas para verificar normalización
-    console.log('=== VALIDACIÓN DE FECHAS ===');
-    console.log('Fecha checkin (input):', data.checkin);
-    console.log('Fecha checkout (input):', data.checkout);
-    console.log('Fecha checkin (Date normalizado):', checkinDate.toISOString());
-    console.log('Fecha checkout (Date normalizado):', checkoutDate.toISOString());
-    console.log('Fecha today (Date normalizado):', today.toISOString());
-    console.log('checkinDate < today?', checkinDate < today);
-    console.log('checkinDate.getTime():', checkinDate.getTime());
-    console.log('today.getTime():', today.getTime());
-    console.log('========================');
+    // DEBUG: Log de fechas para verificar
+    console.log('=== VALIDACIÓN DE FECHAS (STRING COMPARISON) ===');
+    console.log('Fecha checkin (string):', checkinStr);
+    console.log('Fecha checkout (string):', checkoutStr);
+    console.log('Fecha today (string):', todayStr);
+    console.log('checkinStr < todayStr?', checkinStr < todayStr);
+    console.log('=================================================');
 
-    // Permitir reservas desde hoy (>=, no solo >)
-    if (checkinDate < today) {
+    // Permitir reservas desde hoy - COMPARAR STRINGS DIRECTAMENTE
+    if (checkinStr < todayStr) {
         console.error('❌ ERROR: La fecha de llegada es anterior a hoy');
         errors.push('La fecha de llegada no puede ser anterior a hoy');
     } else {
