@@ -4,16 +4,21 @@ let isScrolling = false;
 let ticking = false;
 
 // ===== DOM ELEMENTS =====
-const header = document.getElementById('header');
-const navMenu = document.getElementById('nav-menu');
-const navToggle = document.getElementById('nav-toggle');
-const navClose = document.getElementById('nav-close');
-const navOverlay = document.getElementById('nav-overlay');
-const floatingCta = document.getElementById('floating-cta');
-const reservationModal = document.getElementById('reservation-modal');
-const testimonialCards = document.querySelectorAll('.testimonial-card');
-const testimonialPrev = document.querySelector('.testimonial-btn--prev');
-const testimonialNext = document.querySelector('.testimonial-btn--next');
+let header, navMenu, navToggle, navClose, navOverlay, floatingCta, reservationModal, testimonialCards, testimonialPrev, testimonialNext;
+
+// Initialize DOM elements after page load
+function initializeDOMElements() {
+    header = document.getElementById('header');
+    navMenu = document.getElementById('nav-menu');
+    navToggle = document.getElementById('nav-toggle');
+    navClose = document.getElementById('nav-close');
+    navOverlay = document.getElementById('nav-overlay');
+    floatingCta = document.getElementById('floating-cta');
+    reservationModal = document.getElementById('reservation-modal');
+    testimonialCards = document.querySelectorAll('.testimonial-card');
+    testimonialPrev = document.querySelector('.testimonial-btn--prev');
+    testimonialNext = document.querySelector('.testimonial-btn--next');
+}
 
 // ===== UTILITY FUNCTIONS =====
 
@@ -678,6 +683,12 @@ async function updateRoomOptions() {
         };
 
         console.log('Checking availability with params:', availabilityParams);
+        
+        // Check if checkAvailability function is available
+        if (typeof checkAvailability !== 'function') {
+            throw new Error('checkAvailability function not available. Make sure config.js is loaded first.');
+        }
+        
         const response = await checkAvailability(availabilityParams);
         console.log('Full availability response:', response);
         
@@ -1656,7 +1667,7 @@ if (isPWA()) {
 // ===== INITIALIZATION =====
 
 // Initialize all functionality when DOM is loaded
-function init() {
+function initializeLandingPage() {
     // Navigation event listeners
     if (navToggle) {
         navToggle.addEventListener('click', showMenu);
@@ -1900,12 +1911,7 @@ window.testModalFunctions = function() {
     return 'All functions tested. Check console for details.';
 };
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// Initialization is now handled by initializeWhenReady() function at the end of the file
 
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
@@ -1964,6 +1970,35 @@ function initFontFallback() {
 
 // Initialize font fallback detection
 document.addEventListener('DOMContentLoaded', initFontFallback);
+
+// ===== INITIALIZATION =====
+// Wait for both DOM and all dependencies to be loaded
+function initializeWhenReady() {
+    // Check if required dependencies are available
+    const dependenciesReady = typeof checkAvailability === 'function' && 
+                             typeof generateWhatsAppURL === 'function' &&
+                             typeof apiRequest === 'function';
+    
+    if (dependenciesReady) {
+        console.log('✓ All dependencies loaded, initializing...');
+        // Initialize DOM elements
+        initializeDOMElements();
+        // Initialize main functionality
+        initializeLandingPage();
+    } else {
+        // Wait a bit more and try again
+        setTimeout(initializeWhenReady, 100);
+        console.log('⏳ Waiting for dependencies to load...');
+    }
+}
+
+// Start initialization after DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWhenReady);
+} else {
+    // DOM already loaded, start immediately
+    initializeWhenReady();
+}
 
 // Service Worker registration (for PWA capabilities)
 // Commented out since sw.js file doesn't exist

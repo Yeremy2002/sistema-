@@ -194,8 +194,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== ESTILOS ADICIONALES VIA JAVASCRIPT =====
 // Agregar estilos para la navegación activa
-const style = document.createElement('style');
-style.textContent = `
+const navigationStyles = document.createElement('style');
+navigationStyles.textContent = `
     .nav__link.active {
         color: var(--primary-color, #cc7710) !important;
         font-weight: 600;
@@ -237,4 +237,4 @@ style.textContent = `
         }
     }
 `;
-document.head.appendChild(style);
+document.head.appendChild(navigationStyles);

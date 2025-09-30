@@ -9,7 +9,7 @@
     <meta name="author" content="{{ $hotel ? $hotel->nombre : 'Casa Vieja Hotel y Restaurante' }}">
     
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.google.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: http: https: blob:; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' http: https: wss:; frame-src 'self' https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.google.com https://maps.googleapis.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: http: https: blob:; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' http: https: wss:; frame-src 'self' https://www.google.com https://www.facebook.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
@@ -945,11 +945,10 @@
             });
         };
     </script>
+    <!-- Cargar scripts en el orden correcto -->
+    <script src="{{ asset('landing/config.js') }}"></script>
     <script src="{{ asset('landing/hero-carousel.js') }}"></script>
     <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
-    <script src="{{ asset('landing/navigation-fixes.js') }}"></script>
-    <script src="{{ asset('landing/hero-carousel.js') }}"></script>
     <script src="{{ asset('landing/script.js') }}"></script>
-    <script src="{{ asset('hotel-landing/main.js') }}"></script>
 </body>
 </html>
