@@ -1069,16 +1069,34 @@ class ReservaController extends Controller
 
         // Si la petición es POST, procesar el check-in
         if (request()->isMethod('post')) {
-            $data = request()->validate([
-                'nombre_cliente' => 'required|string|max:255',
-                'documento_identidad' => 'required|string|max:255',
-                'telefono' => 'required|string|max:20',
-                'fecha_entrada' => 'required|date',
-                'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Permitir mismo día
-                'adelanto' => 'nullable|numeric|min:0',
-                'nit' => 'nullable|string|max:255',
-                'observaciones' => 'nullable|string',
+            // DEBUG: Log de datos recibidos
+            \Log::info('=== CHECKIN DEBUG ===', [
+                'request_all' => request()->all(),
+                'fecha_entrada' => request('fecha_entrada'),
+                'fecha_salida' => request('fecha_salida'),
+                'permitir_estancias_horas' => $hotel->permitir_estancias_horas
             ]);
+            
+            try {
+                $data = request()->validate([
+                    'nombre_cliente' => 'required|string|max:255',
+                    'documento_identidad' => 'required|string|max:255',
+                    'telefono' => 'required|string|max:20',
+                    'fecha_entrada' => 'required|date',
+                    'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Permitir mismo día
+                    'adelanto' => 'nullable|numeric|min:0',
+                    'nit' => 'nullable|string|max:255',
+                    'observaciones' => 'nullable|string',
+                ]);
+                
+                \Log::info('=== VALIDACIÓN EXITOSA ===', ['data' => $data]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('=== ERROR DE VALIDACIÓN ===', [
+                    'errors' => $e->errors(),
+                    'request' => request()->all()
+                ]);
+                throw $e;
+            }
 
             // Validar horario de check-in
             $horaActual = \Carbon\Carbon::now()->format('H:i');
