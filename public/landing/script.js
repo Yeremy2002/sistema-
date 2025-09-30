@@ -278,10 +278,12 @@ function openReservationModal(packageType = '') {
         }
 
         if (checkoutInput) {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            checkoutInput.min = tomorrow.toISOString().split('T')[0];
+            // Allow same-day checkout (for hourly stays)
+            checkoutInput.min = today;
             if (!checkoutInput.value) {
+                // Default to tomorrow for convenience, but user can select today
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
                 checkoutInput.value = tomorrow.toISOString().split('T')[0];
             }
         }
@@ -2023,12 +2025,13 @@ function initializeLandingPage() {
         checkinInput.addEventListener('change', (e) => {
             if (checkoutInput) {
                 const checkinDate = new Date(e.target.value);
-                const minCheckout = new Date(checkinDate);
-                minCheckout.setDate(minCheckout.getDate() + 1);
-                checkoutInput.min = minCheckout.toISOString().split('T')[0];
+                // Allow same-day checkout (minimum is same day as checkin)
+                checkoutInput.min = e.target.value;
 
-                if (checkoutInput.value && new Date(checkoutInput.value) <= checkinDate) {
-                    checkoutInput.value = minCheckout.toISOString().split('T')[0];
+                // Only update checkout if it's BEFORE checkin (invalid)
+                if (checkoutInput.value && new Date(checkoutInput.value) < checkinDate) {
+                    // Set to same day as checkin (user can adjust if needed)
+                    checkoutInput.value = e.target.value;
                 }
 
                 // Update room options based on new dates
