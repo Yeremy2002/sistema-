@@ -86,7 +86,7 @@ class ReservaController extends Controller
                 }
                 
                 // Verificar que el checkout sea antes de la hora límite del mismo día
-                $horaLimite = $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00';
+                $horaLimite = $hotel->checkout_mismo_dia_limite ?? '20:00';
                 list($limitHour, $limitMin) = explode(':', $horaLimite);
                 $fechaLimite = \Carbon\Carbon::parse($request->fecha_salida)->setTime($limitHour, $limitMin, 0);
                 
@@ -318,7 +318,7 @@ class ReservaController extends Controller
             'documento_cliente' => 'required|string|max:255',
             'telefono_cliente' => 'required|string|max:20',
             'fecha_entrada' => 'required|date',
-            'fecha_salida' => 'required|date|after:fecha_entrada',
+            'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Permitir mismo día
             'estado' => 'required|in:Pendiente,Check-in,Check-out,Cancelada',
             'observaciones' => 'nullable|string',
             'adelanto' => 'nullable|numeric|min:0'
@@ -522,7 +522,7 @@ class ReservaController extends Controller
                     }
                     
                     // Verificar que el checkout sea antes de la hora límite del mismo día
-                    $horaLimite = $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '20:00';
+                    $horaLimite = $hotel->checkout_mismo_dia_limite ?? '20:00';
                     list($limitHour, $limitMin) = explode(':', $horaLimite);
                     $fechaLimite = \Carbon\Carbon::parse($data['fecha_salida'])->setTime($limitHour, $limitMin, 0);
                     
@@ -1074,7 +1074,7 @@ class ReservaController extends Controller
                 'documento_identidad' => 'required|string|max:255',
                 'telefono' => 'required|string|max:20',
                 'fecha_entrada' => 'required|date',
-                'fecha_salida' => 'required|date|after:fecha_entrada',
+                'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Permitir mismo día
                 'adelanto' => 'nullable|numeric|min:0',
                 'nit' => 'nullable|string|max:255',
                 'observaciones' => 'nullable|string',
