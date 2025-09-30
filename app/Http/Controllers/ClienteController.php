@@ -96,24 +96,21 @@ class ClienteController extends Controller
       ->first();
 
     if ($cliente) {
-      // Get client's reservation history
-      $historial = $cliente->reservas()
-        ->whereIn('estado', ['Check-out', 'Pendiente', 'Check-in'])
-        ->orderBy('fecha_entrada', 'desc')
-        ->limit(5)
-        ->get(['id', 'fecha_entrada', 'fecha_salida', 'estado', 'total']);
-
+      // Return only basic client info (email and phone) for security
       return response()->json([
         'success' => true,
-        'cliente' => $cliente,
-        'historial_reservas' => $historial
+        'cliente' => [
+          'id' => $cliente->id,
+          'nombre' => $cliente->nombre,
+          'email' => $cliente->email,
+          'telefono' => $cliente->telefono
+        ]
       ]);
     }
 
     return response()->json([
       'success' => false,
-      'cliente' => null,
-      'historial_reservas' => []
+      'cliente' => null
     ]);
   }
 

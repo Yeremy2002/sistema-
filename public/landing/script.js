@@ -823,11 +823,11 @@ async function searchExistingClient(searchTerm) {
     try {
         const response = await searchClient(searchTerm);
 
-        if (response.success && response.data) {
+        // Check if API returned success and has cliente data
+        if (response.success && response.data && response.data.cliente) {
             return {
                 success: true,
-                data: response.data.cliente || response.data,
-                history: response.data.historial_reservas || []
+                data: response.data.cliente
             };
         }
 
@@ -2365,14 +2365,11 @@ async function validateClientName(name) {
             // Client found! Show welcome message and auto-fill
             console.log('🎉 Cliente encontrado:', result.data.nombre);
 
-            // Auto-fill data
+            // Auto-fill email and phone only
             autoFillClientDataSilent(result.data);
 
             // Show welcome SweetAlert
             showWelcomeMessage(result.data.nombre);
-
-            // Show client history
-            showClientHistory(result.data, result.history);
 
             // Enable all fields including submit button (allow client to edit and confirm)
             setFieldsDisabledState(false, true, true); // all fields enabled, name enabled, submit enabled
