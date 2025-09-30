@@ -2546,23 +2546,25 @@ function setFieldsDisabledState(disabled, nameEnabled = true, submitEnabled = fa
 }
 
 // Apply phone mask with Guatemala code (502) pre-populated
-// Format: (502) 5421-4387 or (XXX) XXXX-XXXX for international
+// Format: (502) 5544-5566 or (XXX) XXXX-XXXX for international
 function applyPhoneMask(input) {
     let value = input.value.replace(/\D/g, ''); // Remove all non-digits
     let formattedValue = '';
     
     if (value.length > 0) {
         // Format: (XXX) XXXX-XXXX
-        // First 3 digits = area/country code
-        // Next 8+ digits = phone number with dash after 4th digit
+        // First 3 digits = area/country code (502)
+        // Next 4 digits = first part of phone (5544)
+        // Last 4 digits = second part of phone (5566)
+        // Total: 3 + 8 = 11 digits for Guatemala
         if (value.length <= 3) {
             formattedValue = `(${value}`;
         } else if (value.length <= 7) {
-            // (502) 5421
+            // (502) 5544
             formattedValue = `(${value.substring(0, 3)}) ${value.substring(3)}`;
         } else {
-            // (502) 5421-4387
-            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3, 7)}-${value.substring(7, 11)}`;
+            // (502) 5544-5566 - Allow up to 15 digits total for international
+            formattedValue = `(${value.substring(0, 3)}) ${value.substring(3, 7)}-${value.substring(7, 15)}`;
         }
     } else {
         // If user deletes everything, restore default Guatemala code

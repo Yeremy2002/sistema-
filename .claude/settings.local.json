@@ -18,7 +18,9 @@
       "Bash(export PATH=$PATH:./node_modules/.bin)",
       "Bash(./create_deployment_package.sh:*)",
       "Read(//Users/richardortiz/workspace/gestion_hotel/**)",
-      "Bash(tar:*)"
+      "Bash(tar:*)",
+      "Read(//Users/richardortiz/Documents/screens/**)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
