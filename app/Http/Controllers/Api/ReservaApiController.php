@@ -69,7 +69,7 @@ class ReservaApiController extends Controller
         ]);
         $validator = Validator::make($request->all(), [
             'fecha_entrada' => 'required|date|after_or_equal:today',
-            'fecha_salida' => 'required|date|after:fecha_entrada',
+            'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Changed from 'after' to 'after_or_equal' to allow same-day stays
             'categoria_id' => 'nullable|exists:categorias,id',
             'nivel_id' => 'nullable|exists:nivels,id'
         ]);
@@ -101,6 +101,7 @@ class ReservaApiController extends Controller
         // Filtrar habitaciones disponibles
         $habitacionesDisponibles = $habitaciones->filter(function ($habitacion) use ($fechaEntrada, $fechaSalida) {
             // Verificar si la habitación tiene reservas que se solapen con las fechas solicitadas
+            // Para estadías del mismo día, también consideramos horas si están disponibles
             $reservasConflicto = $habitacion->reservas()
                 ->whereIn('estado', [
                     'Check-in',
@@ -110,12 +111,12 @@ class ReservaApiController extends Controller
                     'Reservada-Confirmada'
                 ])
                 ->where(function ($query) use ($fechaEntrada, $fechaSalida) {
-                    $query->whereBetween('fecha_entrada', [$fechaEntrada, $fechaSalida])
-                        ->orWhereBetween('fecha_salida', [$fechaEntrada, $fechaSalida])
-                        ->orWhere(function ($subQuery) use ($fechaEntrada, $fechaSalida) {
-                            $subQuery->where('fecha_entrada', '<=', $fechaEntrada)
-                                ->where('fecha_salida', '>=', $fechaSalida);
-                        });
+                    // Check if there's any overlap using proper interval logic
+                    // Overlap exists if: (start1 < end2) AND (start2 < end1)
+                    $query->where(function ($subQuery) use ($fechaEntrada, $fechaSalida) {
+                        $subQuery->where('fecha_entrada', '<', $fechaSalida)
+                                 ->where('fecha_salida', '>', $fechaEntrada);
+                    });
                 })
                 ->exists();
 
@@ -160,7 +161,7 @@ class ReservaApiController extends Controller
         $validator = Validator::make($request->all(), [
             'habitacion_id' => 'required|exists:habitacions,id',
             'fecha_entrada' => 'required|date|after_or_equal:today',
-            'fecha_salida' => 'required|date|after:fecha_entrada',
+            'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Changed from 'after' to 'after_or_equal' to allow same-day stays
             'adelanto' => 'required|numeric|min:0',
             'observaciones' => 'nullable|string|max:1000',
 
@@ -198,8 +199,9 @@ class ReservaApiController extends Controller
                 'Reservada-Confirmada'
             ])
             ->where(function ($query) use ($fechaEntrada, $fechaSalida) {
-                $query->whereBetween('fecha_entrada', [$fechaEntrada, $fechaSalida])
-                    ->orWhereBetween('fecha_salida', [$fechaEntrada, $fechaSalida])
+                // Use proper interval overlap logic: (start1 < end2) AND (start2 < end1)
+                $query->where('fecha_entrada', '<', $fechaSalida)
+                      ->where('fecha_salida', '>', $fechaEntrada)
                     ->orWhere(function ($subQuery) use ($fechaEntrada, $fechaSalida) {
                         $subQuery->where('fecha_entrada', '<=', $fechaEntrada)
                             ->where('fecha_salida', '>=', $fechaSalida);

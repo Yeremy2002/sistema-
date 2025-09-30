@@ -59,7 +59,7 @@ class ReservaApiController extends Controller
   {
     $request->validate([
       'fecha_entrada' => 'required|date',
-      'fecha_salida' => 'required|date|after:fecha_entrada',
+      'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Changed from 'after' to 'after_or_equal' to allow same-day stays
       'categoria_id' => 'nullable|exists:categorias,id'
     ]);
 
@@ -73,12 +73,9 @@ class ReservaApiController extends Controller
       })
       ->whereDoesntHave('reservas', function ($query) use ($fechaEntrada, $fechaSalida) {
         $query->where(function ($q) use ($fechaEntrada, $fechaSalida) {
-          $q->whereBetween('fecha_entrada', [$fechaEntrada, $fechaSalida])
-            ->orWhereBetween('fecha_salida', [$fechaEntrada, $fechaSalida])
-            ->orWhere(function ($q) use ($fechaEntrada, $fechaSalida) {
-              $q->where('fecha_entrada', '<=', $fechaEntrada)
-                ->where('fecha_salida', '>=', $fechaSalida);
-            });
+          // Use proper interval overlap logic: (start1 < end2) AND (start2 < end1)
+          $q->where('fecha_entrada', '<', $fechaSalida)
+            ->where('fecha_salida', '>', $fechaEntrada);
         })
           ->whereIn('estado', ['Check-in', 'Pendiente']);
       })
@@ -109,7 +106,7 @@ class ReservaApiController extends Controller
       'habitacion_id' => 'required|exists:habitacions,id',
       'cliente_id' => 'required|exists:clientes,id',
       'fecha_entrada' => 'required|date',
-      'fecha_salida' => 'required|date|after:fecha_entrada',
+      'fecha_salida' => 'required|date|after_or_equal:fecha_entrada', // Changed from 'after' to 'after_or_equal' to allow same-day stays
       'adelanto' => 'nullable|numeric|min:0'
     ]);
 
@@ -127,12 +124,9 @@ class ReservaApiController extends Controller
 
     $reservaExistente = $habitacion->reservas()
       ->where(function ($query) use ($fechaEntrada, $fechaSalida) {
-        $query->whereBetween('fecha_entrada', [$fechaEntrada, $fechaSalida])
-          ->orWhereBetween('fecha_salida', [$fechaEntrada, $fechaSalida])
-          ->orWhere(function ($q) use ($fechaEntrada, $fechaSalida) {
-            $q->where('fecha_entrada', '<=', $fechaEntrada)
-              ->where('fecha_salida', '>=', $fechaSalida);
-          });
+        // Use proper interval overlap logic: (start1 < end2) AND (start2 < end1)
+        $query->where('fecha_entrada', '<', $fechaSalida)
+              ->where('fecha_salida', '>', $fechaEntrada);
       })
       ->whereIn('estado', ['Pendiente de Confirmación', 'Pendiente', 'Check-in'])
       ->exists();
