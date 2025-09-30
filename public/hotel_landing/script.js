@@ -1238,18 +1238,17 @@ function formatDate(dateString) {
 // Sanitize string input to prevent XSS
 function sanitizeString(str) {
     if (typeof str !== 'string') return str;
-
-    // Create a temporary element to leverage browser's built-in HTML escaping
-    const temp = document.createElement('div');
-    temp.textContent = str;
-    return temp.innerHTML
+    
+    // NO USAR TRIM PARA PRESERVAR ESPACIOS
+    // Solo escapar caracteres peligrosos HTML, pero permitir espacios
+    return str
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;')
-        .replace(/\//g, '&#x2F;')
-        .trim();
+        .replace(/\//g, '&#x2F;');
+    // NO .trim() aquí - preservar espacios en solicitudes especiales
 }
 
 // Sanitize email input
@@ -1350,10 +1349,25 @@ function validateReservationData(data) {
     // Normalizar fechas a medianoche para comparación correcta
     checkinDate.setHours(0, 0, 0, 0);
     checkoutDate.setHours(0, 0, 0, 0);
+    
+    // DEBUG: Log de fechas para verificar normalización
+    console.log('=== VALIDACIÓN DE FECHAS ===');
+    console.log('Fecha checkin (input):', data.checkin);
+    console.log('Fecha checkout (input):', data.checkout);
+    console.log('Fecha checkin (Date normalizado):', checkinDate.toISOString());
+    console.log('Fecha checkout (Date normalizado):', checkoutDate.toISOString());
+    console.log('Fecha today (Date normalizado):', today.toISOString());
+    console.log('checkinDate < today?', checkinDate < today);
+    console.log('checkinDate.getTime():', checkinDate.getTime());
+    console.log('today.getTime():', today.getTime());
+    console.log('========================');
 
     // Permitir reservas desde hoy (>=, no solo >)
     if (checkinDate < today) {
+        console.error('❌ ERROR: La fecha de llegada es anterior a hoy');
         errors.push('La fecha de llegada no puede ser anterior a hoy');
+    } else {
+        console.log('✅ OK: La fecha de llegada es válida');
     }
 
     // Allow same-day stays (check-in and check-out on the same day)
