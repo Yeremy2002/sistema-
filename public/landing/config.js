@@ -212,11 +212,31 @@ async function createReservation(reservationData) {
         
     } catch (error) {
         console.error('Error creating reservation:', error);
+        
+        // Extraer el mensaje real del JSON si existe en error.message
+        let errorMessage = 'Error al crear la reserva';
+        
+        // Intentar extraer el mensaje del backend del formato: HTTP 409: {"success":false,"message":"..."}
+        const jsonMatch = error.message.match(/HTTP \d+: (\{.*\})/);
+        if (jsonMatch && jsonMatch[1]) {
+            try {
+                const errorData = JSON.parse(jsonMatch[1]);
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } catch (e) {
+                // Si no se puede parsear, usar el mensaje original
+                errorMessage = error.message;
+            }
+        } else {
+            errorMessage = error.message;
+        }
+        
         // Return error in expected format
         return {
             success: false,
             error: error.message,
-            message: 'Error al crear la reserva'
+            message: errorMessage  // Usar el mensaje real extraído
         };
     }
 }
