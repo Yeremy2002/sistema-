@@ -637,7 +637,10 @@ function calculateNights(checkin, checkout) {
     const checkinDate = new Date(checkin);
     const checkoutDate = new Date(checkout);
     const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // Si es 0 noches (mismo día), cobrar como 1 día completo
+    return nights === 0 ? 1 : nights;
 }
 
 // Format price for display (simple version, will use config.js version when available)
@@ -1206,7 +1209,13 @@ function updatePriceSummary() {
     // Update summary elements
     document.getElementById('price-room-type').textContent = selectedOption.text.split(' - ')[0];
     document.getElementById('price-dates').textContent = `${formatDate(checkinInput.value)} - ${formatDate(checkoutInput.value)}`;
-    document.getElementById('price-nights').textContent = `${nights} noche${nights !== 1 ? 's' : ''}`;
+    
+    // Mostrar texto apropiado según si es estadía del mismo día o múltiples noches
+    const nightsText = nights === 1 && checkinInput.value === checkoutInput.value 
+        ? '1 día (mismo día)' 
+        : `${nights} noche${nights !== 1 ? 's' : ''}`;
+    document.getElementById('price-nights').textContent = nightsText;
+    
     document.getElementById('price-per-night').textContent = formatPrice(pricePerNight);
     document.getElementById('price-total').textContent = formatPrice(pricePerNight * nights);
 
