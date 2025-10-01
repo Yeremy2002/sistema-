@@ -803,10 +803,12 @@ class ReservaController extends Controller
             try {
                 $request->validate([
                     'monto_total' => 'required|numeric|min:0',
-                    'descuento_adicional' => 'nullable|numeric|min:0',
                     'pago_efectivo' => 'nullable|numeric|min:0',
                     'pago_tarjeta' => 'nullable|numeric|min:0',
                     'pago_transferencia' => 'nullable|numeric|min:0',
+                    'tarjeta_voucher' => 'nullable|string|max:100',
+                    'transferencia_banco_nombre' => 'nullable|string|max:100',
+                    'transferencia_numero' => 'nullable|string|max:100',
                     'observaciones' => 'nullable|string',
                     'justificacion_checkout_forzado' => 'required|string|max:500',
                     'autorizacion_checkout_forzado' => 'required|accepted'
@@ -830,10 +832,12 @@ class ReservaController extends Controller
             // Checkout muy retrasado requiere justificación obligatoria
             $request->validate([
                 'monto_total' => 'required|numeric|min:0',
-                'descuento_adicional' => 'nullable|numeric|min:0',
                 'pago_efectivo' => 'nullable|numeric|min:0',
                 'pago_tarjeta' => 'nullable|numeric|min:0',
                 'pago_transferencia' => 'nullable|numeric|min:0',
+                'tarjeta_voucher' => 'nullable|string|max:100',
+                'transferencia_banco_nombre' => 'nullable|string|max:100',
+                'transferencia_numero' => 'nullable|string|max:100',
                 'observaciones' => 'nullable|string',
                 'justificacion_admin' => 'required|string|max:500',
                 'autorizacion_checkout_retrasado' => 'required|accepted'
@@ -846,10 +850,12 @@ class ReservaController extends Controller
             // Checkout administrativo normal
             $request->validate([
                 'monto_total' => 'required|numeric|min:0',
-                'descuento_adicional' => 'nullable|numeric|min:0',
                 'pago_efectivo' => 'nullable|numeric|min:0',
                 'pago_tarjeta' => 'nullable|numeric|min:0',
                 'pago_transferencia' => 'nullable|numeric|min:0',
+                'tarjeta_voucher' => 'nullable|string|max:100',
+                'transferencia_banco_nombre' => 'nullable|string|max:100',
+                'transferencia_numero' => 'nullable|string|max:100',
                 'observaciones' => 'nullable|string',
                 'justificacion_admin' => 'required|string|max:500'
             ]);
@@ -857,36 +863,65 @@ class ReservaController extends Controller
             // Checkout normal
             $request->validate([
                 'monto_total' => 'required|numeric|min:0',
-                'descuento_adicional' => 'nullable|numeric|min:0',
                 'pago_efectivo' => 'nullable|numeric|min:0',
                 'pago_tarjeta' => 'nullable|numeric|min:0',
                 'pago_transferencia' => 'nullable|numeric|min:0',
+                'tarjeta_voucher' => 'nullable|string|max:100',
+                'transferencia_banco_nombre' => 'nullable|string|max:100',
+                'transferencia_numero' => 'nullable|string|max:100',
                 'observaciones' => 'nullable|string',
             ]);
         }
 
-        $descuento = $request->descuento_adicional ?? 0;
-        $totalEsperado = $reserva->total - $reserva->adelanto - $descuento;
+        // Calcular total esperado sin descuentos
+        $totalEsperado = $reserva->total - $reserva->adelanto;
         $totalEsperado = round($totalEsperado, 2);
         $montoTotal = round($request->monto_total, 2);
         $pagoEfectivo = round($request->pago_efectivo ?? 0, 2);
         $pagoTarjeta = round($request->pago_tarjeta ?? 0, 2);
         $pagoTransferencia = round($request->pago_transferencia ?? 0, 2);
-        $sumaPagos = $pagoEfectivo + $pagoTarjeta + $pagoTransferencia;
-
-        if (abs($montoTotal - $totalEsperado) > 0.01) {
-            return back()->with('error', 'El monto a pagar no coincide con el total menos el adelanto y descuento.')->withInput();
+        
+        // Determinar el método de pago usado
+        $metodoPago = $request->metodo_pago_principal;
+        $montoPagado = 0;
+        
+        if ($metodoPago === 'efectivo') {
+            $montoPagado = $pagoEfectivo;
+        } elseif ($metodoPago === 'tarjeta') {
+            // Para tarjeta, el monto pagado incluye el recargo del 5%
+            $montoPagado = $pagoTarjeta + ($pagoTarjeta * 0.05);
+        } elseif ($metodoPago === 'transferencia') {
+            $montoPagado = $pagoTransferencia;
         }
-        if (abs($sumaPagos - $totalEsperado) > 0.01) {
-            return back()->with('error', 'La suma de los pagos no coincide con el total a pagar.')->withInput();
+        
+        // Validación básica: verificar que se haya ingresado un monto
+        if ($montoPagado <= 0) {
+            return back()->with('error', 'Debe ingresar un monto de pago válido.')->withInput();
         }
 
         // Combinar observaciones regulares con justificación administrativa si aplica
         $observaciones = $request->observaciones;
         
+        // Agregar información del método de pago a las observaciones
+        $infoPago = "\n\n--- Información de Pago ---\n";
+        $infoPago .= "Método: " . ucfirst($metodoPago) . "\n";
+        
+        if ($metodoPago === 'tarjeta' && $request->tarjeta_voucher) {
+            $infoPago .= "Voucher/Boleta: " . $request->tarjeta_voucher . "\n";
+        } elseif ($metodoPago === 'transferencia') {
+            if ($request->transferencia_banco_nombre) {
+                $infoPago .= "Banco: " . $request->transferencia_banco_nombre . "\n";
+            }
+            if ($request->transferencia_numero) {
+                $infoPago .= "Número de Transferencia: " . $request->transferencia_numero . "\n";
+            }
+        }
+        
+        $observaciones .= $infoPago;
+        
         if ($checkoutForzado && $saldoPendiente < 0) {
             // Checkout forzado por saldo negativo
-            $observaciones .= ($observaciones ? "\n\n" : '') . 
+            $observaciones .= "\n" . 
                 "[CHECK-OUT FORZADO AUTORIZADO POR: " . \Auth::user()->name . "]\n" .
                 "Motivo: Saldo negativo (Anticipo: " . $hotel->simbolo_moneda . number_format($reserva->adelanto, 2) . 
                 " > Total: " . $hotel->simbolo_moneda . number_format($reserva->total, 2) . ")\n" .
@@ -895,7 +930,7 @@ class ReservaController extends Controller
                 "NOTA: Este checkout requirió autorización administrativa por saldo negativo.";
         } elseif ($checkoutMuyRetrasado && $esAdmin) {
             // Checkout muy retrasado con autorización administrativa
-            $observaciones .= ($observaciones ? "\n\n" : '') . 
+            $observaciones .= "\n" . 
                 "[CHECK-OUT RETRASADO AUTORIZADO POR: " . \Auth::user()->name . "]\n" .
                 "Retraso: " . $horasVencidas . " horas después del límite (" . $horaCheckoutFin . ")\n" .
                 "Fecha/Hora de autorización: " . $ahora->format('d/m/Y H:i') . "\n" .
@@ -903,14 +938,13 @@ class ReservaController extends Controller
                 "NOTA: Este checkout afecta el cierre de caja del día.";
         } elseif ($esAdmin && $request->justificacion_admin) {
             // Checkout administrativo normal
-            $observaciones .= ($observaciones ? "\n\n" : '') . 
+            $observaciones .= "\n" . 
                 "[CHECK-OUT ADMINISTRATIVO POR: " . \Auth::user()->name . "]\n" .
                 "Justificación: " . $request->justificacion_admin;
         }
         
         $reserva->estado = 'Check-out';
         $reserva->observaciones = $observaciones;
-        $reserva->descuento_adicional = $descuento;
         $reserva->save();
 
         // Liberar la habitación

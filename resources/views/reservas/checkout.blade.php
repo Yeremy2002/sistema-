@@ -78,116 +78,133 @@
                     <div class="card-body">
                         <form id="checkout-form" action="{{ route('reservas.checkout.store', $reserva) }}" method="POST">
                             @csrf
-                            <div class="form-group">
-                                <label for="descuento_adicional">Descuento Adicional</label>
-                                <input type="number" step="0.01" class="form-control" id="descuento_adicional"
-                                    name="descuento_adicional" value="0" min="0">
+                            
+                            <!-- Total a Pagar - Destacado -->
+                            <div class="alert alert-info text-center mb-4">
+                                <h5 class="mb-2">Total a Pagar</h5>
+                                <h3 class="mb-0">
+                                    <strong>{{ $hotel->simbolo_moneda }}{{ number_format($reserva->total, 2) }}</strong>
+                                </h3>
                             </div>
+
+                            <!-- Método de Pago -->
                             <div class="form-group">
-                                <label>Método de Pago Principal</label>
+                                <label><strong>Forma de Pago</strong></label>
                                 <div class="mb-3">
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodo_pago_principal" 
                                                id="metodo_efectivo" value="efectivo" checked>
                                         <label class="form-check-label" for="metodo_efectivo">
-                                            <i class="fas fa-money-bill-wave text-success"></i> Efectivo
+                                            <i class="fas fa-money-bill-wave text-success"></i> <strong>Efectivo</strong>
                                         </label>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodo_pago_principal" 
                                                id="metodo_tarjeta" value="tarjeta">
                                         <label class="form-check-label" for="metodo_tarjeta">
-                                            <i class="fas fa-credit-card text-primary"></i> Tarjeta (+5% recargo)
+                                            <i class="fas fa-credit-card text-primary"></i> <strong>Tarjeta</strong> <span class="badge badge-warning">+5% recargo</span>
                                         </label>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodo_pago_principal" 
                                                id="metodo_transferencia" value="transferencia">
                                         <label class="form-check-label" for="metodo_transferencia">
-                                            <i class="fas fa-exchange-alt text-info"></i> Transferencia
+                                            <i class="fas fa-exchange-alt text-info"></i> <strong>Transferencia</strong>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Campos específicos por método de pago -->
+                            <!-- Sección de Pago en Efectivo -->
                             <div id="pago_efectivo_section" class="payment-section">
-                                <div class="form-group">
-                                    <label for="pago_efectivo">Monto Recibido en Efectivo</label>
-                                    <input type="number" step="0.01" class="form-control" id="pago_efectivo"
-                                        name="pago_efectivo" value="0" min="0">
-                                    <small class="form-text text-muted">Puede ingresar un monto mayor para calcular el vuelto</small>
-                                </div>
-                                <div id="cambio_section" class="alert alert-success" style="display: none;">
-                                    <i class="fas fa-hand-holding-usd"></i>
-                                    <strong>Vuelto/Cambio a entregar: </strong>
-                                    <span id="cambio_amount" class="h5">{{ $hotel->simbolo_moneda }}0.00</span>
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-success"><i class="fas fa-money-bill-wave"></i> Pago en Efectivo</h6>
+                                        <div class="form-group">
+                                            <label for="pago_efectivo">Monto Recibido</label>
+                                            <input type="number" step="0.01" class="form-control" id="pago_efectivo"
+                                                name="pago_efectivo" value="{{ number_format($reserva->total, 2, '.', '') }}" min="0">
+                                            <small class="form-text text-muted">Puede ingresar un monto mayor para calcular el vuelto</small>
+                                        </div>
+                                        <div id="cambio_section" class="alert alert-success" style="display: none;">
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                            <strong>Vuelto/Cambio a entregar: </strong>
+                                            <span id="cambio_amount" class="h5">{{ $hotel->simbolo_moneda }}0.00</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
+                            <!-- Sección de Pago con Tarjeta -->
                             <div id="pago_tarjeta_section" class="payment-section" style="display: none;">
-                                <div class="form-group">
-                                    <label for="pago_tarjeta">Monto Base (sin recargo)</label>
-                                    <input type="number" step="0.01" class="form-control" id="pago_tarjeta"
-                                        name="pago_tarjeta" value="0" min="0" readonly>
-                                </div>
-                                <div class="card border-warning">
-                                    <div class="card-body p-3">
-                                        <h6 class="card-title text-warning"><i class="fas fa-credit-card"></i> Desglose Pago con Tarjeta</h6>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Monto base:</small><br>
-                                                <span id="tarjeta_base">{{ $hotel->simbolo_moneda }}0.00</span>
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary"><i class="fas fa-credit-card"></i> Pago con Tarjeta</h6>
+                                        <div class="form-group">
+                                            <label for="pago_tarjeta">Monto Recibido</label>
+                                            <input type="number" step="0.01" class="form-control" id="pago_tarjeta"
+                                                name="pago_tarjeta" value="{{ number_format($reserva->total, 2, '.', '') }}" min="0">
+                                            <small class="form-text text-muted">Monto base sin incluir el recargo</small>
+                                        </div>
+                                        
+                                        <!-- Desglose del recargo -->
+                                        <div class="alert alert-warning">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Monto base:</small><br>
+                                                    <span id="tarjeta_base">{{ $hotel->simbolo_moneda }}0.00</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Recargo (5%):</small><br>
+                                                    <span id="tarjeta_recargo" class="text-warning">{{ $hotel->simbolo_moneda }}0.00</span>
+                                                </div>
                                             </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Recargo (5%):</small><br>
-                                                <span id="tarjeta_recargo" class="text-warning">{{ $hotel->simbolo_moneda }}0.00</span>
+                                            <hr class="my-2">
+                                            <div class="text-center">
+                                                <strong>Total con recargo: <span id="tarjeta_total" class="h6 text-warning">{{ $hotel->simbolo_moneda }}0.00</span></strong>
                                             </div>
                                         </div>
-                                        <hr class="my-2">
-                                        <div class="text-center">
-                                            <strong>Total con recargo: <span id="tarjeta_total" class="h6 text-warning">{{ $hotel->simbolo_moneda }}0.00</span></strong>
+                                        
+                                        <div class="form-group">
+                                            <label for="tarjeta_voucher">Número de Boleta/Voucher</label>
+                                            <input type="text" class="form-control" id="tarjeta_voucher"
+                                                name="tarjeta_voucher" placeholder="Ingrese el número de voucher">
+                                            <small class="form-text text-muted">Opcional - Para verificación en cierre de caja</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Sección de Pago por Transferencia -->
                             <div id="pago_transferencia_section" class="payment-section" style="display: none;">
-                                <div class="form-group">
-                                    <label for="pago_transferencia">Monto Transferido</label>
-                                    <input type="number" step="0.01" class="form-control" id="pago_transferencia"
-                                        name="pago_transferencia" value="0" min="0" readonly>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info"><i class="fas fa-exchange-alt"></i> Pago por Transferencia</h6>
                                         <div class="form-group">
-                                            <label for="transferencia_banco">Banco</label>
-                                            <select class="form-control" id="transferencia_banco" name="transferencia_banco">
-                                                <option value="">Seleccionar banco...</option>
-                                                <option value="BAM">BAM</option>
-                                                <option value="BANRURAL">Banrural</option>
-                                                <option value="BANCO_INDUSTRIAL">Banco Industrial</option>
-                                                <option value="BANTRAB">Bantrab</option>
-                                                <option value="AGROMERCANTIL">Banco Agromercantil</option>
-                                                <option value="OTRO">Otro</option>
-                                            </select>
+                                            <label for="pago_transferencia">Monto Recibido</label>
+                                            <input type="number" step="0.01" class="form-control" id="pago_transferencia"
+                                                name="pago_transferencia" value="{{ number_format($reserva->total, 2, '.', '') }}" min="0">
+                                            <small class="form-text text-muted">Monto transferido que debe coincidir con el total</small>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
+                                        
                                         <div class="form-group">
-                                            <label for="transferencia_referencia">Número de Referencia/Hilera</label>
-                                            <input type="text" class="form-control" id="transferencia_referencia" 
-                                                   name="transferencia_referencia" placeholder="Ej: 123456789">
+                                            <label for="transferencia_banco_nombre">Nombre del Banco</label>
+                                            <input type="text" class="form-control" id="transferencia_banco_nombre"
+                                                name="transferencia_banco_nombre" placeholder="Ej: Banco Industrial">
+                                            <small class="form-text text-muted">Opcional - Para verificación en cierre de caja</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="transferencia_numero">Número de Transferencia</label>
+                                            <input type="text" class="form-control" id="transferencia_numero" 
+                                                   name="transferencia_numero" placeholder="Ej: 123456789">
+                                            <small class="form-text text-muted">Opcional - Para verificación en cierre de caja</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group mt-2">
-                                <label for="monto_total">Total a Pagar</label>
-                                <input type="number" step="0.01" class="form-control" id="monto_total"
-                                    name="monto_total"
-                                    value="{{ old('monto_total', $reserva->total) }}" readonly>
-                            </div>
+
+                            <input type="hidden" name="monto_total" id="monto_total" value="{{ $reserva->total }}">
                             <div class="form-group">
                                 <label for="observaciones">Observaciones</label>
                                 <textarea class="form-control @error('observaciones') is-invalid @enderror" id="observaciones" name="observaciones"
@@ -228,28 +245,17 @@
                     section.style.display = 'none';
                 });
                 
-                // Resetear valores
-                document.getElementById('pago_efectivo').value = '0';
-                document.getElementById('pago_tarjeta').value = '0';
-                document.getElementById('pago_transferencia').value = '0';
-                
-                // Mostrar sección correspondiente y asignar valor
-                const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
-                const totalPagar = totalReserva - descuento;
-                
+                // Mostrar sección correspondiente
                 if (metodo === 'efectivo') {
                     document.getElementById('pago_efectivo_section').style.display = 'block';
-                    document.getElementById('pago_efectivo').value = totalPagar.toFixed(2);
+                    calcularVuelto();
                 } else if (metodo === 'tarjeta') {
                     document.getElementById('pago_tarjeta_section').style.display = 'block';
-                    document.getElementById('pago_tarjeta').value = totalPagar.toFixed(2);
-                    calcularRecargoTarjeta(totalPagar);
+                    const montoTarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || totalReserva;
+                    calcularRecargoTarjeta(montoTarjeta);
                 } else if (metodo === 'transferencia') {
                     document.getElementById('pago_transferencia_section').style.display = 'block';
-                    document.getElementById('pago_transferencia').value = totalPagar.toFixed(2);
                 }
-                
-                actualizarTotal();
             }
             
             // Calcular recargo de tarjeta
@@ -267,10 +273,8 @@
                 const metodo = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
                 if (metodo !== 'efectivo') return;
                 
-                const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
-                const totalPagar = totalReserva - descuento;
                 const montoRecibido = parseFloat(document.getElementById('pago_efectivo').value) || 0;
-                const vuelto = montoRecibido - totalPagar;
+                const vuelto = montoRecibido - totalReserva;
                 
                 if (vuelto > 0) {
                     document.getElementById('cambio_amount').textContent = simboloMoneda + vuelto.toFixed(2);
@@ -280,56 +284,20 @@
                 }
             }
             
-            function actualizarTotal() {
-            const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
-            const efectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
-            const tarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
-            const transferencia = parseFloat(document.getElementById('pago_transferencia').value) || 0;
-            const totalPagar = totalReserva - adelanto - descuento;
-            document.getElementById('monto_total').value = totalPagar.toFixed(2);
-            
-            // Calcular vuelto si es efectivo
-            calcularVuelto();
-            
-            // Aplicar validaciones normales
-                // Validación visual: suma de pagos debe ser igual al total a pagar
-                const sumaPagos = efectivo + tarjeta + transferencia;
-                const feedback = document.getElementById('feedback_pago');
-                let msg = '';
-                if (descuento > totalReserva) {
-                    msg =
-                        '<div class="alert alert-danger p-2">El descuento no puede ser mayor al total de la reserva.</div>';
-                    document.getElementById('descuento_adicional').classList.add('is-invalid');
-                } else {
-                    document.getElementById('descuento_adicional').classList.remove('is-invalid');
-                }
-                if (Math.abs(sumaPagos - totalPagar) > 0.01) {
-                    msg += '<div class="alert alert-warning p-2">La suma de los pagos (' + sumaPagos.toFixed(2) +
-                        ') no coincide con el total a pagar (' + totalPagar.toFixed(2) + ').</div>';
-                    document.getElementById('monto_total').style.backgroundColor = '#f8d7da';
-                } else if (!msg) {
-                    document.getElementById('monto_total').style.backgroundColor = '#d4edda';
-                } else {
-                    document.getElementById('monto_total').style.backgroundColor = '';
-                }
-                feedback.innerHTML = msg;
-        }
             // Event listeners para cambios de método de pago
             document.querySelectorAll('input[name="metodo_pago_principal"]').forEach(radio => {
                 radio.addEventListener('change', cambiarMetodoPago);
             });
             
-            // Event listeners para actualización de totales
-            document.getElementById('descuento_adicional').addEventListener('input', function() {
-                cambiarMetodoPago(); // Recalcular con nuevo descuento
+            // Event listeners para actualización de cálculos
+            document.getElementById('pago_efectivo').addEventListener('input', calcularVuelto);
+            document.getElementById('pago_tarjeta').addEventListener('input', function() {
+                const montoTarjeta = parseFloat(this.value) || 0;
+                calcularRecargoTarjeta(montoTarjeta);
             });
-            document.getElementById('pago_efectivo').addEventListener('input', actualizarTotal);
-            document.getElementById('pago_tarjeta').addEventListener('input', actualizarTotal);
-            document.getElementById('pago_transferencia').addEventListener('input', actualizarTotal);
             
             // Inicializar
             cambiarMetodoPago();
-            actualizarTotal();
 
             // Función para verificar si SweetAlert2 está disponible
             function waitForSwal() {
@@ -344,87 +312,50 @@
 
             // Validación al enviar el formulario
             document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            
-            // Para checkout normal, validaciones básicas de pago
-            const descuento = parseFloat(document.getElementById('descuento_adicional').value) || 0;
-            const efectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
-            const tarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
-            const transferencia = parseFloat(document.getElementById('pago_transferencia').value) || 0;
-            const totalPagar = totalReserva - descuento;
-            const metodoPago = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
-            let montoAPagar = 0;
-            
-            // Validaciones específicas por método de pago
-            if (metodoPago === 'efectivo') {
-                montoAPagar = efectivo;
-                if (efectivo < totalPagar) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Monto insuficiente',
-                        text: 'El monto recibido en efectivo (' + simboloMoneda + efectivo.toFixed(2) + ') es menor al total a pagar (' + simboloMoneda + totalPagar.toFixed(2) + ').',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                }
-            } else if (metodoPago === 'tarjeta') {
-                const recargoTarjeta = tarjeta * 0.05;
-                montoAPagar = tarjeta + recargoTarjeta;
-                if (Math.abs(tarjeta - totalPagar) > 0.01) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en pago con tarjeta',
-                        text: 'El monto base de la tarjeta debe ser igual al total a pagar.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                }
-            } else if (metodoPago === 'transferencia') {
-                montoAPagar = transferencia;
+                const metodoPago = document.querySelector('input[name="metodo_pago_principal"]:checked').value;
                 
-                // Validar que se haya seleccionado un banco
-                const banco = document.getElementById('transferencia_banco').value;
-                if (!banco) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Banco requerido',
-                        text: 'Debe seleccionar el banco de la transferencia.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
+                // Validaciones básicas por método de pago
+                if (metodoPago === 'efectivo') {
+                    const efectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
+                    if (efectivo < totalReserva) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Monto insuficiente',
+                            text: 'El monto recibido en efectivo (' + simboloMoneda + efectivo.toFixed(2) + ') es menor al total a pagar (' + simboloMoneda + totalReserva.toFixed(2) + ').',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        e.preventDefault();
+                        return;
+                    }
+                } else if (metodoPago === 'tarjeta') {
+                    const tarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
+                    if (tarjeta <= 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Monto requerido',
+                            text: 'Debe ingresar un monto válido para el pago con tarjeta.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        e.preventDefault();
+                        return;
+                    }
+                } else if (metodoPago === 'transferencia') {
+                    const transferencia = parseFloat(document.getElementById('pago_transferencia').value) || 0;
+                    if (transferencia <= 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Monto requerido',
+                            text: 'Debe ingresar un monto válido para la transferencia.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        e.preventDefault();
+                        return;
+                    }
                 }
                 
-                // Validar referencia
-                const referencia = document.getElementById('transferencia_referencia').value.trim();
-                if (!referencia) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Referencia requerida',
-                        text: 'Debe ingresar el número de referencia o hilera de la transferencia.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                }
-                
-                if (Math.abs(transferencia - totalPagar) > 0.01) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en transferencia',
-                        text: 'El monto transferido debe ser igual al total a pagar.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    e.preventDefault();
-                    return;
-                }
-            }
-            
-            // Establecer acción por defecto
-            document.getElementById('post_checkout_accion').value = 'limpieza';
-            // Permitir que el formulario se envíe normalmente
-        });
+                // Establecer acción por defecto
+                document.getElementById('post_checkout_accion').value = 'limpieza';
+            });
     });
     </script>
 @stop
