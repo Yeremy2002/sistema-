@@ -712,4 +712,4 @@ Para reportar bugs o solicitar nuevas funcionalidades, crear un issue en el repo
 
 ---
 
-**Nota Importante**: Este README incluye toda la información necesaria para ejecutar el proyecto en desarrollo y testing. Para configuraciones específicas de producción, consultar la documentación adicional en el archivo `CLAUDE.md`.
+**Nota Importante**: Este README incluye toda la información necesaria para ejecutar el proyecto en desarrollo y testing. Para configuraciones específicas de producción, consultar la documentación adicional incluida en el repositorio.
