@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(./cpanel_deployment/prepare_for_cpanel.sh:*)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}

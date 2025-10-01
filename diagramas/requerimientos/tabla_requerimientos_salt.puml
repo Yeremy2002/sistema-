@@ -1,0 +1,27 @@
+@startsalt TablaRequerimientos
+title Requerimientos Funcionales - Sistema Hotelero
+{
+  {T
+    + **GESTIÓN DE RESERVAS**
+    + ID | Nombre | Descripción | Prioridad | Criterios
+    + RF-001 | Crear Reserva Backend | Crear desde panel admin | Alta | Validación completa
+    + RF-002 | Crear Reserva API | Crear desde landing | Alta | Validación mínima
+    + RF-003 | Estados Reserva | 7 estados ciclo vida | Alta | Transiciones válidas
+    + RF-004 | Expiración Auto | Expiran no confirmadas | Alta | Tiempo configurable
+    .
+    + **GESTIÓN DE HABITACIONES**
+    + ID | Nombre | Descripción | Prioridad | Criterios  
+    + RF-011 | Estados Habitación | 4 estados habitación | Alta | Control automático
+    + RF-012 | Gestión Categorías | Clasificar habitaciones | Alta | CRUD categorías
+    + RF-013 | Gestión Niveles | Organizar por pisos | Media | CRUD niveles
+    + RF-017 | Numeración Única | Número único | Alta | Validación duplicados
+    .
+    + **CONTROL DE CAJA**
+    + ID | Nombre | Descripción | Prioridad | Criterios
+    + RF-031 | Apertura Caja | Abrir por turno | Alta | Monto inicial
+    + RF-032 | Cierre Caja | Cerrar con arqueo | Alta | Cálculo automático
+    + RF-033 | Registro Movimientos | Todos ingresos/egresos | Alta | Categorización
+    + RF-034 | Middleware Protección | Bloquear sin caja | Alta | Validación rutas
+  }
+}
+@endsalt

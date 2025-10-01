@@ -377,41 +377,54 @@
     <!-- Experiencias -->
     <section class="experiences section" id="experiencias">
         <div class="container">
-            <h2 class="section__title">Experiencias Únicas</h2>
-            <p class="section__subtitle">Vive la montaña de manera auténtica</p>
+            <h2 class="section__title">{{ $landingSettings->experiences_title ?? 'Experiencias Únicas' }}</h2>
+            <p class="section__subtitle">{{ $landingSettings->experiences_content ?? 'Vive la montaña de manera auténtica' }}</p>
             
             <div class="experiences__grid">
-                <div class="experience-card">
-                    <div class="experience-card__icon">
-                        <i class="ri-mountain-line"></i>
+                @if($landingSettings && $landingSettings->experiences_list && is_array($landingSettings->experiences_list) && count($landingSettings->experiences_list) > 0)
+                    @foreach($landingSettings->experiences_list as $experience)
+                    <div class="experience-card">
+                        <div class="experience-card__icon">
+                            <i class="{{ $experience['icon'] ?? 'ri-star-line' }}"></i>
+                        </div>
+                        <h3 class="experience-card__title">{{ $experience['title'] }}</h3>
+                        <p class="experience-card__description">{{ $experience['description'] }}</p>
                     </div>
-                    <h3 class="experience-card__title">Senderismo Guiado</h3>
-                    <p class="experience-card__description">Explora los senderos de la montaña con guías locales expertos que te mostrarán la flora y fauna única de la región.</p>
-                </div>
-                
-                <div class="experience-card">
-                    <div class="experience-card__icon">
-                        <i class="ri-fire-line"></i>
+                    @endforeach
+                @else
+                    <!-- Experiencias por defecto -->
+                    <div class="experience-card">
+                        <div class="experience-card__icon">
+                            <i class="ri-mountain-line"></i>
+                        </div>
+                        <h3 class="experience-card__title">Senderismo Guiado</h3>
+                        <p class="experience-card__description">Explora los senderos de la montaña con guías locales expertos que te mostrarán la flora y fauna única de la región.</p>
                     </div>
-                    <h3 class="experience-card__title">Fogatas Nocturnas</h3>
-                    <p class="experience-card__description">Disfruta de noches mágicas alrededor del fuego, con historias locales y la mejor vista de las estrellas.</p>
-                </div>
-                
-                <div class="experience-card">
-                    <div class="experience-card__icon">
-                        <i class="ri-camera-line"></i>
+                    
+                    <div class="experience-card">
+                        <div class="experience-card__icon">
+                            <i class="ri-fire-line"></i>
+                        </div>
+                        <h3 class="experience-card__title">Fogatas Nocturnas</h3>
+                        <p class="experience-card__description">Disfruta de noches mágicas alrededor del fuego, con historias locales y la mejor vista de las estrellas.</p>
                     </div>
-                    <h3 class="experience-card__title">Fotografía de Paisaje</h3>
-                    <p class="experience-card__description">Captura los momentos más hermosos con nuestros tours fotográficos en los mejores miradores.</p>
-                </div>
-                
-                <div class="experience-card">
-                    <div class="experience-card__icon">
-                        <i class="ri-plant-line"></i>
+                    
+                    <div class="experience-card">
+                        <div class="experience-card__icon">
+                            <i class="ri-camera-line"></i>
+                        </div>
+                        <h3 class="experience-card__title">Fotografía de Paisaje</h3>
+                        <p class="experience-card__description">Captura los momentos más hermosos con nuestros tours fotográficos en los mejores miradores.</p>
                     </div>
-                    <h3 class="experience-card__title">Huerta Orgánica</h3>
-                    <p class="experience-card__description">Conoce nuestro huerto orgánico y aprende sobre agricultura sostenible de montaña.</p>
-                </div>
+                    
+                    <div class="experience-card">
+                        <div class="experience-card__icon">
+                            <i class="ri-plant-line"></i>
+                        </div>
+                        <h3 class="experience-card__title">Huerta Orgánica</h3>
+                        <p class="experience-card__description">Conoce nuestro huerto orgánico y aprende sobre agricultura sostenible de montaña.</p>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -453,7 +466,7 @@
             
             <!-- Testimonios destacados (estáticos) -->
             <div class="testimonials__grid">
-                @if($landingSettings && $landingSettings->testimonials)
+                @if($landingSettings && $landingSettings->testimonials && is_array($landingSettings->testimonials) && count($landingSettings->testimonials) > 0)
                     @foreach($landingSettings->testimonials as $testimonial)
                     <div class="testimonial-card">
                         <div class="testimonial__content">

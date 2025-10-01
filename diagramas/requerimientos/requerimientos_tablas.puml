@@ -1,0 +1,163 @@
+@startuml RequerimientosFuncionales
+!theme cerulean-outline
+title Requerimientos Funcionales - Sistema de Gestión Hotelera
+header Sistema de Gestión Hotelera - Requerimientos Funcionales
+footer Generado: %date("yyyy-MM-dd")
+
+' Configuración de estilo
+skinparam defaultFontSize 9
+skinparam titleFontSize 14
+skinparam headerFontSize 12
+skinparam footerFontSize 8
+skinparam backgroundColor white
+skinparam classBackgroundColor #E8F4F8
+skinparam classBorderColor #2E86AB
+skinparam classFontColor #333333
+
+' Tabla de Gestión de Reservas
+class "RF-001 a RF-010: GESTIÓN DE RESERVAS" as RF_Reservas {
+    {static} +**RF-001** | **Crear Reserva desde Backend** | Alta
+    +El sistema debe permitir crear reservas
+    +desde el panel administrativo con validación 
+    +completa de datos del cliente
+    +✓ Validar disponibilidad de habitación
+    +✓ Requerir todos los datos del cliente
+    +✓ Calcular automáticamente totales
+    +✓ Asignar estado inicial "Confirmada"
+    --
+    {static} +**RF-002** | **Crear Reserva desde API** | Alta
+    +El sistema debe permitir crear reservas
+    +desde la landing page con validación mínima
+    +✓ Validar solo nombre y teléfono
+    +✓ NIT/DPI/Email opcionales
+    +✓ Estado "Pendiente de Confirmación"
+    +✓ Expiración automática en 1 hora
+    --
+    {static} +**RF-003** | **Estados de Reserva** | Alta
+    +El sistema debe manejar 7 estados diferentes
+    +en el ciclo de vida de una reserva
+    +✓ Estados: Pendiente, Confirmada, Check-in,
+    +   Check-out, Cancelada, No Show, Expirada
+    +✓ Transiciones válidas entre estados
+    +✓ Registro de cambios con timestamp
+    --
+    {static} +**RF-004** | **Expiración Automática** | Alta
+    +Las reservas no confirmadas deben expirar
+    +automáticamente después del tiempo configurado
+    +✓ Tiempo configurable (default: 1 hora)
+    +✓ Comando programado para verificación
+    +✓ Cambio automático a estado "Expirada"
+    +✓ Liberación de habitación
+}
+
+' Tabla de Gestión de Habitaciones  
+class "RF-011 a RF-020: GESTIÓN DE HABITACIONES" as RF_Habitaciones {
+    {static} +**RF-011** | **Estados de Habitación** | Alta
+    +El sistema debe manejar 4 estados
+    +para cada habitación
+    +✓ Estados: Disponible, Ocupada, 
+    +   Limpieza, Mantenimiento
+    +✓ Transiciones automáticas en check-in/out
+    +✓ Control manual para limpieza/mantenimiento
+    +✓ Historial de cambios de estado
+    --
+    {static} +**RF-012** | **Gestión de Categorías** | Alta
+    +El sistema debe clasificar habitaciones
+    +por categorías con características específicas
+    +✓ Crear/editar/eliminar categorías
+    +✓ Asignar características y amenities
+    +✓ Precios base por categoría
+    +✓ Descripción detallada
+    --
+    {static} +**RF-013** | **Gestión de Niveles** | Media
+    +El sistema debe organizar habitaciones
+    +por pisos o niveles del hotel
+    +✓ Crear/editar niveles (pisos)
+    +✓ Asignar habitaciones a niveles
+    +✓ Navegación por nivel
+    +✓ Identificación visual
+    --
+    {static} +**RF-017** | **Numeración Única** | Alta
+    +Cada habitación debe tener un número
+    +único identificativo
+    +✓ Número único por hotel
+    +✓ Validación de duplicados
+    +✓ Formato alfanumérico
+    +✓ Búsqueda por número
+}
+
+' Tabla de Gestión de Clientes
+class "RF-021 a RF-030: GESTIÓN DE CLIENTES" as RF_Clientes {
+    {static} +**RF-021** | **Registro Flexible** | Alta
+    +El sistema debe permitir registro con
+    +validaciones diferenciadas según origen
+    +✓ Landing: solo nombre y teléfono requeridos
+    +✓ Backend: datos completos requeridos
+    +✓ Normalización automática de nombres
+    +✓ Validación de formatos
+    --
+    {static} +**RF-022** | **Base de Datos Unificada** | Alta
+    +Mantener una base única de clientes
+    +evitando duplicados
+    +✓ Validación de duplicados por NIT/DPI
+    +✓ Búsqueda inteligente de coincidencias
+    +✓ Fusión de registros duplicados
+    +✓ Actualización de datos existentes
+    --
+    {static} +**RF-024** | **Búsqueda Avanzada** | Alta
+    +El sistema debe permitir buscar clientes
+    +por múltiples criterios
+    +✓ Búsqueda por nombre, teléfono, email
+    +✓ Búsqueda por NIT/DPI exacto
+    +✓ Búsqueda parcial inteligente
+    +✓ Ordenamiento de resultados
+}
+
+' Tabla de Control de Caja
+class "RF-031 a RF-040: CONTROL DE CAJA" as RF_Caja {
+    {static} +**RF-031** | **Apertura de Caja** | Alta
+    +El sistema debe permitir abrir caja por
+    +turno de trabajo con monto inicial
+    +✓ Monto inicial requerido
+    +✓ Identificación del usuario responsable
+    +✓ Timestamp de apertura
+    +✓ Un solo usuario por caja abierta
+    --
+    {static} +**RF-032** | **Cierre de Caja** | Alta
+    +El sistema debe permitir cerrar caja
+    +con arqueo y cuadre
+    +✓ Cálculo automático de movimientos
+    +✓ Comparación con arqueo físico
+    +✓ Registro de diferencias
+    +✓ Timestamp de cierre
+    --
+    {static} +**RF-033** | **Registro de Movimientos** | Alta
+    +Todos los ingresos y egresos deben
+    +registrarse automáticamente
+    +✓ Movimientos automáticos por reservas
+    +✓ Registro manual de gastos
+    +✓ Categorización de movimientos
+    +✓ Comprobantes y referencias
+    --
+    {static} +**RF-034** | **Middleware de Protección** | Alta
+    +El sistema debe bloquear operaciones
+    +financieras sin caja abierta
+    +✓ Validación en todas las rutas sensibles
+    +✓ Redirección automática
+    +✓ Mensajes de error específicos
+    +✓ Excepciones para administradores
+}
+
+' Layout vertical para mejor legibilidad
+RF_Reservas -[hidden]down- RF_Habitaciones
+RF_Habitaciones -[hidden]down- RF_Clientes  
+RF_Clientes -[hidden]down- RF_Caja
+
+note top of RF_Reservas
+**PRIORIDAD ALTA: 28 requerimientos**
+**PRIORIDAD MEDIA: 28 requerimientos** 
+**PRIORIDAD BAJA: 14 requerimientos**
+**TOTAL: 70 requerimientos funcionales**
+end note
+
+@enduml

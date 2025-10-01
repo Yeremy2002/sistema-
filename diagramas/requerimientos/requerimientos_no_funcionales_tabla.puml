@@ -1,0 +1,175 @@
+@startuml RequerimientosNoFuncionales
+!theme cerulean-outline
+title Requerimientos No Funcionales - Sistema de Gestión Hotelera
+header Sistema de Gestión Hotelera - Requerimientos No Funcionales
+footer Generado: %date("yyyy-MM-dd")
+
+' Configuración de estilo
+skinparam defaultFontSize 9
+skinparam titleFontSize 14
+skinparam headerFontSize 12
+skinparam footerFontSize 8
+skinparam backgroundColor white
+skinparam classBackgroundColor #FFF2E8
+skinparam classBorderColor #D2691E
+skinparam classFontColor #333333
+
+' Tabla de Rendimiento y Escalabilidad
+class "RNF-001 a RNF-010: RENDIMIENTO Y ESCALABILIDAD" as RNF_Rendimiento {
+    {static} +**RNF-001** | **Tiempo de Respuesta API** | Alta
+    +Las consultas a la API REST deben 
+    +responder en tiempos óptimos
+    +✓ Consultas de disponibilidad: < 2 segundos
+    +✓ Creación de reservas: < 3 segundos
+    +✓ Búsquedas simples: < 1 segundo
+    +✓ 95% de requests bajo estos límites
+    --
+    {static} +**RNF-002** | **Tiempo de Carga de Páginas** | Alta
+    +Las páginas del sistema deben 
+    +cargar rápidamente
+    +✓ Dashboard: < 3 segundos
+    +✓ Listados: < 2 segundos
+    +✓ Formularios: < 1.5 segundos
+    +✓ Medido en conexiones estándar
+    --
+    {static} +**RNF-003** | **Capacidad Concurrente** | Alta
+    +El sistema debe soportar múltiples
+    +usuarios simultáneos
+    +✓ Mínimo 50 usuarios concurrentes
+    +✓ Sin degradación del rendimiento
+    +✓ Pool de conexiones optimizado
+    +✓ Gestión eficiente de sesiones
+    --
+    {static} +**RNF-005** | **Optimización de BD** | Alta
+    +Las consultas a la base de datos
+    +deben estar optimizadas
+    +✓ Índices en campos de búsqueda
+    +✓ Queries optimizadas (< 100ms)
+    +✓ Connection pooling habilitado
+    +✓ Paginación en listados grandes
+}
+
+' Tabla de Seguridad
+class "RNF-011 a RNF-020: SEGURIDAD" as RNF_Seguridad {
+    {static} +**RNF-011** | **Autenticación Segura** | Alta
+    +El sistema debe implementar
+    +autenticación robusta
+    +✓ Hash seguro de contraseñas (bcrypt)
+    +✓ Políticas de contraseñas fuertes
+    +✓ Bloqueo por intentos fallidos
+    +✓ Sesiones seguras con tokens
+    --
+    {static} +**RNF-012** | **Autorización por Roles** | Alta
+    +Control de acceso basado en
+    +roles y permisos
+    +✓ Roles: Admin, Recepcionista, Contador
+    +✓ Permisos granulares por módulo
+    +✓ Middleware de protección
+    +✓ Auditoría de accesos
+    --
+    {static} +**RNF-013** | **Protección CSRF** | Alta
+    +Prevenir ataques Cross-Site
+    +Request Forgery
+    +✓ Tokens CSRF en formularios
+    +✓ Validación automática
+    +✓ Regeneración de tokens
+    +✓ Excepciones para API pública
+    --
+    {static} +**RNF-015** | **Configuración HTTPS** | Alta
+    +El sistema debe usar comunicaciones
+    +encriptadas
+    +✓ SSL/TLS en producción
+    +✓ Redirección automática a HTTPS
+    +✓ Headers de seguridad (HSTS)
+    +✓ Certificados válidos y actualizados
+}
+
+' Tabla de Disponibilidad
+class "RNF-021 a RNF-030: DISPONIBILIDAD Y CONFIABILIDAD" as RNF_Disponibilidad {
+    {static} +**RNF-021** | **Disponibilidad del Sistema** | Alta
+    +El sistema debe estar disponible
+    +la mayor parte del tiempo
+    +✓ Uptime mínimo 99.0% mensual
+    +✓ Ventanas de mantenimiento programadas
+    +✓ Monitoreo continuo
+    +✓ SLA definido y medible
+    --
+    {static} +**RNF-022** | **Recuperación ante Fallos** | Alta
+    +El sistema debe recuperarse
+    +rápidamente de fallos
+    +✓ RTO (Recovery Time): < 4 horas
+    +✓ RPO (Recovery Point): < 1 hora
+    +✓ Procedimientos documentados
+    +✓ Backup automático y restauración
+    --
+    {static} +**RNF-024** | **Manejo de Errores** | Alta
+    +Gestión apropiada de errores
+    +y excepciones
+    +✓ Log detallado de errores
+    +✓ Mensajes de error amigables
+    +✓ Notificación automática de críticos
+    +✓ Stacktrace solo en desarrollo
+    --
+    {static} +**RNF-027** | **Transacciones ACID** | Alta
+    +Las operaciones críticas deben
+    +ser transaccionales
+    +✓ Transacciones de base de datos
+    +✓ Rollback automático en errores
+    +✓ Consistencia de datos
+    +✓ Aislamiento de transacciones
+}
+
+' Tabla de Usabilidad
+class "RNF-031 a RNF-040: USABILIDAD Y UX" as RNF_Usabilidad {
+    {static} +**RNF-031** | **Interfaz Intuitiva** | Alta
+    +El sistema debe ser fácil de
+    +usar y aprender
+    +✓ Navegación clara y consistente
+    +✓ Iconografía estándar
+    +✓ Flujos de trabajo lógicos
+    +✓ Ayuda contextual disponible
+    --
+    {static} +**RNF-032** | **Diseño Responsive** | Alta
+    +La interfaz debe adaptarse a
+    +diferentes dispositivos
+    +✓ Compatible con desktop, tablet, móvil
+    +✓ Breakpoints apropiados
+    +✓ Touch-friendly en móviles
+    +✓ Elementos redimensionables
+    --
+    {static} +**RNF-035** | **Feedback Visual** | Alta
+    +El sistema debe proporcionar
+    +retroalimentación clara
+    +✓ Loading indicators
+    +✓ Mensajes de confirmación
+    +✓ Estados de error visibles
+    +✓ Progress bars en procesos largos
+    --
+    {static} +**RNF-037** | **Eficiencia en Tareas** | Alta
+    +Los flujos de trabajo deben
+    +ser eficientes
+    +✓ Shortcuts de teclado
+    +✓ Búsqueda rápida
+    +✓ Autocompletado en formularios
+    +✓ Acciones por lotes
+}
+
+' Layout vertical
+RNF_Rendimiento -[hidden]down- RNF_Seguridad
+RNF_Seguridad -[hidden]down- RNF_Disponibilidad  
+RNF_Disponibilidad -[hidden]down- RNF_Usabilidad
+
+note top of RNF_Rendimiento
+**PRIORIDAD ALTA: 27 requerimientos**
+**PRIORIDAD MEDIA: 26 requerimientos** 
+**PRIORIDAD BAJA: 7 requerimientos**
+**TOTAL: 60 requerimientos no funcionales**
+
+**MÉTRICAS OBJETIVO:**
+• API Response Time: < 2s (95th percentile)
+• Page Load Time: < 3s (promedio)
+• System Uptime: 99.0% mensual mínimo
+• Test Coverage: > 80%
+end note
+
+@enduml

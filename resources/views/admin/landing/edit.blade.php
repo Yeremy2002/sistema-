@@ -50,6 +50,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" id="experiences-tab" data-toggle="tab" href="#experiences" role="tab" aria-controls="experiences" aria-selected="false">
+                                    <i class="fas fa-hiking mr-1"></i>Experiencias
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" id="gallery-tab" data-toggle="tab" href="#gallery" role="tab" aria-controls="gallery" aria-selected="false">
                                     <i class="fas fa-images mr-1"></i>Galería
                                 </a>
@@ -271,6 +276,85 @@
                                                     <input type="text" class="form-control" id="testimonials_title" name="testimonials_title" 
                                                         value="{{ old('testimonials_title', $settings->testimonials_title) }}" required>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Experiences Tab -->
+                            <div class="tab-pane fade" id="experiences" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Gestión de Experiencias Únicas</h6>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="addExperience()">
+                                            <i class="fas fa-plus mr-1"></i> Agregar Experiencia
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted">Agrega las experiencias únicas que ofrece tu hotel. Cada experiencia se mostrará como una tarjeta en la landing page.</p>
+                                        
+                                        <div id="experiences-list">
+                                            @if($settings->experiences_list && is_array($settings->experiences_list))
+                                                @foreach($settings->experiences_list as $index => $experience)
+                                                <div class="experience-item border p-3 mb-3 rounded" data-index="{{ $index }}">
+                                                    <div class="row">
+                                                        <div class="col-md-11">
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-2">
+                                                                        <label class="form-label">Título</label>
+                                                                        <input type="text" class="form-control" name="experiences_list[{{ $index }}][title]" 
+                                                                            value="{{ $experience['title'] ?? '' }}" placeholder="Ej: Senderismo Guiado">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-2">
+                                                                        <label class="form-label">Ícono (Remix Icon)</label>
+                                                                        <input type="text" class="form-control" name="experiences_list[{{ $index }}][icon]" 
+                                                                            value="{{ $experience['icon'] ?? '' }}" placeholder="Ej: ri-mountain-line">
+                                                                        <small class="text-muted"><a href="https://remixicon.com" target="_blank">Ver iconos</a></small>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-2">
+                                                                        <label class="form-label">Vista Previa</label>
+                                                                        <div class="border p-2 rounded text-center">
+                                                                            <i class="{{ $experience['icon'] ?? 'ri-star-line' }}" style="font-size: 24px;"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-12">
+                                                                    <label class="form-label">Descripción</label>
+                                                                    <textarea class="form-control" name="experiences_list[{{ $index }}][description]" rows="2" 
+                                                                        placeholder="Describe esta experiencia única...">{{ $experience['description'] ?? '' }}</textarea>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeExperience({{ $index }})">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                        
+                                        <div class="alert alert-info mt-3">
+                                            <h6><i class="fas fa-info-circle mr-2"></i>Íconos Sugeridos:</h6>
+                                            <div class="d-flex flex-wrap">
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-mountain-line (Montaña)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-fire-line (Fogata)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-camera-line (Fotografía)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-plant-line (Huerto)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-bike-line (Ciclismo)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-moon-line (Astronomía)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-restaurant-line (Gastronomía)</span>
+                                                <span class="badge bg-secondary mr-2 mb-2">ri-footprint-line (Senderismo)</span>
                                             </div>
                                         </div>
                                     </div>
@@ -499,6 +583,7 @@
         </div>
     </div>
 </div>
+@endsection
 
 @section('css')
 <style>
@@ -788,7 +873,80 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTestimonialsData() {
         document.getElementById('testimonials-data').value = JSON.stringify(testimonials);
     }
+    
+    // Experiences management
+    let experienceCounter = document.querySelectorAll('.experience-item').length;
+    
+    window.addExperience = function() {
+        const list = document.getElementById('experiences-list');
+        const index = experienceCounter++;
+        
+        const div = document.createElement('div');
+        div.className = 'experience-item border p-3 mb-3 rounded';
+        div.setAttribute('data-index', index);
+        
+        div.innerHTML = `
+            <div class="row">
+                <div class="col-md-11">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-2">
+                                <label class="form-label">Título</label>
+                                <input type="text" class="form-control" name="experiences_list[${index}][title]" 
+                                    placeholder="Ej: Senderismo Guiado">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-2">
+                                <label class="form-label">Ícono (Remix Icon)</label>
+                                <input type="text" class="form-control icon-input" name="experiences_list[${index}][icon]" 
+                                    placeholder="Ej: ri-mountain-line" onchange="updateIconPreview(this, ${index})">
+                                <small class="text-muted"><a href="https://remixicon.com" target="_blank">Ver iconos</a></small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-2">
+                                <label class="form-label">Vista Previa</label>
+                                <div class="border p-2 rounded text-center" id="icon-preview-${index}">
+                                    <i class="ri-star-line" style="font-size: 24px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="experiences_list[${index}][description]" rows="2" 
+                                placeholder="Describe esta experiencia única..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-center justify-content-center">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeExperience(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        list.appendChild(div);
+    };
+    
+    window.removeExperience = function(index) {
+        if (confirm('¿Estás seguro de eliminar esta experiencia?')) {
+            const item = document.querySelector(`.experience-item[data-index="${index}"]`);
+            if (item) {
+                item.remove();
+            }
+        }
+    };
+    
+    window.updateIconPreview = function(input, index) {
+        const preview = document.getElementById(`icon-preview-${index}`);
+        if (preview) {
+            preview.innerHTML = `<i class="${input.value || 'ri-star-line'}" style="font-size: 24px;"></i>`;
+        }
+    };
 });
 </script>
-@endsection
 @endsection

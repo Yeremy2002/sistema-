@@ -26,3 +26,19 @@ yarn-error.log
 /original
 gestion_hoteles.code-workspace
 gestion_hotel/
+
+# Archivos Markdown
+*.md
+
+# Directorios y archivos de prueba
+test*
+tests*
+*.test.*
+test_*
+
+# Archivos y directorios de IA
+.claude/
+.aclaude/
+*claude*
+*ai*
+*AI*
