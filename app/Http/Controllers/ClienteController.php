@@ -87,31 +87,22 @@ class ClienteController extends Controller
   {
     $query = $request->get('q');
 
-    // Search for a single client by name (for landing page integration)
-    $cliente = Cliente::where('nombre', 'like', "%{$query}%")
+    // Require minimum 3 characters for search
+    if (strlen($query) < 3) {
+      return response()->json([]);
+    }
+
+    // Search for ALL matching clients and return as array
+    $clientes = Cliente::where('nombre', 'like', "%{$query}%")
       ->orWhere('nit', 'like', "%{$query}%")
       ->orWhere('dpi', 'like', "%{$query}%")
       ->orWhere('email', 'like', "%{$query}%")
       ->orWhere('telefono', 'like', "%{$query}%")
-      ->first();
+      ->limit(10)
+      ->get(['id', 'nombre', 'nit', 'dpi', 'telefono', 'email']);
 
-    if ($cliente) {
-      // Return only basic client info (email and phone) for security
-      return response()->json([
-        'success' => true,
-        'cliente' => [
-          'id' => $cliente->id,
-          'nombre' => $cliente->nombre,
-          'email' => $cliente->email,
-          'telefono' => $cliente->telefono
-        ]
-      ]);
-    }
-
-    return response()->json([
-      'success' => false,
-      'cliente' => null
-    ]);
+    // Return array directly (not wrapped in object)
+    return response()->json($clientes);
   }
 
   /**

@@ -7,6 +7,49 @@
 @stop
 
 @section('content')
+    {{-- Mensajes de sesión --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('alerta_caja_requerida'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5><i class="fas fa-cash-register"></i> ATENCIÓN: CAJA NO ABIERTA</h5>
+            <p class="mb-2"><strong>Debe abrir una caja antes de realizar operaciones de check-in.</strong></p>
+            <p class="mb-0">
+                <a href="{{ route('cajas.create') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus-circle"></i> Abrir Caja Ahora
+                </a>
+            </p>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form
@@ -109,15 +152,30 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_entrada">Fecha de Entrada <span class="text-muted">(Check-in
-                                    14:00)</span></label>
-                            <input type="date" name="fecha_entrada" id="fecha_entrada"
-                                class="form-control @error('fecha_entrada') is-invalid @enderror"
-                                value="{{ old('fecha_entrada', isset($reserva) ? $reserva->fecha_entrada->format('Y-m-d') : $fechaActual ?? date('Y-m-d')) }}"
-                                required>
-                            <small class="form-text text-info">
-                                <i class="fas fa-info-circle"></i> El check-in siempre se realiza a las 14:00 horas
-                            </small>
+                            <label for="fecha_entrada">Fecha de Entrada
+                                @if($hotel->permitir_estancias_horas)
+                                    <span class="text-muted">(con hora)</span>
+                                @else
+                                    <span class="text-muted">(Check-in 14:00)</span>
+                                @endif
+                            </label>
+                            @if($hotel->permitir_estancias_horas)
+                                <input type="datetime-local" name="fecha_entrada" id="fecha_entrada"
+                                    class="form-control @error('fecha_entrada') is-invalid @enderror"
+                                    value="{{ old('fecha_entrada', isset($reserva) ? $reserva->fecha_entrada->format('Y-m-d\TH:i') : date('Y-m-d\T14:00')) }}"
+                                    required>
+                                <small class="form-text text-info">
+                                    <i class="fas fa-info-circle"></i> Ingrese fecha y hora exacta para estadías por horas (mismo día)
+                                </small>
+                            @else
+                                <input type="date" name="fecha_entrada" id="fecha_entrada"
+                                    class="form-control @error('fecha_entrada') is-invalid @enderror"
+                                    value="{{ old('fecha_entrada', isset($reserva) ? $reserva->fecha_entrada->format('Y-m-d') : $fechaActual ?? date('Y-m-d')) }}"
+                                    required>
+                                <small class="form-text text-info">
+                                    <i class="fas fa-info-circle"></i> El check-in siempre se realiza a las 14:00 horas
+                                </small>
+                            @endif
                             <small class="form-text text-danger">
                                 <i class="fas fa-calendar-day"></i> Fecha actual del sistema: {{ date('d/m/Y') }}
                                 ({{ date('l') }})
@@ -130,15 +188,30 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_salida">Fecha de Salida <span class="text-muted">(Check-out
-                                    12:30)</span></label>
-                            <input type="date" name="fecha_salida" id="fecha_salida"
-                                class="form-control @error('fecha_salida') is-invalid @enderror"
-                                value="{{ old('fecha_salida', isset($reserva) ? $reserva->fecha_salida->format('Y-m-d') : '') }}"
-                                required>
-                            <small class="form-text text-info">
-                                <i class="fas fa-info-circle"></i> El check-out debe realizarse a las 12:30 horas
-                            </small>
+                            <label for="fecha_salida">Fecha de Salida
+                                @if($hotel->permitir_estancias_horas)
+                                    <span class="text-muted">(con hora)</span>
+                                @else
+                                    <span class="text-muted">(Check-out 12:30)</span>
+                                @endif
+                            </label>
+                            @if($hotel->permitir_estancias_horas)
+                                <input type="datetime-local" name="fecha_salida" id="fecha_salida"
+                                    class="form-control @error('fecha_salida') is-invalid @enderror"
+                                    value="{{ old('fecha_salida', isset($reserva) ? $reserva->fecha_salida->format('Y-m-d\TH:i') : '') }}"
+                                    required>
+                                <small class="form-text text-info">
+                                    <i class="fas fa-info-circle"></i> Ingrese fecha y hora exacta (máximo hasta las {{ $hotel->checkout_mismo_dia_limite ? $hotel->checkout_mismo_dia_limite->format('H:i') : '23:59' }} para mismo día)
+                                </small>
+                            @else
+                                <input type="date" name="fecha_salida" id="fecha_salida"
+                                    class="form-control @error('fecha_salida') is-invalid @enderror"
+                                    value="{{ old('fecha_salida', isset($reserva) ? $reserva->fecha_salida->format('Y-m-d') : '') }}"
+                                    required>
+                                <small class="form-text text-info">
+                                    <i class="fas fa-info-circle"></i> El check-out debe realizarse a las 12:30 horas
+                                </small>
+                            @endif
                             @error('fecha_salida')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -252,7 +325,7 @@
             // Constantes para las horas de check-in y check-out
             const CHECKIN_HOUR = '14:00';
             const CHECKOUT_HOUR = '12:30';
-            
+
             // Configuración de estadías por horas desde el hotel
             const PERMITIR_ESTANCIAS_HORAS = {{ $hotel->permitir_estancias_horas ? 'true' : 'false' }};
             const MINIMO_HORAS_ESTANCIA = {{ $hotel->minimo_horas_estancia ?? 2 }};
@@ -299,12 +372,12 @@
                     minSalida = new Date(entrada);
                     // Pero debe ser al menos X horas después del check-in
                     minSalida.setHours(minSalida.getHours() + MINIMO_HORAS_ESTANCIA);
-                    
+
                     // Si la fecha límite del mismo día se pasa, debe ser al día siguiente
                     const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
                     const limitTime = new Date(entrada);
                     limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
-                    
+
                     if (minSalida > limitTime) {
                         // Si el tiempo mínimo excede el límite del mismo día, pasar al siguiente día
                         minSalida = new Date(entrada);
@@ -394,22 +467,22 @@
                 const salida = new Date(document.getElementById('fecha_salida').value);
                 const feedback = document.getElementById('feedback_checkin');
                 let msg = '';
-                
+
                 if (entrada && salida) {
                     if (PERMITIR_ESTANCIAS_HORAS) {
                         // Para estadías por horas, validar que si es el mismo día, cumpla con los requisitos
                         const esMismoDia = entrada.toDateString() === salida.toDateString();
-                        
+
                         if (esMismoDia) {
                             // Verificar que la hora de salida esté dentro del límite permitido
                             const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
                             const limitTime = new Date(entrada);
                             limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
-                            
+
                             // Para validación, usar la hora límite de checkout del mismo día
                             const salidaConHora = new Date(salida);
                             salidaConHora.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
-                            
+
                             if (salidaConHora > limitTime) {
                                 msg = '<div class="alert alert-warning p-2">Para estadías del mismo día, el check-out debe ser antes de las ' + CHECKOUT_MISMO_DIA_LIMITE + '.</div>';
                             } else {
@@ -428,13 +501,13 @@
                             document.getElementById('fecha_salida').classList.remove('is-invalid');
                         }
                     }
-                    
+
                     // Remover clase de error si no hay error
                     if (!msg.includes('alert-danger')) {
                         document.getElementById('fecha_salida').classList.remove('is-invalid');
                     }
                 }
-                
+
                 feedback.innerHTML = msg;
             }
             if (fechaEntrada) {
@@ -449,11 +522,11 @@
                 const entrada = new Date(document.getElementById('fecha_entrada').value);
                 const salida = new Date(document.getElementById('fecha_salida').value);
                 let errorMsg = '';
-                
+
                 if (entrada && salida) {
                     if (PERMITIR_ESTANCIAS_HORAS) {
                         const esMismoDia = entrada.toDateString() === salida.toDateString();
-                        
+
                         if (salida < entrada) {
                             errorMsg = 'La fecha de salida no puede ser anterior a la de entrada.';
                         } else if (esMismoDia) {
@@ -461,10 +534,10 @@
                             const [limitHour, limitMin] = CHECKOUT_MISMO_DIA_LIMITE.split(':');
                             const limitTime = new Date(entrada);
                             limitTime.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
-                            
+
                             const salidaConHora = new Date(salida);
                             salidaConHora.setHours(parseInt(limitHour), parseInt(limitMin), 0, 0);
-                            
+
                             if (salidaConHora > limitTime) {
                                 errorMsg = 'Para estadías del mismo día, el check-out debe realizarse antes de las ' + CHECKOUT_MISMO_DIA_LIMITE + '.';
                             }
@@ -476,7 +549,7 @@
                         }
                     }
                 }
-                
+
                 if (errorMsg) {
                     e.preventDefault();
                     Swal.fire({

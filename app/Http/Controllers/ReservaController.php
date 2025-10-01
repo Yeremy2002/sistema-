@@ -1098,6 +1098,60 @@ class ReservaController extends Controller
                 throw $e;
             }
 
+            // ===================== VALIDACIÓN DE ESTADÍAS POR HORAS =====================
+            if ($hotel->permitir_estancias_horas) {
+                $fechaEntrada = \Carbon\Carbon::parse($data['fecha_entrada']);
+                $fechaSalida = \Carbon\Carbon::parse($data['fecha_salida']);
+
+                // DEBUG: Log para ver los valores parseados
+                \Log::info('=== VALIDACIÓN HORAS DEBUG ===', [
+                    'fecha_entrada_raw' => $data['fecha_entrada'],
+                    'fecha_salida_raw' => $data['fecha_salida'],
+                    'fecha_entrada_parsed' => $fechaEntrada->format('Y-m-d H:i:s'),
+                    'fecha_salida_parsed' => $fechaSalida->format('Y-m-d H:i:s'),
+                    'minimo_horas' => $hotel->minimo_horas_estancia
+                ]);
+
+                // Si es el mismo día, validar que cumpla con las reglas de estadías por horas
+                if ($fechaEntrada->toDateString() === $fechaSalida->toDateString()) {
+                    // Verificar que la salida sea después de la entrada
+                    if ($fechaSalida->lte($fechaEntrada)) {
+                        return back()->with('error', 'La hora de salida debe ser posterior a la hora de entrada.')->withInput();
+                    }
+
+                    // Verificar que se cumpla el mínimo de horas (calcular diferencia correctamente)
+                    // Usar diffInMinutes con parámetro false para obtener valor con signo
+                    $minutosDiferencia = $fechaEntrada->diffInMinutes($fechaSalida, false);
+                    $minimoHoras = $hotel->minimo_horas_estancia ?? 2;
+                    $minimoMinutos = $minimoHoras * 60;
+
+                    \Log::info('=== CÁLCULO MINUTOS ===', [
+                        'minutos_diferencia' => $minutosDiferencia,
+                        'minimo_requerido' => $minimoMinutos,
+                        'horas' => floor(abs($minutosDiferencia) / 60),
+                        'minutos_restantes' => abs($minutosDiferencia) % 60
+                    ]);
+
+                    if ($minutosDiferencia < $minimoMinutos) {
+                        $horasCalc = floor(abs($minutosDiferencia) / 60);
+                        $minutosCalc = abs($minutosDiferencia) % 60;
+                        return back()->with('error', 'Para estadías del mismo día, se requiere un mínimo de ' . $minimoHoras . ' hora(s). Diferencia actual: ' . $horasCalc . ' hora(s) y ' . $minutosCalc . ' minuto(s).')->withInput();
+                    }
+
+                    // Verificar que el checkout sea antes de la hora límite del mismo día
+                    $horaLimite = $hotel->checkout_mismo_dia_limite
+                        ? $hotel->checkout_mismo_dia_limite->format('H:i')
+                        : '20:00';
+                    list($limitHour, $limitMin) = explode(':', $horaLimite);
+                    $fechaLimite = \Carbon\Carbon::parse($data['fecha_salida'])->setTime($limitHour, $limitMin, 0);
+
+                    if ($fechaSalida->gt($fechaLimite)) {
+                        return back()->with('error', 'Para estadías del mismo día, el check-out debe ser antes de las ' . $horaLimite . '.')->withInput();
+                    }
+                }
+            }
+            // =================== FIN VALIDACIÓN DE ESTADÍAS POR HORAS =================
+
             // Validar horario de check-in
             $horaActual = \Carbon\Carbon::now()->format('H:i');
             $horaCheckinEstandar = $hotel->checkin_hora_inicio ? $hotel->checkin_hora_inicio->format('H:i') : '14:00';
@@ -1125,8 +1179,22 @@ class ReservaController extends Controller
             $reserva->nombre_cliente = $nombreCliente;
             $reserva->documento_cliente = $data['documento_identidad'];
             $reserva->telefono_cliente = $data['telefono'];
-            $reserva->fecha_entrada = \Carbon\Carbon::parse($data['fecha_entrada'])->setTime(14, 0, 0);
-            $reserva->fecha_salida = \Carbon\Carbon::parse($data['fecha_salida'])->setTime(12, 30, 0);
+
+            // Parsear fechas con sus horas completas
+            $fechaEntradaParsed = \Carbon\Carbon::parse($data['fecha_entrada']);
+            $fechaSalidaParsed = \Carbon\Carbon::parse($data['fecha_salida']);
+
+            // Si es el mismo día y permite estadías por horas, usar las horas proporcionadas
+            if ($fechaEntradaParsed->toDateString() === $fechaSalidaParsed->toDateString() && $hotel->permitir_estancias_horas) {
+                // Mantener las horas tal como vienen del formulario
+                $reserva->fecha_entrada = $fechaEntradaParsed;
+                $reserva->fecha_salida = $fechaSalidaParsed;
+            } else {
+                // Para estadías de múltiples días, usar horarios estándar
+                $reserva->fecha_entrada = $fechaEntradaParsed->setTime(14, 0, 0);
+                $reserva->fecha_salida = $fechaSalidaParsed->setTime(12, 30, 0);
+            }
+
             $reserva->observaciones = $data['observaciones'] ?? null;
             $reserva->adelanto = $data['adelanto'] ?? 0;
             $reserva->estado = 'Check-in';
