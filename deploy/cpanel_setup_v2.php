@@ -397,7 +397,7 @@ class HotelSetup {
         }
 
         echo "<h4>📞 Support:</h4>";
-        echo "<p>For technical support, refer to the CLAUDE.md file in your project root or contact your system administrator.</p>";
+echo "<p>For technical support, check the project documentation or contact your system administrator.</p>";
         echo "</div>";
 
         echo "</div></div></body></html>";

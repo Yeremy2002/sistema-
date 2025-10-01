@@ -172,7 +172,7 @@ NEXT STEPS AFTER DEPLOYMENT:
 4. Test reservation system
 5. Set up monitoring and backups
 
-Technical Support: Refer to CLAUDE.md for system architecture
+Technical Support: Check documentation for system architecture
 EOF
 
 print_status "Installation summary created: ${DEPLOY_NAME}_INSTALLATION.txt"
