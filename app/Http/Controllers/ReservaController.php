@@ -965,7 +965,8 @@ class ReservaController extends Controller
             $limpieza->observaciones = 'Limpieza generada automáticamente tras check-out de la reserva #' . $reserva->id;
             $limpieza->save();
             $estadoFinal = 'Limpieza';
-            $usuariosLimpieza = \App\Models\User::role('Limpieza')->active()->get();
+            // Notificar a usuarios con roles de Mantenimiento y Recepcionista (roles que existen)
+            $usuariosLimpieza = \App\Models\User::role(['Mantenimiento', 'Recepcionista'])->active()->get();
             $notificados = $notificados->merge($usuariosLimpieza);
             foreach ($usuariosLimpieza as $usuario) {
                 $usuario->notify(new \App\Notifications\LimpiezaMantenimientoNotification(
@@ -1002,8 +1003,8 @@ class ReservaController extends Controller
                 ));
             }
         }
-        // Notificar a roles adicionales (Administrador, Super Admin, Cajero)
-        $rolesExtra = ['Administrador', 'Super Admin', 'Cajero'];
+        // Notificar a roles adicionales (Administrador, Super Admin, Manager)
+        $rolesExtra = ['Administrador', 'Super Admin', 'Manager'];
         foreach ($rolesExtra as $rol) {
             $usuarios = \App\Models\User::role($rol)->active()->get();
             foreach ($usuarios as $usuario) {

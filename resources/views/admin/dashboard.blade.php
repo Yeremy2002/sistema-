@@ -719,5 +719,144 @@
             }
             Swal.close();
         }
+        
+        // Función para cambiar el estado de una habitación
+        function cambiarEstado(habitacionId, nuevoEstado) {
+            Swal.fire({
+                title: 'Cambiar Estado',
+                text: `¿Está seguro de cambiar el estado de la habitación a ${nuevoEstado}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Procesando...',
+                        text: 'Cambiando estado de la habitación',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch(`/habitaciones/${habitacionId}/cambiar-estado`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                estado: nuevoEstado
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Éxito!',
+                                    text: 'Estado cambiado correctamente',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    if (window.calendar && typeof window.calendar.refetchEvents === 'function') {
+                                        window.calendar.refetchEvents();
+                                    }
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error al cambiar el estado: ' + data.message,
+                                    confirmButtonColor: '#3085d6'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al cambiar el estado de la habitación',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        });
+                }
+            });
+        }
+        
+        // Función para corregir el estado de una habitación inconsistente
+        function corregirEstadoHabitacion(habitacionId) {
+            Swal.fire({
+                title: 'Estado Inconsistente',
+                text: 'Esta habitación está marcada como "Ocupada" pero no tiene una reserva activa. ¿Desea cambiar el estado a "Disponible"?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, corregir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Procesando...',
+                        text: 'Corrigiendo estado de la habitación',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch(`/habitaciones/${habitacionId}/corregir-estado`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Éxito!',
+                                    text: 'Estado corregido exitosamente',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    if (window.calendar && typeof window.calendar.refetchEvents === 'function') {
+                                        window.calendar.refetchEvents();
+                                    }
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error al corregir el estado: ' + data.message,
+                                    confirmButtonColor: '#3085d6'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al corregir el estado de la habitación',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        });
+                }
+            });
+        }
     </script>
 @stop
