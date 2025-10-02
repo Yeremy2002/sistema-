@@ -37,7 +37,7 @@ if (¿Tiene reserva?) then (sí)
           if (¿Método?) then (Tarjeta)
             :Agregar recargo 5%;
             :Registrar número de voucher;
-          else (Transferencia)
+          elseif (Transferencia) then
             :Registrar banco;
             :Registrar número transferencia;
           else (Efectivo)

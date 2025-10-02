@@ -42,7 +42,7 @@ if (¿Estado = "Check-in"?) then (sí)
           
           :Registrar pago en caja;
           
-        else (Tarjeta)
+        elseif (Tarjeta) then
           |Sistema|
           :Calcular recargo 5%;
           :Calcular total con recargo;
@@ -73,7 +73,7 @@ if (¿Estado = "Check-in"?) then (sí)
           :Cambiar habitación a "Limpieza";
           :Notificar a personal\nde Mantenimiento/Recepcionista;
           
-        else (Mantenimiento)
+        elseif (Mantenimiento) then
           |Sistema|
           :Crear orden de mantenimiento;
           :Cambiar habitación a "Mantenimiento";

@@ -10,64 +10,44 @@ start
 |Sistema|
 :Verificar estado actual;
 
+note right
+  Estados posibles:
+  - Disponible
+  - Limpieza
+  - Mantenimiento
+  - Reservada-Confirmada
+  - Reservada-Pendiente
+  - Ocupada
+end note
+
 partition "Estados y Transiciones Permitidas" {
   
   if (¿Estado actual?) then (Disponible)
     |Usuario|
-    :Ver opciones disponibles;
+    :Ver opciones:
+    - Reservar
+    - Check-in
+    - Limpieza
+    - Mantenimiento;
     
-    if (¿Acción seleccionada?) then (Reservar)
-      :Ir a proceso de reserva;
+    :Seleccionar acción;
+    
+    |Sistema|
+    :Mostrar confirmación SweetAlert2;
+    
+    if (¿Usuario confirma?) then (sí)
+      :Cambiar estado según elección;
+      :Crear orden si aplica;
+      :Notificar personal correspondiente;
+      :Actualizar calendario;
+      :Mostrar mensaje de éxito;
       stop
-      
-    else (Check-in)
-      :Ir a proceso de check-in;
+    else (no)
+      :Cancelar operación;
       stop
-      
-    else (Limpieza)
-      :Confirmar cambio a Limpieza;
-      
-      |Sistema|
-      :Mostrar confirmación SweetAlert2;
-      
-      if (¿Usuario confirma?) then (sí)
-        :Cambiar estado a "Limpieza";
-        :Crear orden de limpieza;
-        :Registrar fecha/hora;
-        :Registrar usuario responsable;
-        :Notificar personal\nMantenimiento/Recepcionista;
-        :Actualizar calendario;
-        :Recargar vista;
-        :Mostrar mensaje de éxito;
-        stop
-      else (no)
-        :Cancelar operación;
-        stop
-      endif
-      
-    else (Mantenimiento)
-      :Confirmar cambio a Mantenimiento;
-      
-      |Sistema|
-      :Mostrar confirmación SweetAlert2;
-      
-      if (¿Usuario confirma?) then (sí)
-        :Cambiar estado a "Mantenimiento";
-        :Crear orden de mantenimiento;
-        :Registrar fecha/hora;
-        :Registrar usuario responsable;
-        :Notificar personal\nde Mantenimiento;
-        :Actualizar calendario;
-        :Recargar vista;
-        :Mostrar mensaje de éxito;
-        stop
-      else (no)
-        :Cancelar operación;
-        stop
-      endif
     endif
     
-  else (Limpieza)
+  elseif (Limpieza) then
     |Usuario|
     :Ver opciones disponibles;
     
@@ -91,7 +71,7 @@ partition "Estados y Transiciones Permitidas" {
         stop
       endif
       
-    else (Mantenimiento)
+    elseif (Mantenimiento) then
       :Confirmar cambio a Mantenimiento;
       
       |Sistema|
@@ -112,7 +92,7 @@ partition "Estados y Transiciones Permitidas" {
       endif
     endif
     
-  else (Mantenimiento)
+  elseif (Mantenimiento) then
     |Usuario|
     :Ver opciones disponibles;
     
@@ -137,7 +117,7 @@ partition "Estados y Transiciones Permitidas" {
         stop
       endif
       
-    else (Limpieza)
+    elseif (Limpieza) then
       :Confirmar cambio a Limpieza;
       
       |Sistema|
@@ -158,7 +138,7 @@ partition "Estados y Transiciones Permitidas" {
       endif
     endif
     
-  else (Reservada-Confirmada)
+  elseif (Reservada-Confirmada) then
     |Usuario|
     :Ver opciones disponibles;
     :Solo permite Check-in;
@@ -171,7 +151,7 @@ partition "Estados y Transiciones Permitidas" {
       stop
     endif
     
-  else (Reservada-Pendiente)
+  elseif (Reservada-Pendiente) then
     |Usuario|
     :Ver opciones disponibles;
     
@@ -179,7 +159,7 @@ partition "Estados y Transiciones Permitidas" {
       :Ir a proceso de confirmación;
       stop
       
-    else (Check-in)
+    elseif (Check-in) then
       :Ir a proceso de check-in;
       stop
       
@@ -192,7 +172,7 @@ partition "Estados y Transiciones Permitidas" {
       stop
     endif
     
-  else (Ocupada)
+  else
     |Usuario|
     :Ver opciones disponibles;
     
