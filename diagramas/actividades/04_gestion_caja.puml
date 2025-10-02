@@ -1,0 +1,159 @@
+@startuml Gestion_de_Caja
+title Diagrama de Actividades - Gestión de Caja (Apertura/Cierre)
+
+|Usuario Cajero|
+start
+:Acceder al módulo de cajas;
+
+if (¿Tiene caja asignada?) then (sí)
+  
+  |Sistema|
+  :Verificar estado de caja;
+  
+  if (¿Caja está abierta?) then (no - Cerrada)
+    
+    |Usuario Cajero|
+    :Seleccionar "Abrir Caja";
+    :Ingresar monto inicial;
+    :Seleccionar turno\n(Mañana/Tarde/Noche);
+    :Ingresar observaciones\n(opcional);
+    
+    |Sistema|
+    :Validar monto inicial > 0;
+    
+    if (¿Monto válido?) then (sí)
+      :Crear registro de apertura;
+      :Establecer estado = Abierta;
+      :Registrar fecha/hora apertura;
+      :Registrar usuario responsable;
+      
+      |Usuario Cajero|
+      :Caja abierta exitosamente;
+      
+      partition "Operaciones durante el día" {
+        repeat
+          :Realizar operación;
+          
+          if (¿Tipo operación?) then (Ingreso)
+            :Registrar ingreso\n(Check-in/Check-out/Pago);
+            :Ingresar monto;
+            :Seleccionar método de pago;
+            :Agregar concepto;
+            
+            |Sistema|
+            :Incrementar saldo en caja;
+            :Registrar movimiento;
+            
+          else (Egreso)
+            :Registrar egreso\n(Gastos/Retiros);
+            :Ingresar monto;
+            :Agregar concepto;
+            :Agregar justificación;
+            
+            |Sistema|
+            :Decrementar saldo en caja;
+            :Registrar movimiento;
+          endif
+          
+        repeat while (¿Continuar operando?) is (sí) not (no - Cerrar caja)
+      }
+      
+      |Usuario Cajero|
+      :Seleccionar "Cerrar Caja";
+      
+      |Sistema|
+      :Calcular tiempo caja abierta;
+      
+      if (¿Más de 15 horas?) then (sí)
+        :Mostrar advertencia\n"Caja abierta más de 15 horas";
+        :Recomendar cierre;
+      endif
+      
+      if (¿Más de 20 horas?) then (sí)
+        :Mostrar alerta crítica;
+        :Requiere justificación administrativa;
+        
+        |Usuario Cajero|
+        :Ingresar justificación obligatoria;
+      endif
+      
+      |Usuario Cajero|
+      :Realizar arqueo de caja;
+      :Contar efectivo físico;
+      :Ingresar monto físico contado;
+      
+      |Sistema|
+      :Calcular saldo esperado\n(Inicial + Ingresos - Egresos);
+      :Calcular diferencia\n(Físico - Esperado);
+      
+      if (¿Hay diferencia?) then (sí)
+        if (¿Diferencia > tolerancia?) then (sí)
+          :Mostrar alerta de diferencia;
+          :Requiere justificación;
+          
+          |Usuario Cajero|
+          :Ingresar justificación\nde diferencia;
+          :Confirmar arqueo;
+          
+          |Sistema|
+          :Registrar diferencia;
+          :Marcar como arqueo con diferencia;
+        else (no - Dentro de tolerancia)
+          |Sistema|
+          :Aceptar diferencia menor;
+        endif
+      else (no)
+        |Sistema|
+        :Arqueo exacto;
+      endif
+      
+      |Sistema|
+      :Registrar fecha/hora cierre;
+      :Cambiar estado a Cerrada;
+      :Generar reporte de caja;
+      :Generar PDF con movimientos;
+      
+      |Usuario Cajero|
+      :Descargar reporte;
+      :Revisar resumen del día;
+      
+      |Sistema|
+      :Enviar notificación a administrador;
+      :Archivo de caja cerrada;
+      
+      |Usuario Cajero|
+      :Caja cerrada exitosamente;
+      stop
+      
+    else (no)
+      :Mostrar error\n"Monto inicial inválido";
+      stop
+    endif
+    
+  else (sí - Ya está abierta)
+    :Mostrar información de caja activa;
+    :Ver saldo actual;
+    :Ver movimientos del día;
+    
+    if (¿Desea realizar operación?) then (sí)
+      :Ir a operaciones durante el día;
+    else (no)
+      :Salir;
+      stop
+    endif
+  endif
+  
+else (no)
+  :Mostrar error\n"Usuario sin caja asignada";
+  
+  |Administrador|
+  :Recibir solicitud;
+  :Asignar caja al usuario;
+  
+  |Sistema|
+  :Registrar asignación;
+  :Notificar al usuario;
+  stop
+endif
+
+@enduml

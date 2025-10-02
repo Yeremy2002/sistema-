@@ -1,0 +1,242 @@
+@startuml Cambio_Estados_Habitacion
+title Diagrama de Actividades - Cambio de Estados de Habitación
+
+|Usuario|
+start
+:Acceder al dashboard;
+:Visualizar habitaciones;
+:Seleccionar habitación;
+
+|Sistema|
+:Verificar estado actual;
+
+partition "Estados y Transiciones Permitidas" {
+  
+  if (¿Estado actual?) then (Disponible)
+    |Usuario|
+    :Ver opciones disponibles;
+    
+    if (¿Acción seleccionada?) then (Reservar)
+      :Ir a proceso de reserva;
+      stop
+      
+    else (Check-in)
+      :Ir a proceso de check-in;
+      stop
+      
+    else (Limpieza)
+      :Confirmar cambio a Limpieza;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Limpieza";
+        :Crear orden de limpieza;
+        :Registrar fecha/hora;
+        :Registrar usuario responsable;
+        :Notificar personal\nMantenimiento/Recepcionista;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+      
+    else (Mantenimiento)
+      :Confirmar cambio a Mantenimiento;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Mantenimiento";
+        :Crear orden de mantenimiento;
+        :Registrar fecha/hora;
+        :Registrar usuario responsable;
+        :Notificar personal\nde Mantenimiento;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+    endif
+    
+  else (Limpieza)
+    |Usuario|
+    :Ver opciones disponibles;
+    
+    if (¿Acción seleccionada?) then (Finalizar Limpieza)
+      :Confirmar finalización;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Disponible";
+        :Actualizar orden de limpieza\na "Completada";
+        :Registrar fecha/hora finalización;
+        :Notificar administradores;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+      
+    else (Mantenimiento)
+      :Confirmar cambio a Mantenimiento;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Mantenimiento";
+        :Actualizar orden de limpieza;
+        :Crear orden de mantenimiento;
+        :Notificar personal\nde Mantenimiento;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+    endif
+    
+  else (Mantenimiento)
+    |Usuario|
+    :Ver opciones disponibles;
+    
+    if (¿Acción seleccionada?) then (Finalizar Mantenimiento)
+      :Confirmar finalización;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Disponible";
+        :Actualizar orden de mantenimiento\na "Completada";
+        :Registrar costo (si aplica);
+        :Registrar fecha/hora finalización;
+        :Notificar administradores;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+      
+    else (Limpieza)
+      :Confirmar cambio a Limpieza;
+      
+      |Sistema|
+      :Mostrar confirmación SweetAlert2;
+      
+      if (¿Usuario confirma?) then (sí)
+        :Cambiar estado a "Limpieza";
+        :Actualizar orden de mantenimiento;
+        :Crear orden de limpieza;
+        :Notificar personal\nMantenimiento/Recepcionista;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+    endif
+    
+  else (Reservada-Confirmada)
+    |Usuario|
+    :Ver opciones disponibles;
+    :Solo permite Check-in;
+    
+    if (¿Selecciona Check-in?) then (sí)
+      :Ir a proceso de check-in;
+      stop
+    else (no)
+      :Salir;
+      stop
+    endif
+    
+  else (Reservada-Pendiente)
+    |Usuario|
+    :Ver opciones disponibles;
+    
+    if (¿Acción seleccionada?) then (Confirmar)
+      :Ir a proceso de confirmación;
+      stop
+      
+    else (Check-in)
+      :Ir a proceso de check-in;
+      stop
+      
+    else (Cancelar)
+      :Cancelar reserva;
+      |Sistema|
+      :Cambiar estado a "Disponible";
+      :Liberar habitación;
+      :Notificar cliente;
+      stop
+    endif
+    
+  else (Ocupada)
+    |Usuario|
+    :Ver opciones disponibles;
+    
+    |Sistema|
+    :Verificar reserva activa;
+    
+    if (¿Tiene reserva activa?) then (sí)
+      |Usuario|
+      :Solo permite Check-out;
+      
+      if (¿Selecciona Check-out?) then (sí)
+        :Ir a proceso de check-out;
+        stop
+      else (no)
+        :Salir;
+        stop
+      endif
+      
+    else (no - Estado inconsistente)
+      |Usuario|
+      :Ver opción "Corregir Estado";
+      :Confirmar corrección;
+      
+      |Sistema|
+      :Mostrar advertencia SweetAlert2;
+      note right
+        "Habitación marcada como Ocupada
+        sin reserva activa"
+      end note
+      
+      if (¿Usuario confirma corrección?) then (sí)
+        :Cambiar estado a "Disponible";
+        :Registrar corrección en logs;
+        :Notificar administradores;
+        :Actualizar calendario;
+        :Recargar vista;
+        :Mostrar mensaje de éxito;
+        stop
+      else (no)
+        :Cancelar operación;
+        stop
+      endif
+    endif
+  endif
+}
+
+@enduml

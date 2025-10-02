@@ -1,0 +1,118 @@
+@startuml Proceso_de_CheckIn
+title Diagrama de Actividades - Proceso de Check-in
+
+|Recepcionista|
+start
+:Cliente llega al hotel;
+:Acceder al sistema;
+
+if (¿Tiene reserva?) then (sí)
+  :Buscar reserva en el sistema;
+  
+  if (¿Reserva encontrada?) then (sí)
+    |Sistema|
+    :Verificar estado de reserva;
+    
+    if (¿Estado válido para check-in?) then (sí)
+      note right
+        Estados válidos:
+        - Reservada-Confirmada
+        - Reservada-Pendiente
+        - Pendiente
+      end note
+      
+      |Recepcionista|
+      :Verificar datos del cliente;
+      :Confirmar fechas entrada/salida;
+      :Revisar adelanto pagado;
+      
+      if (¿Hay saldo pendiente?) then (sí)
+        :Calcular saldo a pagar;
+        :Solicitar pago al cliente;
+        
+        if (¿Cliente paga?) then (sí)
+          :Registrar pago en caja;
+          :Seleccionar método de pago\n(Efectivo/Tarjeta/Transferencia);
+          
+          if (¿Método?) then (Tarjeta)
+            :Agregar recargo 5%;
+            :Registrar número de voucher;
+          else (Transferencia)
+            :Registrar banco;
+            :Registrar número transferencia;
+          else (Efectivo)
+            :Calcular vuelto si aplica;
+          endif
+        else (no)
+          :Cancelar check-in;
+          stop
+        endif
+      endif
+      
+      |Sistema|
+      :Cambiar estado reserva a "Check-in";
+      :Cambiar estado habitación a "Ocupada";
+      :Registrar fecha/hora check-in;
+      :Asignar habitación al cliente;
+      
+      |Recepcionista|
+      :Entregar llave al cliente;
+      :Informar sobre servicios;
+      :Completar check-in;
+      stop
+      
+    else (no)
+      :Mostrar error\n"Estado no permite check-in";
+      stop
+    endif
+    
+  else (no)
+    :Mostrar mensaje\n"Reserva no encontrada";
+    
+    if (¿Desea hacer check-in directo?) then (sí)
+      :Ir a flujo sin reserva;
+    else (no)
+      stop
+    endif
+  endif
+  
+else (no - Check-in directo)
+  :Seleccionar habitación disponible;
+  
+  |Sistema|
+  :Verificar disponibilidad;
+  
+  if (¿Habitación disponible?) then (sí)
+    |Recepcionista|
+    :Ingresar datos del cliente\n(Nombre, DPI, Teléfono);
+    :Ingresar fechas entrada/salida;
+    :Calcular precio total;
+    :Solicitar pago;
+    
+    if (¿Cliente paga?) then (sí)
+      :Registrar pago en caja;
+      :Seleccionar método de pago;
+      
+      |Sistema|
+      :Crear reserva\nEstado: "Check-in";
+      :Cambiar habitación a "Ocupada";
+      :Registrar fecha/hora check-in;
+      
+      |Recepcionista|
+      :Entregar llave;
+      :Completar check-in;
+      stop
+      
+    else (no)
+      :Cancelar operación;
+      stop
+    endif
+    
+  else (no)
+    :Mostrar mensaje\n"Habitación no disponible";
+    :Sugerir otras habitaciones;
+    stop
+  endif
+endif
+
+@enduml

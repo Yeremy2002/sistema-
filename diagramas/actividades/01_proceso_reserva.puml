@@ -1,0 +1,85 @@
+@startuml Proceso_de_Reserva
+title Diagrama de Actividades - Proceso de Reserva
+
+|Cliente|
+start
+:Acceder a Landing Page;
+:Seleccionar fechas de entrada/salida;
+:Ver habitaciones disponibles;
+
+if (¿Habitación seleccionada?) then (sí)
+  :Ingresar datos del cliente\n(Nombre, DPI, Teléfono, Email);
+  :Ingresar datos de acompañantes\n(opcional);
+  :Seleccionar método de pago;
+  
+  if (¿Método de pago?) then (Adelanto)
+    :Ingresar monto de adelanto;
+  else (Pago completo)
+    :Confirmar pago total;
+  endif
+  
+  :Enviar solicitud de reserva;
+  
+  |Sistema|
+  :Validar disponibilidad;
+  
+  if (¿Disponible?) then (sí)
+    :Generar reserva\nEstado: "Pendiente de Confirmación";
+    :Registrar en base de datos;
+    :Cambiar estado habitación\na "Reservada-Pendiente";
+    :Enviar email de confirmación;
+    :Notificar a recepcionista;
+    
+    |Cliente|
+    :Recibir confirmación\npor email;
+    note right
+      La reserva expira en 24 horas
+      si no se confirma
+    end note
+    
+    |Recepcionista|
+    :Recibir notificación;
+    :Revisar reserva;
+    
+    if (¿Contactar cliente?) then (sí)
+      :Llamar al cliente;
+      :Confirmar detalles;
+      :Confirmar método de pago;
+      
+      if (¿Cliente confirma?) then (sí)
+        :Cambiar estado a\n"Reservada-Confirmada";
+        :Actualizar habitación a\n"Reservada-Confirmada";
+        
+        |Sistema|
+        :Enviar notificación\nde confirmación;
+        
+        |Cliente|
+        :Recibir confirmación final;
+        stop
+      else (no)
+        :Cancelar reserva;
+        :Liberar habitación;
+        stop
+      endif
+    else (no)
+      note right
+        Si pasan 24 horas
+        sin confirmación,
+        el sistema cancela
+        automáticamente
+      end note
+      stop
+    endif
+    
+  else (no)
+    |Cliente|
+    :Mostrar mensaje\n"Habitación no disponible";
+    :Sugerir otras opciones;
+    stop
+  endif
+  
+else (no)
+  stop
+endif
+
+@enduml

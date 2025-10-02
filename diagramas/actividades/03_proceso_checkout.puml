@@ -1,0 +1,153 @@
+@startuml Proceso_de_CheckOut
+title Diagrama de Actividades - Proceso de Check-out
+
+|Recepcionista|
+start
+:Cliente solicita check-out;
+:Acceder a reserva activa;
+
+|Sistema|
+:Verificar estado reserva;
+
+if (¿Estado = "Check-in"?) then (sí)
+  :Verificar horario de check-out;
+  
+  if (¿Dentro de horario?) then (sí)
+    note right
+      Horario normal:
+      12:30 - 13:00
+    end note
+    
+    |Recepcionista|
+    :Revisar consumos adicionales;
+    :Calcular total a pagar;
+    
+    if (¿Hay saldo pendiente?) then (sí)
+      :Mostrar total pendiente;
+      :Solicitar pago al cliente;
+      
+      if (¿Cliente paga?) then (sí)
+        :Seleccionar método de pago;
+        
+        if (¿Método?) then (Efectivo)
+          :Ingresar monto recibido;
+          
+          |Sistema|
+          :Calcular vuelto;
+          
+          if (¿Hay vuelto?) then (sí)
+            |Recepcionista|
+            :Entregar vuelto al cliente;
+          endif
+          
+          :Registrar pago en caja;
+          
+        else (Tarjeta)
+          |Sistema|
+          :Calcular recargo 5%;
+          :Calcular total con recargo;
+          
+          |Recepcionista|
+          :Procesar pago con tarjeta;
+          :Ingresar número de voucher\n(opcional);
+          :Registrar pago en caja;
+          
+        else (Transferencia)
+          |Recepcionista|
+          :Verificar transferencia;
+          :Ingresar nombre del banco\n(opcional);
+          :Ingresar número de transferencia\n(opcional);
+          :Registrar pago en caja;
+        endif
+        
+        |Sistema|
+        :Cambiar estado reserva\na "Check-out";
+        :Agregar información de pago\na observaciones;
+        
+        |Recepcionista|
+        :Seleccionar acción post check-out;
+        
+        if (¿Qué acción?) then (Limpieza)
+          |Sistema|
+          :Crear orden de limpieza;
+          :Cambiar habitación a "Limpieza";
+          :Notificar a personal\nde Mantenimiento/Recepcionista;
+          
+        else (Mantenimiento)
+          |Sistema|
+          :Crear orden de mantenimiento;
+          :Cambiar habitación a "Mantenimiento";
+          :Notificar a personal\nde Mantenimiento;
+          
+        else (Disponible)
+          |Sistema|
+          :Cambiar habitación a "Disponible";
+        endif
+        
+        |Sistema|
+        :Notificar a administradores;
+        :Registrar fecha/hora check-out;
+        
+        |Recepcionista|
+        :Confirmar check-out al cliente;
+        :Despedir al cliente;
+        stop
+        
+      else (no)
+        :Cancelar check-out;
+        stop
+      endif
+      
+    else (no - Ya está pagado)
+      |Sistema|
+      :Cambiar estado reserva\na "Check-out";
+      :Seleccionar acción post check-out;
+      
+      fork
+        :Crear orden limpieza/mantenimiento;
+      fork again
+        :Cambiar estado habitación;
+      fork again
+        :Notificar personal;
+      end fork
+      
+      |Recepcionista|
+      :Confirmar check-out;
+      stop
+    endif
+    
+  else (no - Fuera de horario)
+    if (¿Usuario es admin?) then (sí)
+      |Sistema|
+      :Calcular horas de retraso;
+      
+      if (¿Más de 2 horas?) then (sí)
+        :Requiere justificación;
+        :Requiere autorización explícita;
+        
+        |Recepcionista|
+        :Ingresar justificación;
+        :Confirmar autorización;
+        
+        |Sistema|
+        :Agregar nota administrativa;
+        :Proceder con check-out;
+        
+      else (no - Menos de 2 horas)
+        :Mostrar advertencia;
+        :Proceder con check-out;
+      endif
+      
+    else (no)
+      :Mostrar error\n"Requiere autorización administrativa";
+      :Notificar a administrador;
+      stop
+    endif
+  endif
+  
+else (no)
+  :Mostrar error\n"Estado no permite check-out";
+  stop
+endif
+
+@enduml
