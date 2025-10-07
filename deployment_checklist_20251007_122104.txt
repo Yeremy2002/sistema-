@@ -1,0 +1,156 @@
+╔═══════════════════════════════════════════════════════════════╗
+║     cPanel DEPLOYMENT CHECKLIST - Hotel Casa Vieja            ║
+║                   casaviejagt.com                             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+PRE-DEPLOYMENT TASKS:
+---------------------
+[ ] Review CPANEL_DEPLOYMENT_ANALYSIS.md
+[ ] Backup existing production site (if any)
+[ ] Verify FTP credentials
+[ ] Verify database credentials
+[ ] Test build assets locally (npm run build)
+
+CPANEL PREPARATION:
+-------------------
+[ ] Login to cPanel (casaviejagt.com/cpanel)
+[ ] Verify database exists: casaviejagt_hotel_management
+[ ] Verify database user: casaviejagt_hoteluser
+[ ] Check database user privileges (ALL PRIVILEGES)
+[ ] Set PHP version to 8.2 or higher
+[ ] Verify required PHP extensions enabled
+[ ] Set document root to: public_html/public
+
+FILE UPLOAD:
+------------
+[ ] Upload deployment package via FTP
+[ ] Extract package in /home/casaviejagt/public_html/
+[ ] Upload .env.production as .env
+[ ] Edit .env and add email password
+[ ] Generate new APP_KEY: php artisan key:generate
+
+FILE PERMISSIONS:
+-----------------
+[ ] Set storage/ permissions to 775 (recursive)
+[ ] Set bootstrap/cache/ permissions to 775 (recursive)
+[ ] Verify ownership: casaviejagt:casaviejagt
+
+DATABASE SETUP:
+---------------
+[ ] Run: php artisan migrate --force
+[ ] Run: php artisan db:seed --class=EssentialDataSeeder --force
+[ ] Verify tables created in phpMyAdmin
+[ ] Verify admin user exists
+
+OPTIMIZATION:
+-------------
+[ ] Run: php artisan config:cache
+[ ] Run: php artisan route:cache
+[ ] Run: php artisan view:cache
+[ ] Run: php artisan storage:link
+[ ] Verify cache files created
+
+CRON JOBS SETUP:
+----------------
+[ ] Add Laravel Scheduler:
+    */5 * * * * cd /home/casaviejagt/public_html && php artisan schedule:run >> /dev/null 2>&1
+
+[ ] Add Queue Worker:
+    */2 * * * * cd /home/casaviejagt/public_html && php artisan queue:work --stop-when-empty --max-time=60 >> /dev/null 2>&1
+
+[ ] Verify PHP path (use: which php or whereis php)
+[ ] Save cron jobs
+
+SSL CERTIFICATE:
+----------------
+[ ] Navigate to SSL/TLS Status in cPanel
+[ ] Run AutoSSL for casaviejagt.com
+[ ] Verify HTTPS redirect working
+[ ] Test: https://casaviejagt.com
+
+ROOT .htaccess:
+---------------
+[ ] Create /home/casaviejagt/public_html/.htaccess with:
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteRule ^$ public/ [L]
+    RewriteRule (.*) public/$1 [L]
+</IfModule>
+
+TESTING:
+--------
+[ ] Test homepage: https://casaviejagt.com
+[ ] Test login: https://casaviejagt.com/login
+[ ] Login with admin credentials
+[ ] Create test room
+[ ] Create test reservation
+[ ] Test cash register (caja) operations
+[ ] Test API endpoint: /api/test-cors
+[ ] Test API endpoint: /api/reservas/disponibilidad
+[ ] Send test notification
+[ ] Verify email sending
+
+MONITORING:
+-----------
+[ ] Check Laravel logs: storage/logs/laravel.log
+[ ] Monitor cron execution (first 1 hour)
+[ ] Check queue processing
+[ ] Verify scheduled tasks running
+[ ] Monitor error logs in cPanel
+
+POST-DEPLOYMENT:
+----------------
+[ ] Update admin password
+[ ] Configure hotel settings
+[ ] Upload room images
+[ ] Set up email notifications
+[ ] Configure CORS for landing page
+[ ] Create database backup
+[ ] Setup automated backups
+[ ] Configure monitoring (UptimeRobot)
+
+ROLLBACK PLAN:
+--------------
+[ ] Keep backup of previous version
+[ ] Document rollback steps
+[ ] Have database dump ready
+
+CREDENTIALS REFERENCE:
+----------------------
+FTP:
+  Host: casaviejagt.com
+  User: casaviejagt
+  Pass: S5{MfMTTw[{@mkM)
+
+Database:
+  Name: casaviejagt_hotel_management
+  User: casaviejagt_hoteluser
+  Pass: eIckhwtXHPr3YV0Y
+
+Admin (from seeder):
+  Email: admin@casaviejagt.com
+  Password: [Check EssentialDataSeeder.php]
+
+IMPORTANT NOTES:
+----------------
+• NEVER set APP_DEBUG=true in production
+• ALWAYS regenerate APP_KEY on production
+• MONITOR logs for first 24 hours
+• Test all critical user flows
+• Verify cron jobs are running
+• Check queue is processing jobs
+
+SUPPORT:
+--------
+• Laravel Docs: https://laravel.com/docs/12.x
+• cPanel Docs: https://docs.cpanel.net/
+• Deployment Guide: CPANEL_DEPLOYMENT_ANALYSIS.md
+
+╔═══════════════════════════════════════════════════════════════╗
+║  Deployment Date: _____________                               ║
+║  Deployed By: _____________                                   ║
+║  Status: [ ] Success  [ ] Failed  [ ] Rollback                ║
+╚═══════════════════════════════════════════════════════════════╝

@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Laravel Application Entry Point (Redirect Version)
+ *
+ * This file should be placed in the web root (public_html/)
+ * when you cannot change the document root to the public/ directory.
+ */
+
+// Redirect all requests to the public directory
+require __DIR__.'/public/index.php';
