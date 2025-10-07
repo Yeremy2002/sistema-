@@ -42,3 +42,10 @@ test_*
 *claude*
 *ai*
 *AI*
+
+# Archivos de deployment y backups
+*.tar.gz
+*.zip
+*_deployment_*
+*backup*
+*.backup
